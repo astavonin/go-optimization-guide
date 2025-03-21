@@ -2,14 +2,18 @@
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
     <url>
          <loc>https://astavonin.github.io/go-performance-book/</loc>
-         <lastmod>2025-03-20</lastmod>
+         <lastmod>2025-03-21</lastmod>
+    </url>
+    <url>
+         <loc>https://astavonin.github.io/go-performance-book/01-common-patterns/</loc>
+         <lastmod>2025-03-21</lastmod>
+    </url>
+    <url>
+         <loc>https://astavonin.github.io/go-performance-book/01-common-patterns/mem-prealloc/</loc>
+         <lastmod>2025-03-21</lastmod>
     </url>
     <url>
          <loc>https://astavonin.github.io/go-performance-book/01-common-patterns/object-pooling/</loc>
-         <lastmod>2025-03-20</lastmod>
-    </url>
-    <url>
-         <loc>https://astavonin.github.io/go-performance-book/01-common-patterns/overview/</loc>
-         <lastmod>2025-03-20</lastmod>
+         <lastmod>2025-03-21</lastmod>
     </url>
 </urlset>
