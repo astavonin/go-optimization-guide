@@ -14,6 +14,8 @@
         <link rel="prev" href="../object-pooling/">
       
       
+        <link rel="next" href="../buffered-io/">
+      
       
       <link rel="icon" href="../../assets/images/favicon.png">
       <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.6.9">
@@ -61,7 +63,7 @@
     
     
     
-    <body dir="ltr" data-md-color-scheme="slate" data-md-color-primary="indigo" data-md-color-accent="indigo">
+    <body dir="ltr" data-md-color-scheme="default" data-md-color-primary="indigo" data-md-color-accent="indigo">
   
     
     <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
@@ -258,6 +260,8 @@
       
         
       
+        
+      
     
     
     
@@ -422,10 +426,9 @@
     </span>
   </a>
   
-    <nav class="md-nav" aria-label="Benchmarking Impact">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
+</li>
+      
+        <li class="md-nav__item">
   <a href="#when-to-preallocate" class="md-nav__link">
     <span class="md-ellipsis">
       When To Preallocate
@@ -433,16 +436,33 @@
   </a>
   
 </li>
-        
-      </ul>
-    </nav>
-  
-</li>
       
     </ul>
   
 </nav>
       
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../buffered-io/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Efficient Buffering
+    
+  </span>
+  
+
+      </a>
     </li>
   
 
@@ -530,20 +550,14 @@
     </span>
   </a>
   
-    <nav class="md-nav" aria-label="Benchmarking Impact">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
+</li>
+      
+        <li class="md-nav__item">
   <a href="#when-to-preallocate" class="md-nav__link">
     <span class="md-ellipsis">
       When To Preallocate
     </span>
   </a>
-  
-</li>
-        
-      </ul>
-    </nav>
   
 </li>
       
@@ -567,7 +581,7 @@
 
 
 <h1 id="memory-preallocation">Memory Preallocation<a class="headerlink" href="#memory-preallocation" title="Permanent link">&para;</a></h1>
-<p>Memory preallocation is a straightforward yet highly effective performance optimization strategy in Go. By allocating the required memory upfront, developers can eliminate hidden overhead related to dynamic resizing—such as memory allocations, data copying, and increased garbage collection frequency. This approach enhances application predictability and performance, particularly beneficial in performance-critical or high-throughput environments.</p>
+<p>Memory preallocation is a powerful and straightforward optimization technique in Go. By explicitly allocating required memory upfront, developers reduce hidden costs associated with dynamic resizing—such as frequent memory allocations, data copying, and increased garbage collection (GC) activity. Effective preallocation leads to predictable, efficient performance, especially crucial for performance-critical or high-throughput systems.</p>
 <h2 id="why-preallocation-matters">Why Preallocation Matters<a class="headerlink" href="#why-preallocation-matters" title="Permanent link">&para;</a></h2>
 <p>In Go, slices and maps dynamically expand to accommodate new elements. While convenient, this automatic growth introduces overhead. When a slice or map reaches its capacity, Go must allocate a new memory block and copy existing data into it. Frequent resizing operations significantly degrade performance, especially within tight loops or resource-intensive tasks.</p>
 <p>Go employs a specific growth strategy for slices to balance memory efficiency and performance. Initially, slice capacities double with each expansion, ensuring rapid growth. However, once a slice exceeds approximately 1024 elements, the capacity growth rate reduces to about 25%. For example, starting from a capacity of 1, slices grow sequentially to capacities of 2, 4, 8, and so forth. But after surpassing 1024 elements, the next capacity increment would typically be around 1280 rather than doubling to 2048. This controlled growth reduces memory waste but increases allocation frequency if the final slice size is predictable but not explicitly preallocated.</p>
@@ -620,7 +634,15 @@ Len: 1025, Cap: 1280
 <p>This helps the runtime allocate enough internal storage upfront, avoiding rehashing and resizing costs.</p>
 <h2 id="benchmarking-impact">Benchmarking Impact<a class="headerlink" href="#benchmarking-impact" title="Permanent link">&para;</a></h2>
 <p>Here’s a simple benchmark comparing appending to a preallocated slice vs. a zero-capacity slice:</p>
-<div class="highlight"><pre><span></span><code><span class="kd">func</span><span class="w"> </span><span class="nx">BenchmarkAppendNoPrealloc</span><span class="p">(</span><span class="nx">b</span><span class="w"> </span><span class="o">*</span><span class="nx">testing</span><span class="p">.</span><span class="nx">B</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<details class="example">
+<summary>Show the benchmark file</summary>
+<div class="highlight"><pre><span></span><code><span class="kn">package</span><span class="w"> </span><span class="nx">main</span>
+
+<span class="kn">import</span><span class="w"> </span><span class="p">(</span>
+<span class="w">    </span><span class="s">&quot;testing&quot;</span>
+<span class="p">)</span>
+
+<span class="kd">func</span><span class="w"> </span><span class="nx">BenchmarkAppendNoPrealloc</span><span class="p">(</span><span class="nx">b</span><span class="w"> </span><span class="o">*</span><span class="nx">testing</span><span class="p">.</span><span class="nx">B</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
 <span class="w">    </span><span class="k">for</span><span class="w"> </span><span class="nx">i</span><span class="w"> </span><span class="o">:=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="nx">i</span><span class="w"> </span><span class="p">&lt;</span><span class="w"> </span><span class="nx">b</span><span class="p">.</span><span class="nx">N</span><span class="p">;</span><span class="w"> </span><span class="nx">i</span><span class="o">++</span><span class="w"> </span><span class="p">{</span>
 <span class="w">        </span><span class="kd">var</span><span class="w"> </span><span class="nx">s</span><span class="w"> </span><span class="p">[]</span><span class="kt">int</span>
 <span class="w">        </span><span class="k">for</span><span class="w"> </span><span class="nx">j</span><span class="w"> </span><span class="o">:=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="nx">j</span><span class="w"> </span><span class="p">&lt;</span><span class="w"> </span><span class="mi">10000</span><span class="p">;</span><span class="w"> </span><span class="nx">j</span><span class="o">++</span><span class="w"> </span><span class="p">{</span>
@@ -638,13 +660,24 @@ Len: 1025, Cap: 1280
 <span class="w">    </span><span class="p">}</span>
 <span class="p">}</span>
 </code></pre></div>
+</details>
 <p>You’ll typically observe that preallocation reduces allocations to a single one per operation and significantly improves throughput.</p>
 <div class="highlight"><pre><span></span><code>BenchmarkAppendNoPrealloc-14               41727             28539 ns/op          357626 B/op         19 allocs/op
 BenchmarkAppendWithPrealloc-14            170154              7093 ns/op           81920 B/op          1 allocs/op
 </code></pre></div>
-<h3 id="when-to-preallocate">When To Preallocate<a class="headerlink" href="#when-to-preallocate" title="Permanent link">&para;</a></h3>
-<p>Preallocation should be leveraged when the final size of your slices or maps can be reasonably anticipated, especially within loops or high-frequency operations. In such scenarios, preallocation leads to fewer memory allocations, reduced garbage collection overhead, and improved predictability.</p>
-<p>However, preallocation isn’t universally beneficial. When dealing with unpredictable or widely varying data sizes, aggressive preallocation can cause unnecessary memory consumption. It may also result in over-provisioned memory, especially problematic in concurrent systems managing numerous large buffers simultaneously. As with all optimizations, profiling your application is essential to confirm that preallocation effectively addresses your performance constraints without introducing new issues.</p>
+<h2 id="when-to-preallocate">When To Preallocate<a class="headerlink" href="#when-to-preallocate" title="Permanent link">&para;</a></h2>
+<p>✅ Preallocate when:</p>
+<ul>
+<li>The number of elements in slices or maps is known or reasonably predictable.</li>
+<li>Your application involves tight loops or high-throughput data processing.</li>
+<li>Minimizing garbage collection overhead is crucial for your application's performance.</li>
+</ul>
+<p>❌ Avoid preallocation when:</p>
+<ul>
+<li>The data size is highly variable and unpredictable.</li>
+<li>Over-allocation risks significant memory waste.</li>
+<li>You're prematurely optimizing—always profile to confirm the benefit.</li>
+</ul>
 
 
 
@@ -652,6 +685,27 @@ BenchmarkAppendWithPrealloc-14            170154              7093 ns/op        
 
 
 
+  
+    
+  
+  
+
+
+  <aside class="md-source-file">
+    
+      
+  <span class="md-source-file__fact">
+    <span class="md-icon" title="Last update">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M21 13.1c-.1 0-.3.1-.4.2l-1 1 2.1 2.1 1-1c.2-.2.2-.6 0-.8l-1.3-1.3c-.1-.1-.2-.2-.4-.2m-1.9 1.8-6.1 6V23h2.1l6.1-6.1zM12.5 7v5.2l4 2.4-1 1L11 13V7zM11 21.9c-5.1-.5-9-4.8-9-9.9C2 6.5 6.5 2 12 2c5.3 0 9.6 4.1 10 9.3-.3-.1-.6-.2-1-.2s-.7.1-1 .2C19.6 7.2 16.2 4 12 4c-4.4 0-8 3.6-8 8 0 4.1 3.1 7.5 7.1 7.9l-.1.2z"/></svg>
+    </span>
+    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-date" title="March 22, 2025 12:15:30">March 22, 2025</span>
+  </span>
+
+    
+    
+    
+    
+  </aside>
 
 
 
@@ -691,7 +745,7 @@ BenchmarkAppendWithPrealloc-14            170154              7093 ns/op        
     </div>
     
     
-    <script id="__config" type="application/json">{"base": "../..", "features": ["navigation.indexes", "navigation.instant", "navigation.tracking", "search.suggest", "search.highlight"], "search": "../../assets/javascripts/workers/search.f8cc74c7.min.js", "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}}</script>
+    <script id="__config" type="application/json">{"base": "../..", "features": ["navigation.indexes", "navigation.instant", "navigation.tracking", "search.suggest", "search.highlight", "content.code.copy", "content.code.annotate"], "search": "../../assets/javascripts/workers/search.f8cc74c7.min.js", "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}}</script>
     
     
       <script src="../../assets/javascripts/bundle.c8b220af.min.js"></script>

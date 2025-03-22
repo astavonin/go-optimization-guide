@@ -63,7 +63,7 @@
     
     
     
-    <body dir="ltr" data-md-color-scheme="slate" data-md-color-primary="indigo" data-md-color-accent="indigo">
+    <body dir="ltr" data-md-color-scheme="default" data-md-color-primary="indigo" data-md-color-accent="indigo">
   
     
     <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
@@ -260,6 +260,8 @@
       
         
       
+        
+      
     
     
     
@@ -364,13 +366,13 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
-  <a href="#example-1-using-syncpool-for-object-reuse" class="md-nav__link">
+  <a href="#using-syncpool-for-object-reuse" class="md-nav__link">
     <span class="md-ellipsis">
-      Example 1: Using sync.Pool for Object Reuse
+      Using sync.Pool for Object Reuse
     </span>
   </a>
   
-    <nav class="md-nav" aria-label="Example 1: Using sync.Pool for Object Reuse">
+    <nav class="md-nav" aria-label="Using sync.Pool for Object Reuse">
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
@@ -397,9 +399,9 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#example-2-pooling-byte-buffers-for-efficient-io" class="md-nav__link">
+  <a href="#pooling-byte-buffers-for-efficient-io" class="md-nav__link">
     <span class="md-ellipsis">
-      Example 2: Pooling Byte Buffers for Efficient I/O
+      Pooling Byte Buffers for Efficient I/O
     </span>
   </a>
   
@@ -411,44 +413,11 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#how-to-verify-object-poolings-impact" class="md-nav__link">
+  <a href="#benchmarking-impact" class="md-nav__link">
     <span class="md-ellipsis">
-      How To Verify Object Pooling's Impact
+      Benchmarking Impact
     </span>
   </a>
-  
-    <nav class="md-nav" aria-label="How To Verify Object Pooling&#39;s Impact">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#the-benchmark" class="md-nav__link">
-    <span class="md-ellipsis">
-      The Benchmark
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#benchmark-results" class="md-nav__link">
-    <span class="md-ellipsis">
-      Benchmark Results
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#interpreting-the-results" class="md-nav__link">
-    <span class="md-ellipsis">
-      Interpreting the Results
-    </span>
-  </a>
-  
-</li>
-        
-      </ul>
-    </nav>
   
 </li>
       
@@ -482,6 +451,28 @@
   
   <span class="md-ellipsis">
     Memory Preallocation
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../buffered-io/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Efficient Buffering
     
   </span>
   
@@ -536,13 +527,13 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
-  <a href="#example-1-using-syncpool-for-object-reuse" class="md-nav__link">
+  <a href="#using-syncpool-for-object-reuse" class="md-nav__link">
     <span class="md-ellipsis">
-      Example 1: Using sync.Pool for Object Reuse
+      Using sync.Pool for Object Reuse
     </span>
   </a>
   
-    <nav class="md-nav" aria-label="Example 1: Using sync.Pool for Object Reuse">
+    <nav class="md-nav" aria-label="Using sync.Pool for Object Reuse">
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
@@ -569,9 +560,9 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#example-2-pooling-byte-buffers-for-efficient-io" class="md-nav__link">
+  <a href="#pooling-byte-buffers-for-efficient-io" class="md-nav__link">
     <span class="md-ellipsis">
-      Example 2: Pooling Byte Buffers for Efficient I/O
+      Pooling Byte Buffers for Efficient I/O
     </span>
   </a>
   
@@ -583,44 +574,11 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#how-to-verify-object-poolings-impact" class="md-nav__link">
+  <a href="#benchmarking-impact" class="md-nav__link">
     <span class="md-ellipsis">
-      How To Verify Object Pooling's Impact
+      Benchmarking Impact
     </span>
   </a>
-  
-    <nav class="md-nav" aria-label="How To Verify Object Pooling&#39;s Impact">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#the-benchmark" class="md-nav__link">
-    <span class="md-ellipsis">
-      The Benchmark
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#benchmark-results" class="md-nav__link">
-    <span class="md-ellipsis">
-      Benchmark Results
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#interpreting-the-results" class="md-nav__link">
-    <span class="md-ellipsis">
-      Interpreting the Results
-    </span>
-  </a>
-  
-</li>
-        
-      </ul>
-    </nav>
   
 </li>
       
@@ -657,7 +615,7 @@
 <p>Using the <code>sync. Pool</code> package, we can efficiently implement object pooling in Go. This is particularly useful in high-performance applications where creating and destroying objects frequently would lead to excessive garbage collection pauses.</p>
 <h2 id="how-object-pooling-works">How Object Pooling Works<a class="headerlink" href="#how-object-pooling-works" title="Permanent link">&para;</a></h2>
 <p>Object pooling allows objects to be reused rather than allocated anew, minimizing the strain on the garbage collector. Instead of requesting new memory from the heap each time, objects are fetched from a pre-allocated pool and returned when no longer needed. This reduces allocation overhead and improves runtime efficiency.</p>
-<h3 id="example-1-using-syncpool-for-object-reuse">Example 1: Using <code>sync.Pool</code> for Object Reuse<a class="headerlink" href="#example-1-using-syncpool-for-object-reuse" title="Permanent link">&para;</a></h3>
+<h3 id="using-syncpool-for-object-reuse">Using <code>sync.Pool</code> for Object Reuse<a class="headerlink" href="#using-syncpool-for-object-reuse" title="Permanent link">&para;</a></h3>
 <h4 id="without-object-pooling-inefficient-memory-usage">Without Object Pooling (Inefficient Memory Usage)<a class="headerlink" href="#without-object-pooling-inefficient-memory-usage" title="Permanent link">&para;</a></h4>
 <div class="highlight"><pre><span></span><code><span class="kn">package</span><span class="w"> </span><span class="nx">main</span>
 
@@ -709,7 +667,7 @@
 <span class="w">    </span><span class="nx">fmt</span><span class="p">.</span><span class="nx">Println</span><span class="p">(</span><span class="s">&quot;Done&quot;</span><span class="p">)</span>
 <span class="p">}</span>
 </code></pre></div>
-<h3 id="example-2-pooling-byte-buffers-for-efficient-io">Example 2: Pooling Byte Buffers for Efficient I/O<a class="headerlink" href="#example-2-pooling-byte-buffers-for-efficient-io" title="Permanent link">&para;</a></h3>
+<h3 id="pooling-byte-buffers-for-efficient-io">Pooling Byte Buffers for Efficient I/O<a class="headerlink" href="#pooling-byte-buffers-for-efficient-io" title="Permanent link">&para;</a></h3>
 <p>Object pooling is especially effective when working with large byte slices that would otherwise lead to high allocation and garbage collection overhead.</p>
 <div class="highlight"><pre><span></span><code><span class="kn">package</span><span class="w"> </span><span class="nx">main</span>
 
@@ -734,9 +692,10 @@
 <span class="p">}</span>
 </code></pre></div>
 <p>Using <code>sync.Pool</code> for byte buffers significantly reduces memory pressure when dealing with high-frequency I/O operations.</p>
-<h2 id="how-to-verify-object-poolings-impact">How To Verify Object Pooling's Impact<a class="headerlink" href="#how-to-verify-object-poolings-impact" title="Permanent link">&para;</a></h2>
+<h2 id="benchmarking-impact">Benchmarking Impact<a class="headerlink" href="#benchmarking-impact" title="Permanent link">&para;</a></h2>
 <p>To prove that object pooling actually reduces allocations and improves speed, we can use Go's built-in memory profiling tools (<code>pprof</code>) and compare memory allocations between the non-pooled and pooled versions. Simulating a full-scale application that actively uses memory for benchmarking is challenging, so we need a controlled test to evaluate direct heap allocations versus pooled allocations.</p>
-<h3 id="the-benchmark">The Benchmark<a class="headerlink" href="#the-benchmark" title="Permanent link">&para;</a></h3>
+<details class="example">
+<summary>Show the benchmark file</summary>
 <div class="highlight"><pre><span></span><code><span class="kn">package</span><span class="w"> </span><span class="nx">main</span>
 
 <span class="kn">import</span><span class="w"> </span><span class="p">(</span>
@@ -777,16 +736,27 @@
 <span class="w">    </span><span class="p">}</span>
 <span class="p">}</span>
 </code></pre></div>
-<h3 id="benchmark-results">Benchmark Results<a class="headerlink" href="#benchmark-results" title="Permanent link">&para;</a></h3>
+</details>
 <div class="highlight"><pre><span></span><code>BenchmarkWithoutPooling-14       1692014               705.4 ns/op          8192 B/op          1 allocs/op
 BenchmarkWithPooling-14         160440506                7.455 ns/op           0 B/op          0 allocs/op
 </code></pre></div>
-<h3 id="interpreting-the-results">Interpreting the Results<a class="headerlink" href="#interpreting-the-results" title="Permanent link">&para;</a></h3>
 <p>The benchmark results highlight the performance and memory usage differences between direct allocations and object pooling. The <code>BenchmarkWithoutPooling</code> function demonstrates higher execution time and memory consumption due to frequent heap allocations, resulting in increased garbage collection cycles. A nonzero allocation count confirms that each iteration incurs a heap allocation, contributing to GC overhead and slower performance.</p>
 <p>The memory allocation per operation appears larger than expected. Although the struct <code>Data</code> contains a <code>[1024]int</code> array, which is 4 KB (assuming <code>int</code> is 4 bytes on the architecture used), the actual allocated memory is <strong>8192 B/op</strong>. This discrepancy is due to Go’s memory allocation strategy, where the allocator efficiently rounds up allocations to fit into memory blocks. In many cases, Go’s runtime aligns struct allocations to the nearest power-of-two boundary, which may result in higher memory usage than the raw struct size.</p>
 <h2 id="when-should-you-use-syncpool">When Should You Use <code>sync.Pool</code>?<a class="headerlink" href="#when-should-you-use-syncpool" title="Permanent link">&para;</a></h2>
-<p>While <code>sync.Pool</code> is a powerful tool for optimizing memory usage, it is most effective in specific scenarios. It is beneficial when objects are expensive to allocate and frequently discarded, such as in networking, database connection management, or high-throughput data processing. In such cases, pooling helps reduce garbage collection overhead and improves performance.</p>
-<p>However, <code>sync.Pool</code> is not always the best choice. Explicit object management strategies may be more appropriate if objects are long-lived or persist beyond short-lived operations. Additionally, <code>sync.Pool</code> clears its contents on every garbage collection cycle, meaning objects that are not frequently reused may not benefit from pooling. The best use case for pooling is when frequent allocations create unnecessary GC pressure, and object reuse offers measurable improvements in efficiency.</p>
+<p>✅ Use sync.Pool when:</p>
+<ul>
+<li>You have short-lived, reusable objects (e.g., buffers, scratch memory, request state).</li>
+<li>Allocation overhead or GC churn is measurable and significant.</li>
+<li>The object’s lifecycle is local and can be reset between uses.</li>
+<li>You want to reduce pressure on the garbage collector in high-throughput systems.</li>
+</ul>
+<p>❌ Avoid sync.Pool when:</p>
+<ul>
+<li>Objects are long-lived or shared across multiple goroutines.</li>
+<li>The reuse rate is low—pooled objects are not frequently accessed.</li>
+<li>Predictability or lifecycle control is more important than allocation speed.</li>
+<li>Memory savings are negligible or code complexity increases significantly.</li>
+</ul>
 
 
 
@@ -794,6 +764,27 @@ BenchmarkWithPooling-14         160440506                7.455 ns/op           0
 
 
 
+  
+    
+  
+  
+
+
+  <aside class="md-source-file">
+    
+      
+  <span class="md-source-file__fact">
+    <span class="md-icon" title="Last update">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M21 13.1c-.1 0-.3.1-.4.2l-1 1 2.1 2.1 1-1c.2-.2.2-.6 0-.8l-1.3-1.3c-.1-.1-.2-.2-.4-.2m-1.9 1.8-6.1 6V23h2.1l6.1-6.1zM12.5 7v5.2l4 2.4-1 1L11 13V7zM11 21.9c-5.1-.5-9-4.8-9-9.9C2 6.5 6.5 2 12 2c5.3 0 9.6 4.1 10 9.3-.3-.1-.6-.2-1-.2s-.7.1-1 .2C19.6 7.2 16.2 4 12 4c-4.4 0-8 3.6-8 8 0 4.1 3.1 7.5 7.1 7.9l-.1.2z"/></svg>
+    </span>
+    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-date" title="March 22, 2025 12:15:30">March 22, 2025</span>
+  </span>
+
+    
+    
+    
+    
+  </aside>
 
 
 
@@ -833,7 +824,7 @@ BenchmarkWithPooling-14         160440506                7.455 ns/op           0
     </div>
     
     
-    <script id="__config" type="application/json">{"base": "../..", "features": ["navigation.indexes", "navigation.instant", "navigation.tracking", "search.suggest", "search.highlight"], "search": "../../assets/javascripts/workers/search.f8cc74c7.min.js", "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}}</script>
+    <script id="__config" type="application/json">{"base": "../..", "features": ["navigation.indexes", "navigation.instant", "navigation.tracking", "search.suggest", "search.highlight", "content.code.copy", "content.code.annotate"], "search": "../../assets/javascripts/workers/search.f8cc74c7.min.js", "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}}</script>
     
     
       <script src="../../assets/javascripts/bundle.c8b220af.min.js"></script>
