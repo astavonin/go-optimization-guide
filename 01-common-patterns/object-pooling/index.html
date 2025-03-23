@@ -33,6 +33,12 @@
       
       
 
+  
+  
+  
+  
+  <style>:root{--md-annotation-icon:url('data:image/svg+xml;charset=utf-8,%3Csvg%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%20viewBox%3D%220%200%2024%2024%22%3E%3Cpath%20d%3D%22M13%2013h-2V7h2m0%2010h-2v-2h2M12%202A10%2010%200%200%200%202%2012a10%2010%200%200%200%2010%2010%2010%2010%200%200%200%2010-10A10%2010%200%200%200%2012%202%22/%3E%3C/svg%3E');}</style>
+
 
     
     
@@ -262,6 +268,8 @@
       
         
       
+        
+      
     
     
     
@@ -473,6 +481,28 @@
   
   <span class="md-ellipsis">
     Efficient Buffering
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../worker-pool/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Goroutine Worker Pools
     
   </span>
   
@@ -696,7 +726,7 @@
 <p>To prove that object pooling actually reduces allocations and improves speed, we can use Go's built-in memory profiling tools (<code>pprof</code>) and compare memory allocations between the non-pooled and pooled versions. Simulating a full-scale application that actively uses memory for benchmarking is challenging, so we need a controlled test to evaluate direct heap allocations versus pooled allocations.</p>
 <details class="example">
 <summary>Show the benchmark file</summary>
-<div class="highlight"><pre><span></span><code><span class="kn">package</span><span class="w"> </span><span class="nx">main</span>
+<div class="highlight"><pre><span></span><code><span class="kn">package</span><span class="w"> </span><span class="nx">perf</span>
 
 <span class="kn">import</span><span class="w"> </span><span class="p">(</span>
 <span class="w">    </span><span class="s">&quot;testing&quot;</span>
