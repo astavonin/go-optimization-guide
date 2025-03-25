@@ -12,7 +12,7 @@ import (
 
 const (
 	numJobs     = 10000
-	// workerCount = runtime.NumCPU()
+	workerCount = 10
 )
 
 func doWork(n int) [32]byte {
@@ -48,7 +48,7 @@ func BenchmarkWorkerPool(b *testing.B) {
 		wg.Add(numJobs)
 
 		jobs := make(chan int, numJobs)
-		for w := 0; w < runtime.NumCPU()-2; w++ {
+		for w := 0; w < workerCount; w++ {
 			go worker(jobs, &wg)
 		}
 

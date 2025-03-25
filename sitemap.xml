@@ -21,6 +21,10 @@
          <lastmod>2025-03-25</lastmod>
     </url>
     <url>
+         <loc>https://astavonin.github.io/go-performance-book/01-common-patterns/interface-boxing/</loc>
+         <lastmod>2025-03-25</lastmod>
+    </url>
+    <url>
          <loc>https://astavonin.github.io/go-performance-book/01-common-patterns/mem-prealloc/</loc>
          <lastmod>2025-03-25</lastmod>
     </url>
