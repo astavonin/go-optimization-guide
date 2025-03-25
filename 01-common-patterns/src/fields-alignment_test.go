@@ -60,7 +60,7 @@ type SharedCounterGood struct {
 // shared-start
 
 func BenchmarkFalseSharing(b *testing.B) {
-    var c SharedCounterBad
+    var c SharedCounterBad  // (1)
     var wg sync.WaitGroup
 
     b.ResetTimer()
@@ -81,6 +81,7 @@ func BenchmarkFalseSharing(b *testing.B) {
         wg.Wait()
     }
 }
+// shared-end
 
 func BenchmarkNoFalseSharing(b *testing.B) {
     var c SharedCounterGood
@@ -105,4 +106,3 @@ func BenchmarkNoFalseSharing(b *testing.B) {
     }
 }
 
-// shared-end

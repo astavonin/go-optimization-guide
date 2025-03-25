@@ -679,6 +679,7 @@
 <p>The WellAligned version reduced memory usage by 80MB for 10 million structs and also ran slightly faster than the poorly aligned version. This highlights that thoughtful field arrangement improves memory efficiency and can yield modest performance gains in allocation-heavy code paths.</p>
 <h2 id="avoiding-false-sharing-in-concurrent-workloads">Avoiding False Sharing in Concurrent Workloads<a class="headerlink" href="#avoiding-false-sharing-in-concurrent-workloads" title="Permanent link">&para;</a></h2>
 <p>In addition to memory layout efficiency, struct alignment also plays a crucial role in concurrent systems. When multiple goroutines access different fields of the same struct that reside on the same CPU cache line, they may suffer from false sharing—where changes to one field cause invalidations in the other, even if logically unrelated.</p>
+<p>On modern CPUs, a typical cache line is 64 bytes wide. When a struct is accessed in memory, the CPU loads the entire cache line that contains it, not just the specific field. This means that two unrelated fields within the same 64-byte block will both reside in the same line—even if they are used independently by separate goroutines. If one goroutine writes to its field, the cache line becomes invalidated and must be reloaded on the other core, leading to degraded performance due to false sharing.</p>
 <p>To illustrate, we compared two structs—one vulnerable to false sharing, and another with padding to separate fields across cache lines:</p>
 <div class="highlight"><pre><span></span><code><span class="kd">type</span><span class="w"> </span><span class="nx">SharedCounterBad</span><span class="w"> </span><span class="kd">struct</span><span class="w"> </span><span class="p">{</span>
 <span class="w">    </span><span class="nx">a</span><span class="w"> </span><span class="kt">int64</span>
@@ -693,30 +694,7 @@
 </code></pre></div>
 <p>Each field is incremented by a separate goroutine 1 million times:</p>
 <div class="highlight"><pre><span></span><code><span class="kd">func</span><span class="w"> </span><span class="nx">BenchmarkFalseSharing</span><span class="p">(</span><span class="nx">b</span><span class="w"> </span><span class="o">*</span><span class="nx">testing</span><span class="p">.</span><span class="nx">B</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
-<span class="w">    </span><span class="kd">var</span><span class="w"> </span><span class="nx">c</span><span class="w"> </span><span class="nx">SharedCounterBad</span>
-<span class="w">    </span><span class="kd">var</span><span class="w"> </span><span class="nx">wg</span><span class="w"> </span><span class="nx">sync</span><span class="p">.</span><span class="nx">WaitGroup</span>
-
-<span class="w">    </span><span class="nx">b</span><span class="p">.</span><span class="nx">ResetTimer</span><span class="p">()</span>
-<span class="w">    </span><span class="k">for</span><span class="w"> </span><span class="nx">i</span><span class="w"> </span><span class="o">:=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="nx">i</span><span class="w"> </span><span class="p">&lt;</span><span class="w"> </span><span class="nx">b</span><span class="p">.</span><span class="nx">N</span><span class="p">;</span><span class="w"> </span><span class="nx">i</span><span class="o">++</span><span class="w"> </span><span class="p">{</span>
-<span class="w">        </span><span class="nx">wg</span><span class="p">.</span><span class="nx">Add</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span>
-<span class="w">        </span><span class="k">go</span><span class="w"> </span><span class="kd">func</span><span class="p">()</span><span class="w"> </span><span class="p">{</span>
-<span class="w">            </span><span class="k">for</span><span class="w"> </span><span class="nx">i</span><span class="w"> </span><span class="o">:=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="nx">i</span><span class="w"> </span><span class="p">&lt;</span><span class="w"> </span><span class="mi">1</span><span class="nx">_000_000</span><span class="p">;</span><span class="w"> </span><span class="nx">i</span><span class="o">++</span><span class="w"> </span><span class="p">{</span>
-<span class="w">                </span><span class="nx">c</span><span class="p">.</span><span class="nx">a</span><span class="o">++</span>
-<span class="w">            </span><span class="p">}</span>
-<span class="w">            </span><span class="nx">wg</span><span class="p">.</span><span class="nx">Done</span><span class="p">()</span>
-<span class="w">        </span><span class="p">}()</span>
-<span class="w">        </span><span class="k">go</span><span class="w"> </span><span class="kd">func</span><span class="p">()</span><span class="w"> </span><span class="p">{</span>
-<span class="w">            </span><span class="k">for</span><span class="w"> </span><span class="nx">i</span><span class="w"> </span><span class="o">:=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="nx">i</span><span class="w"> </span><span class="p">&lt;</span><span class="w"> </span><span class="mi">1</span><span class="nx">_000_000</span><span class="p">;</span><span class="w"> </span><span class="nx">i</span><span class="o">++</span><span class="w"> </span><span class="p">{</span>
-<span class="w">                </span><span class="nx">c</span><span class="p">.</span><span class="nx">b</span><span class="o">++</span>
-<span class="w">            </span><span class="p">}</span>
-<span class="w">            </span><span class="nx">wg</span><span class="p">.</span><span class="nx">Done</span><span class="p">()</span>
-<span class="w">        </span><span class="p">}()</span>
-<span class="w">        </span><span class="nx">wg</span><span class="p">.</span><span class="nx">Wait</span><span class="p">()</span>
-<span class="w">    </span><span class="p">}</span>
-<span class="p">}</span>
-
-<span class="kd">func</span><span class="w"> </span><span class="nx">BenchmarkNoFalseSharing</span><span class="p">(</span><span class="nx">b</span><span class="w"> </span><span class="o">*</span><span class="nx">testing</span><span class="p">.</span><span class="nx">B</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
-<span class="w">    </span><span class="kd">var</span><span class="w"> </span><span class="nx">c</span><span class="w"> </span><span class="nx">SharedCounterGood</span>
+<span class="w">    </span><span class="kd">var</span><span class="w"> </span><span class="nx">c</span><span class="w"> </span><span class="nx">SharedCounterBad</span><span class="w">  </span><span class="c1">// (1)</span>
 <span class="w">    </span><span class="kd">var</span><span class="w"> </span><span class="nx">wg</span><span class="w"> </span><span class="nx">sync</span><span class="p">.</span><span class="nx">WaitGroup</span>
 
 <span class="w">    </span><span class="nx">b</span><span class="p">.</span><span class="nx">ResetTimer</span><span class="p">()</span>
@@ -738,6 +716,9 @@
 <span class="w">    </span><span class="p">}</span>
 <span class="p">}</span>
 </code></pre></div>
+<ol>
+<li><code>FalseSharing</code> and <code>NoFalseSharing</code> benchmarks are identical, except we will use <code>BenchmarkNoFalseSharing</code> for the <code>NoFalseSharing</code> benchmark.</li>
+</ol>
 <p>Benchmark Results:</p>
 <table>
 <thead>
@@ -763,7 +744,7 @@
 </tr>
 </tbody>
 </table>
-<p>Placing padding between the two fields prevented false sharing, resulting in a measurable performance improvement. The version with padding completed ~3.8% faster (the value could vary between runs from 3% to 6%), which can make a difference in tight concurrent loops or high-frequency counters. It also shows how false sharing may unpredictably affect memory use due to invalidation overhead.</p>
+<p>Placing padding between the two fields prevented false sharing, resulting in a measurable performance improvement. The version with padding completed ~3.8% faster (the value could vary between re-runs from 3% to 6%), which can make a difference in tight concurrent loops or high-frequency counters. It also shows how false sharing may unpredictably affect memory use due to invalidation overhead.</p>
 <details class="example">
 <summary>Show the complete benchmark file</summary>
 <div class="highlight"><pre><span></span><code><span class="kn">package</span><span class="w"> </span><span class="nx">perf</span>
@@ -828,7 +809,7 @@
 <span class="c1">// shared-start</span>
 
 <span class="kd">func</span><span class="w"> </span><span class="nx">BenchmarkFalseSharing</span><span class="p">(</span><span class="nx">b</span><span class="w"> </span><span class="o">*</span><span class="nx">testing</span><span class="p">.</span><span class="nx">B</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
-<span class="w">    </span><span class="kd">var</span><span class="w"> </span><span class="nx">c</span><span class="w"> </span><span class="nx">SharedCounterBad</span>
+<span class="w">    </span><span class="kd">var</span><span class="w"> </span><span class="nx">c</span><span class="w"> </span><span class="nx">SharedCounterBad</span><span class="w">  </span><span class="c1">// (1)</span>
 <span class="w">    </span><span class="kd">var</span><span class="w"> </span><span class="nx">wg</span><span class="w"> </span><span class="nx">sync</span><span class="p">.</span><span class="nx">WaitGroup</span>
 
 <span class="w">    </span><span class="nx">b</span><span class="p">.</span><span class="nx">ResetTimer</span><span class="p">()</span>
@@ -849,6 +830,7 @@
 <span class="w">        </span><span class="nx">wg</span><span class="p">.</span><span class="nx">Wait</span><span class="p">()</span>
 <span class="w">    </span><span class="p">}</span>
 <span class="p">}</span>
+<span class="c1">// shared-end</span>
 
 <span class="kd">func</span><span class="w"> </span><span class="nx">BenchmarkNoFalseSharing</span><span class="p">(</span><span class="nx">b</span><span class="w"> </span><span class="o">*</span><span class="nx">testing</span><span class="p">.</span><span class="nx">B</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
 <span class="w">    </span><span class="kd">var</span><span class="w"> </span><span class="nx">c</span><span class="w"> </span><span class="nx">SharedCounterGood</span>
@@ -872,8 +854,6 @@
 <span class="w">        </span><span class="nx">wg</span><span class="p">.</span><span class="nx">Wait</span><span class="p">()</span>
 <span class="w">    </span><span class="p">}</span>
 <span class="p">}</span>
-
-<span class="c1">// shared-end</span>
 </code></pre></div>
 </details>
 <h2 id="when-to-alignment-structs">When To Alignment Structs<a class="headerlink" href="#when-to-alignment-structs" title="Permanent link">&para;</a></h2>
