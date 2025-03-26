@@ -9,6 +9,10 @@
          <lastmod>2025-03-26</lastmod>
     </url>
     <url>
+         <loc>https://astavonin.github.io/go-performance-book/01-common-patterns/atomic-ops/</loc>
+         <lastmod>2025-03-26</lastmod>
+    </url>
+    <url>
          <loc>https://astavonin.github.io/go-performance-book/01-common-patterns/batching-ops/</loc>
          <lastmod>2025-03-26</lastmod>
     </url>
