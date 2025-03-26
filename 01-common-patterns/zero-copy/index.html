@@ -8,13 +8,11 @@
       
       
       
-        <link rel="canonical" href="https://astavonin.github.io/go-performance-book/01-common-patterns/interface-boxing/">
+        <link rel="canonical" href="https://astavonin.github.io/go-performance-book/01-common-patterns/zero-copy/">
       
       
-        <link rel="prev" href="../fields-alignment/">
+        <link rel="prev" href="../interface-boxing/">
       
-      
-        <link rel="next" href="../zero-copy/">
       
       
       <link rel="icon" href="../../assets/images/favicon.png">
@@ -22,7 +20,7 @@
     
     
       
-        <title>Avoiding Interface Boxing - Go Performance Patterns</title>
+        <title>Zero-Copy Techniques - Go Performance Patterns</title>
       
     
     
@@ -78,7 +76,7 @@
     <div data-md-component="skip">
       
         
-        <a href="#avoiding-interface-boxing" class="md-skip">
+        <a href="#zero-copy-techniques-in-go" class="md-skip">
           Skip to content
         </a>
       
@@ -114,7 +112,7 @@
         <div class="md-header__topic" data-md-component="header-topic">
           <span class="md-ellipsis">
             
-              Avoiding Interface Boxing
+              Zero-Copy Techniques
             
           </span>
         </div>
@@ -453,6 +451,28 @@
                 
   
   
+  
+  
+    <li class="md-nav__item">
+      <a href="../interface-boxing/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Avoiding Interface Boxing
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
     
   
   
@@ -469,7 +489,7 @@
           
   
   <span class="md-ellipsis">
-    Avoiding Interface Boxing
+    Zero-Copy Techniques
     
   </span>
   
@@ -481,7 +501,7 @@
         
   
   <span class="md-ellipsis">
-    Avoiding Interface Boxing
+    Zero-Copy Techniques
     
   </span>
   
@@ -504,46 +524,46 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#what-is-interface-boxing" class="md-nav__link">
+  <a href="#understanding-zero-copy" class="md-nav__link">
     <span class="md-ellipsis">
-      What is Interface Boxing?
+      Understanding Zero-Copy
     </span>
   </a>
   
 </li>
       
         <li class="md-nav__item">
-  <a href="#why-it-matters" class="md-nav__link">
+  <a href="#common-zero-copy-techniques-in-go" class="md-nav__link">
     <span class="md-ellipsis">
-      Why It Matters
+      Common Zero-Copy Techniques in Go
     </span>
   </a>
   
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#benchmarking-impact" class="md-nav__link">
-    <span class="md-ellipsis">
-      Benchmarking Impact
-    </span>
-  </a>
-  
-    <nav class="md-nav" aria-label="Benchmarking Impact">
+    <nav class="md-nav" aria-label="Common Zero-Copy Techniques in Go">
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
-  <a href="#boxing-large-structs" class="md-nav__link">
+  <a href="#using-ioreader-and-iowriter-interfaces" class="md-nav__link">
     <span class="md-ellipsis">
-      Boxing Large Structs
+      Using io.Reader and io.Writer Interfaces
     </span>
   </a>
   
 </li>
         
           <li class="md-nav__item">
-  <a href="#passing-to-a-function-that-accepts-an-interface" class="md-nav__link">
+  <a href="#slicing-for-efficient-data-access" class="md-nav__link">
     <span class="md-ellipsis">
-      Passing to a Function That Accepts an Interface
+      Slicing for Efficient Data Access
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#memory-mapping-mmap" class="md-nav__link">
+    <span class="md-ellipsis">
+      Memory Mapping (mmap)
     </span>
   </a>
   
@@ -555,46 +575,19 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#when-interface-boxing-is-acceptable" class="md-nav__link">
+  <a href="#performance-benchmark" class="md-nav__link">
     <span class="md-ellipsis">
-      When Interface Boxing Is Acceptable
+      Performance Benchmark
     </span>
   </a>
   
-    <nav class="md-nav" aria-label="When Interface Boxing Is Acceptable">
+    <nav class="md-nav" aria-label="Performance Benchmark">
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
-  <a href="#when-abstraction-is-more-important-than-performance" class="md-nav__link">
+  <a href="#file-io-memory-mapping-vs-standard-read" class="md-nav__link">
     <span class="md-ellipsis">
-      When abstraction is more important than performance
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#when-values-are-small-and-boxing-is-allocation-free" class="md-nav__link">
-    <span class="md-ellipsis">
-      When values are small and boxing is allocation-free
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#when-values-are-short-lived" class="md-nav__link">
-    <span class="md-ellipsis">
-      When values are short-lived
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#when-dynamic-behavior-is-required" class="md-nav__link">
-    <span class="md-ellipsis">
-      When dynamic behavior is required
+      File I/O: Memory Mapping vs. Standard Read
     </span>
   </a>
   
@@ -606,11 +599,26 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#how-to-avoid-interface-boxing" class="md-nav__link">
+  <a href="#when-to-use-zero-copy" class="md-nav__link">
     <span class="md-ellipsis">
-      How to Avoid Interface Boxing
+      When to Use Zero-Copy
     </span>
   </a>
+  
+    <nav class="md-nav" aria-label="When to Use Zero-Copy">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#real-world-use-cases-and-libraries" class="md-nav__link">
+    <span class="md-ellipsis">
+      Real-World Use Cases and Libraries
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
   
 </li>
       
@@ -618,28 +626,6 @@
   
 </nav>
       
-    </li>
-  
-
-              
-            
-              
-                
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../zero-copy/" class="md-nav__link">
-        
-  
-  <span class="md-ellipsis">
-    Zero-Copy Techniques
-    
-  </span>
-  
-
-      </a>
     </li>
   
 
@@ -679,46 +665,46 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#what-is-interface-boxing" class="md-nav__link">
+  <a href="#understanding-zero-copy" class="md-nav__link">
     <span class="md-ellipsis">
-      What is Interface Boxing?
+      Understanding Zero-Copy
     </span>
   </a>
   
 </li>
       
         <li class="md-nav__item">
-  <a href="#why-it-matters" class="md-nav__link">
+  <a href="#common-zero-copy-techniques-in-go" class="md-nav__link">
     <span class="md-ellipsis">
-      Why It Matters
+      Common Zero-Copy Techniques in Go
     </span>
   </a>
   
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#benchmarking-impact" class="md-nav__link">
-    <span class="md-ellipsis">
-      Benchmarking Impact
-    </span>
-  </a>
-  
-    <nav class="md-nav" aria-label="Benchmarking Impact">
+    <nav class="md-nav" aria-label="Common Zero-Copy Techniques in Go">
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
-  <a href="#boxing-large-structs" class="md-nav__link">
+  <a href="#using-ioreader-and-iowriter-interfaces" class="md-nav__link">
     <span class="md-ellipsis">
-      Boxing Large Structs
+      Using io.Reader and io.Writer Interfaces
     </span>
   </a>
   
 </li>
         
           <li class="md-nav__item">
-  <a href="#passing-to-a-function-that-accepts-an-interface" class="md-nav__link">
+  <a href="#slicing-for-efficient-data-access" class="md-nav__link">
     <span class="md-ellipsis">
-      Passing to a Function That Accepts an Interface
+      Slicing for Efficient Data Access
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#memory-mapping-mmap" class="md-nav__link">
+    <span class="md-ellipsis">
+      Memory Mapping (mmap)
     </span>
   </a>
   
@@ -730,46 +716,19 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#when-interface-boxing-is-acceptable" class="md-nav__link">
+  <a href="#performance-benchmark" class="md-nav__link">
     <span class="md-ellipsis">
-      When Interface Boxing Is Acceptable
+      Performance Benchmark
     </span>
   </a>
   
-    <nav class="md-nav" aria-label="When Interface Boxing Is Acceptable">
+    <nav class="md-nav" aria-label="Performance Benchmark">
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
-  <a href="#when-abstraction-is-more-important-than-performance" class="md-nav__link">
+  <a href="#file-io-memory-mapping-vs-standard-read" class="md-nav__link">
     <span class="md-ellipsis">
-      When abstraction is more important than performance
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#when-values-are-small-and-boxing-is-allocation-free" class="md-nav__link">
-    <span class="md-ellipsis">
-      When values are small and boxing is allocation-free
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#when-values-are-short-lived" class="md-nav__link">
-    <span class="md-ellipsis">
-      When values are short-lived
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#when-dynamic-behavior-is-required" class="md-nav__link">
-    <span class="md-ellipsis">
-      When dynamic behavior is required
+      File I/O: Memory Mapping vs. Standard Read
     </span>
   </a>
   
@@ -781,11 +740,26 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#how-to-avoid-interface-boxing" class="md-nav__link">
+  <a href="#when-to-use-zero-copy" class="md-nav__link">
     <span class="md-ellipsis">
-      How to Avoid Interface Boxing
+      When to Use Zero-Copy
     </span>
   </a>
+  
+    <nav class="md-nav" aria-label="When to Use Zero-Copy">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#real-world-use-cases-and-libraries" class="md-nav__link">
+    <span class="md-ellipsis">
+      Real-World Use Cases and Libraries
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
   
 </li>
       
@@ -808,90 +782,140 @@
   
 
 
-<h1 id="avoiding-interface-boxing">Avoiding Interface Boxing<a class="headerlink" href="#avoiding-interface-boxing" title="Permanent link">&para;</a></h1>
-<p>Interfaces in Go are a powerful abstraction mechanism, enabling polymorphism and decoupled designs. But this flexibility comes with a hidden cost. When a value is assigned to an interface, Go performs what’s known as interface boxing—wrapping the value in a structure that holds type information and a pointer to the actual data.</p>
-<p>Boxing may seem harmless, but in performance-critical code paths it can lead to hidden heap allocations, unnecessary memory copying, and garbage collection pressure. These issues often go unnoticed until they surface as latency spikes or memory inefficiencies in production.</p>
-<p>Understanding when boxing happens—and how to avoid it—can significantly improve the efficiency of your Go application.</p>
-<h2 id="what-is-interface-boxing">What is Interface Boxing?<a class="headerlink" href="#what-is-interface-boxing" title="Permanent link">&para;</a></h2>
-<p>Interface boxing refers to the process of converting a concrete value to an interface type. In Go, an interface value consists of two parts internally:</p>
-<ul>
-<li>A <strong>type descriptor</strong>, which describes the concrete type.</li>
-<li>A <strong>data pointer</strong>, which points to the actual value.</li>
-</ul>
-<p>When you assign a value to an interface variable, Go creates this two-word structure under the hood. If the value is a non-pointer (a struct or a primitive) and is not already heap-allocated, Go <strong>may</strong> allocate a copy of it on the heap. This is especially relevant when the value is large or when it's stored in a slice of interfaces.</p>
-<p>Here’s a simple example:</p>
-<div class="highlight"><pre><span></span><code><span class="kd">var</span><span class="w"> </span><span class="nx">i</span><span class="w"> </span><span class="kd">interface</span><span class="p">{}</span>
-<span class="nx">i</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="mi">42</span>
+<h1 id="zero-copy-techniques-in-go">Zero-Copy Techniques in Go<a class="headerlink" href="#zero-copy-techniques-in-go" title="Permanent link">&para;</a></h1>
+<p>Managing memory wisely can make a noticeable difference when writing performance-critical Go code. Zero-copy techniques are particularly effective because they avoid unnecessary memory copying by directly manipulating data buffers. By doing so, these techniques significantly enhance throughput and reduce latency, making them highly beneficial for applications that handle intensive I/O operations.</p>
+<h2 id="understanding-zero-copy">Understanding Zero-Copy<a class="headerlink" href="#understanding-zero-copy" title="Permanent link">&para;</a></h2>
+<p>Traditionally, reading or writing data involves copying between user-space buffers and kernel-space buffers, incurring CPU and memory overhead. Zero-copy techniques bypass these intermediate copying steps, allowing applications to access and process data directly from the underlying buffers. This approach significantly reduces CPU load, memory bandwidth, and latency.</p>
+<h2 id="common-zero-copy-techniques-in-go">Common Zero-Copy Techniques in Go<a class="headerlink" href="#common-zero-copy-techniques-in-go" title="Permanent link">&para;</a></h2>
+<h3 id="using-ioreader-and-iowriter-interfaces">Using <code>io.Reader</code> and <code>io.Writer</code> Interfaces<a class="headerlink" href="#using-ioreader-and-iowriter-interfaces" title="Permanent link">&para;</a></h3>
+<p>Leveraging interfaces such as <code>io.Reader</code> and <code>io.Writer</code> can facilitate efficient buffer reuse and minimize copying:</p>
+<div class="highlight"><pre><span></span><code><span class="kd">func</span><span class="w"> </span><span class="nx">StreamData</span><span class="p">(</span><span class="nx">src</span><span class="w"> </span><span class="nx">io</span><span class="p">.</span><span class="nx">Reader</span><span class="p">,</span><span class="w"> </span><span class="nx">dst</span><span class="w"> </span><span class="nx">io</span><span class="p">.</span><span class="nx">Writer</span><span class="p">)</span><span class="w"> </span><span class="kt">error</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="nx">buf</span><span class="w"> </span><span class="o">:=</span><span class="w"> </span><span class="nb">make</span><span class="p">([]</span><span class="kt">byte</span><span class="p">,</span><span class="w"> </span><span class="mi">4096</span><span class="p">)</span><span class="w"> </span><span class="c1">// Reusable buffer</span>
+<span class="w">    </span><span class="nx">_</span><span class="p">,</span><span class="w"> </span><span class="nx">err</span><span class="w"> </span><span class="o">:=</span><span class="w"> </span><span class="nx">io</span><span class="p">.</span><span class="nx">CopyBuffer</span><span class="p">(</span><span class="nx">dst</span><span class="p">,</span><span class="w"> </span><span class="nx">src</span><span class="p">,</span><span class="w"> </span><span class="nx">buf</span><span class="p">)</span>
+<span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="nx">err</span>
+<span class="p">}</span>
 </code></pre></div>
-<p>In this case, the integer <code>42</code> is boxed into an interface: Go stores the type information (<code>int</code>) and a copy of the value <code>42</code>. This is inexpensive for small values like <code>int</code>, but for large structs, the cost becomes non-trivial.</p>
-<p>Another example:</p>
-<div class="highlight"><pre><span></span><code><span class="kd">type</span><span class="w"> </span><span class="nx">Shape</span><span class="w"> </span><span class="kd">interface</span><span class="w"> </span><span class="p">{</span>
-<span class="w">    </span><span class="nx">Area</span><span class="p">()</span><span class="w"> </span><span class="kt">float64</span>
+<p><code>io.CopyBuffer</code> reuses a provided buffer, avoiding repeated allocations and intermediate copies. An in-depth <code>io.CopyBuffer</code> explanation is <a href="https://stackoverflow.com/questions/71082021/what-exactly-is-buffer-last-parameter-in-io-copybuffer">available on SO</a>.</p>
+<h3 id="slicing-for-efficient-data-access">Slicing for Efficient Data Access<a class="headerlink" href="#slicing-for-efficient-data-access" title="Permanent link">&para;</a></h3>
+<p>Slicing large byte arrays or buffers instead of copying data into new slices is a powerful zero-copy strategy:</p>
+<div class="highlight"><pre><span></span><code><span class="kd">func</span><span class="w"> </span><span class="nx">process</span><span class="p">(</span><span class="nx">buffer</span><span class="w"> </span><span class="p">[]</span><span class="kt">byte</span><span class="p">)</span><span class="w"> </span><span class="p">[]</span><span class="kt">byte</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="nx">buffer</span><span class="p">[</span><span class="mi">128</span><span class="p">:</span><span class="mi">256</span><span class="p">]</span><span class="w"> </span><span class="c1">// returns a slice reference without copying</span>
+<span class="p">}</span>
+</code></pre></div>
+<p>Slices in Go are inherently zero-copy since they reference the underlying array.</p>
+<h3 id="memory-mapping-mmap">Memory Mapping (<code>mmap</code>)<a class="headerlink" href="#memory-mapping-mmap" title="Permanent link">&para;</a></h3>
+<p>Using memory mapping enables direct access to file contents without explicit read operations:</p>
+<div class="highlight"><pre><span></span><code><span class="kn">import</span><span class="w"> </span><span class="s">&quot;golang.org/x/exp/mmap&quot;</span>
+
+<span class="kd">func</span><span class="w"> </span><span class="nx">ReadFileZeroCopy</span><span class="p">(</span><span class="nx">path</span><span class="w"> </span><span class="kt">string</span><span class="p">)</span><span class="w"> </span><span class="p">([]</span><span class="kt">byte</span><span class="p">,</span><span class="w"> </span><span class="kt">error</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="nx">r</span><span class="p">,</span><span class="w"> </span><span class="nx">err</span><span class="w"> </span><span class="o">:=</span><span class="w"> </span><span class="nx">mmap</span><span class="p">.</span><span class="nx">Open</span><span class="p">(</span><span class="nx">path</span><span class="p">)</span>
+<span class="w">    </span><span class="k">if</span><span class="w"> </span><span class="nx">err</span><span class="w"> </span><span class="o">!=</span><span class="w"> </span><span class="kc">nil</span><span class="w"> </span><span class="p">{</span>
+<span class="w">        </span><span class="k">return</span><span class="w"> </span><span class="kc">nil</span><span class="p">,</span><span class="w"> </span><span class="nx">err</span>
+<span class="w">    </span><span class="p">}</span>
+<span class="w">    </span><span class="k">defer</span><span class="w"> </span><span class="nx">r</span><span class="p">.</span><span class="nx">Close</span><span class="p">()</span>
+
+<span class="w">    </span><span class="nx">data</span><span class="w"> </span><span class="o">:=</span><span class="w"> </span><span class="nb">make</span><span class="p">([]</span><span class="kt">byte</span><span class="p">,</span><span class="w"> </span><span class="nx">r</span><span class="p">.</span><span class="nx">Len</span><span class="p">())</span>
+<span class="w">    </span><span class="nx">_</span><span class="p">,</span><span class="w"> </span><span class="nx">err</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="nx">r</span><span class="p">.</span><span class="nx">ReadAt</span><span class="p">(</span><span class="nx">data</span><span class="p">,</span><span class="w"> </span><span class="mi">0</span><span class="p">)</span>
+<span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="nx">data</span><span class="p">,</span><span class="w"> </span><span class="nx">err</span>
+<span class="p">}</span>
+</code></pre></div>
+<p>This approach maps file contents directly into memory, entirely eliminating copying between kernel and user-space.</p>
+<h2 id="performance-benchmark">Performance Benchmark<a class="headerlink" href="#performance-benchmark" title="Permanent link">&para;</a></h2>
+<p>Here's a basic benchmark illustrating performance differences between explicit copying and zero-copy slicing:</p>
+<div class="highlight"><pre><span></span><code><span class="kd">var</span><span class="w"> </span><span class="nx">sink</span><span class="w"> </span><span class="p">[]</span><span class="kt">byte</span>
+
+<span class="kd">func</span><span class="w"> </span><span class="nx">BenchmarkCopy</span><span class="p">(</span><span class="nx">b</span><span class="w"> </span><span class="o">*</span><span class="nx">testing</span><span class="p">.</span><span class="nx">B</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="nx">data</span><span class="w"> </span><span class="o">:=</span><span class="w"> </span><span class="nb">make</span><span class="p">([]</span><span class="kt">byte</span><span class="p">,</span><span class="w"> </span><span class="mi">64</span><span class="o">*</span><span class="mi">1024</span><span class="p">)</span>
+<span class="w">    </span><span class="k">for</span><span class="w"> </span><span class="nx">i</span><span class="w"> </span><span class="o">:=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="nx">i</span><span class="w"> </span><span class="p">&lt;</span><span class="w"> </span><span class="nx">b</span><span class="p">.</span><span class="nx">N</span><span class="p">;</span><span class="w"> </span><span class="nx">i</span><span class="o">++</span><span class="w"> </span><span class="p">{</span>
+<span class="w">        </span><span class="nx">buf</span><span class="w"> </span><span class="o">:=</span><span class="w"> </span><span class="nb">make</span><span class="p">([]</span><span class="kt">byte</span><span class="p">,</span><span class="w"> </span><span class="nb">len</span><span class="p">(</span><span class="nx">data</span><span class="p">))</span>
+<span class="w">        </span><span class="nb">copy</span><span class="p">(</span><span class="nx">buf</span><span class="p">,</span><span class="w"> </span><span class="nx">data</span><span class="p">)</span>
+<span class="w">        </span><span class="nx">sink</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="nx">buf</span>
+<span class="w">    </span><span class="p">}</span>
 <span class="p">}</span>
 
-<span class="kd">type</span><span class="w"> </span><span class="nx">Square</span><span class="w"> </span><span class="kd">struct</span><span class="w"> </span><span class="p">{</span>
-<span class="w">    </span><span class="nx">Size</span><span class="w"> </span><span class="kt">float64</span>
-<span class="p">}</span>
-
-<span class="kd">func</span><span class="w"> </span><span class="p">(</span><span class="nx">s</span><span class="w"> </span><span class="nx">Square</span><span class="p">)</span><span class="w"> </span><span class="nx">Area</span><span class="p">()</span><span class="w"> </span><span class="kt">float64</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="k">return</span><span class="w"> </span><span class="nx">s</span><span class="p">.</span><span class="nx">Size</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="nx">s</span><span class="p">.</span><span class="nx">Size</span><span class="w"> </span><span class="p">}</span>
-
-<span class="kd">func</span><span class="w"> </span><span class="nx">main</span><span class="p">()</span><span class="w"> </span><span class="p">{</span>
-<span class="w">    </span><span class="kd">var</span><span class="w"> </span><span class="nx">shapes</span><span class="w"> </span><span class="p">[]</span><span class="nx">Shape</span>
-<span class="w">    </span><span class="k">for</span><span class="w"> </span><span class="nx">i</span><span class="w"> </span><span class="o">:=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="nx">i</span><span class="w"> </span><span class="p">&lt;</span><span class="w"> </span><span class="mi">1000</span><span class="p">;</span><span class="w"> </span><span class="nx">i</span><span class="o">++</span><span class="w"> </span><span class="p">{</span>
-<span class="w">        </span><span class="nx">s</span><span class="w"> </span><span class="o">:=</span><span class="w"> </span><span class="nx">Square</span><span class="p">{</span><span class="nx">Size</span><span class="p">:</span><span class="w"> </span><span class="nb">float64</span><span class="p">(</span><span class="nx">i</span><span class="p">)}</span>
-<span class="w">        </span><span class="nx">shapes</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="nb">append</span><span class="p">(</span><span class="nx">shapes</span><span class="p">,</span><span class="w"> </span><span class="nx">s</span><span class="p">)</span><span class="w"> </span><span class="c1">// boxing occurs here</span>
+<span class="kd">func</span><span class="w"> </span><span class="nx">BenchmarkSlice</span><span class="p">(</span><span class="nx">b</span><span class="w"> </span><span class="o">*</span><span class="nx">testing</span><span class="p">.</span><span class="nx">B</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="nx">data</span><span class="w"> </span><span class="o">:=</span><span class="w"> </span><span class="nb">make</span><span class="p">([]</span><span class="kt">byte</span><span class="p">,</span><span class="w"> </span><span class="mi">64</span><span class="o">*</span><span class="mi">1024</span><span class="p">)</span>
+<span class="w">    </span><span class="k">for</span><span class="w"> </span><span class="nx">i</span><span class="w"> </span><span class="o">:=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="nx">i</span><span class="w"> </span><span class="p">&lt;</span><span class="w"> </span><span class="nx">b</span><span class="p">.</span><span class="nx">N</span><span class="p">;</span><span class="w"> </span><span class="nx">i</span><span class="o">++</span><span class="w"> </span><span class="p">{</span>
+<span class="w">        </span><span class="nx">s</span><span class="w"> </span><span class="o">:=</span><span class="w"> </span><span class="nx">data</span><span class="p">[:]</span>
+<span class="w">        </span><span class="nx">sink</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="nx">s</span>
 <span class="w">    </span><span class="p">}</span>
 <span class="p">}</span>
 </code></pre></div>
-<div class="admonition warning">
-<p class="admonition-title">Warning</p>
-<p><strong>Pay attention to this code!</strong> In this example, even though <code>shapes</code> is a slice of interfaces, each <code>Square</code> value is copied into an interface when appended to <code>shapes</code>. If <code>Square</code> were a large struct, this would introduce 1000 allocations and large memory copying.</p>
+<p>In <code>BenchmarkCopy</code>, a 64KB buffer is copied into a new slice during every iteration, incurring both memory allocation and data copy overhead. In contrast, <code>BenchmarkSlice</code> simply re-slices the same buffer without any allocation or copying. This demonstrates how zero-copy operations like slicing can vastly outperform traditional copying under load.</p>
+<div class="admonition info">
+<p class="admonition-title">Info</p>
+<p>These two functions are not equivalent in behavior—<code>BenchmarkCopy</code> makes an actual deep copy of the buffer, while <code>BenchmarkSlice</code> only creates a new slice header pointing to the same underlying data. This benchmark is not comparing functional correctness but is intentionally contrasting performance characteristics to highlight the cost of unnecessary copying.</p>
+<table>
+<thead>
+<tr>
+<th>Benchmark</th>
+<th>ns/op</th>
+<th>B/op</th>
+<th>allocs/op</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>BenchmarkCopy</td>
+<td>4,246</td>
+<td>65536</td>
+<td>1</td>
+</tr>
+<tr>
+<td>BenchmarkSlice</td>
+<td>0.592</td>
+<td>0</td>
+<td>0</td>
+</tr>
+</tbody>
+</table>
 </div>
-<p>To avoid that, you could pass pointers:</p>
-<div class="highlight"><pre><span></span><code><span class="w">        </span><span class="nx">shapes</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="nb">append</span><span class="p">(</span><span class="nx">shapes</span><span class="p">,</span><span class="w"> </span><span class="o">&amp;</span><span class="nx">s</span><span class="p">)</span><span class="w"> </span><span class="c1">// avoids large struct copy</span>
-</code></pre></div>
-<p>This way, only an 8-byte pointer is stored in the interface, reducing both allocation size and copying overhead.</p>
-<h2 id="why-it-matters">Why It Matters<a class="headerlink" href="#why-it-matters" title="Permanent link">&para;</a></h2>
-<p>In tight loops or high-throughput paths, such as unmarshalling JSON, rendering templates, or processing large collections, interface boxing can degrade performance by triggering unnecessary heap allocations and increasing GC pressure. This overhead is especially costly in systems with high concurrency or real-time responsiveness constraints.</p>
-<p>Boxing can also make profiling and benchmarking misleading, since allocations attributed to innocuous-looking lines may actually stem from implicit conversions to interfaces.</p>
-<h2 id="benchmarking-impact">Benchmarking Impact<a class="headerlink" href="#benchmarking-impact" title="Permanent link">&para;</a></h2>
-<p>For the benchmarking we will define an interface and a struct with a significant payload that implements the interface.</p>
-<div class="highlight"><pre><span></span><code><span class="kd">type</span><span class="w"> </span><span class="nx">Worker</span><span class="w"> </span><span class="kd">interface</span><span class="w"> </span><span class="p">{</span>
-<span class="w">    </span><span class="nx">Work</span><span class="p">()</span>
-<span class="p">}</span>
+<h3 id="file-io-memory-mapping-vs-standard-read">File I/O: Memory Mapping vs. Standard Read<a class="headerlink" href="#file-io-memory-mapping-vs-standard-read" title="Permanent link">&para;</a></h3>
+<p>We also benchmarked file reading performance using <code>os.ReadAt</code> versus <code>mmap.Open</code> for a 4MB binary file.</p>
+<div class="highlight"><pre><span></span><code><span class="kd">func</span><span class="w"> </span><span class="nx">BenchmarkReadWithCopy</span><span class="p">(</span><span class="nx">b</span><span class="w"> </span><span class="o">*</span><span class="nx">testing</span><span class="p">.</span><span class="nx">B</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="nx">f</span><span class="p">,</span><span class="w"> </span><span class="nx">err</span><span class="w"> </span><span class="o">:=</span><span class="w"> </span><span class="nx">os</span><span class="p">.</span><span class="nx">Open</span><span class="p">(</span><span class="s">&quot;testdata/largefile.bin&quot;</span><span class="p">)</span>
+<span class="w">    </span><span class="k">if</span><span class="w"> </span><span class="nx">err</span><span class="w"> </span><span class="o">!=</span><span class="w"> </span><span class="kc">nil</span><span class="w"> </span><span class="p">{</span>
+<span class="w">        </span><span class="nx">b</span><span class="p">.</span><span class="nx">Fatalf</span><span class="p">(</span><span class="s">&quot;failed to open file: %v&quot;</span><span class="p">,</span><span class="w"> </span><span class="nx">err</span><span class="p">)</span>
+<span class="w">    </span><span class="p">}</span>
+<span class="w">    </span><span class="k">defer</span><span class="w"> </span><span class="nx">f</span><span class="p">.</span><span class="nx">Close</span><span class="p">()</span>
 
-<span class="kd">type</span><span class="w"> </span><span class="nx">LargeJob</span><span class="w"> </span><span class="kd">struct</span><span class="w"> </span><span class="p">{</span>
-<span class="w">    </span><span class="nx">payload</span><span class="w"> </span><span class="p">[</span><span class="mi">4096</span><span class="p">]</span><span class="kt">byte</span>
-<span class="p">}</span>
-
-<span class="kd">func</span><span class="w"> </span><span class="p">(</span><span class="nx">LargeJob</span><span class="p">)</span><span class="w"> </span><span class="nx">Work</span><span class="p">()</span><span class="w"> </span><span class="p">{}</span>
-</code></pre></div>
-<h3 id="boxing-large-structs">Boxing Large Structs<a class="headerlink" href="#boxing-large-structs" title="Permanent link">&para;</a></h3>
-<p>To demonstrate the real impact of boxing large values vs. pointers, we benchmarked the cost of assigning 1,000 large structs to an interface slice:</p>
-<div class="highlight"><pre><span></span><code><span class="kd">var</span><span class="w"> </span><span class="nx">sink</span><span class="w"> </span><span class="p">[]</span><span class="nx">Worker</span>
-
-<span class="kd">func</span><span class="w"> </span><span class="nx">BenchmarkBoxedLargeSlice</span><span class="p">(</span><span class="nx">b</span><span class="w"> </span><span class="o">*</span><span class="nx">testing</span><span class="p">.</span><span class="nx">B</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="nx">buf</span><span class="w"> </span><span class="o">:=</span><span class="w"> </span><span class="nb">make</span><span class="p">([]</span><span class="kt">byte</span><span class="p">,</span><span class="w"> </span><span class="mi">4</span><span class="o">*</span><span class="mi">1024</span><span class="o">*</span><span class="mi">1024</span><span class="p">)</span><span class="w"> </span><span class="c1">// 4MB buffer</span>
+<span class="w">    </span><span class="nx">b</span><span class="p">.</span><span class="nx">ResetTimer</span><span class="p">()</span>
 <span class="w">    </span><span class="k">for</span><span class="w"> </span><span class="nx">i</span><span class="w"> </span><span class="o">:=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="nx">i</span><span class="w"> </span><span class="p">&lt;</span><span class="w"> </span><span class="nx">b</span><span class="p">.</span><span class="nx">N</span><span class="p">;</span><span class="w"> </span><span class="nx">i</span><span class="o">++</span><span class="w"> </span><span class="p">{</span>
-<span class="w">        </span><span class="kd">var</span><span class="w"> </span><span class="nx">jobs</span><span class="w"> </span><span class="p">[]</span><span class="nx">Worker</span>
-<span class="w">        </span><span class="k">for</span><span class="w"> </span><span class="nx">j</span><span class="w"> </span><span class="o">:=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="nx">j</span><span class="w"> </span><span class="p">&lt;</span><span class="w"> </span><span class="mi">1000</span><span class="p">;</span><span class="w"> </span><span class="nx">j</span><span class="o">++</span><span class="w"> </span><span class="p">{</span>
-<span class="w">            </span><span class="kd">var</span><span class="w"> </span><span class="nx">job</span><span class="w"> </span><span class="nx">LargeJob</span>
-<span class="w">            </span><span class="nx">jobs</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="nb">append</span><span class="p">(</span><span class="nx">jobs</span><span class="p">,</span><span class="w"> </span><span class="nx">job</span><span class="p">)</span>
+<span class="w">        </span><span class="nx">_</span><span class="p">,</span><span class="w"> </span><span class="nx">err</span><span class="w"> </span><span class="o">:=</span><span class="w"> </span><span class="nx">f</span><span class="p">.</span><span class="nx">ReadAt</span><span class="p">(</span><span class="nx">buf</span><span class="p">,</span><span class="w"> </span><span class="mi">0</span><span class="p">)</span>
+<span class="w">        </span><span class="k">if</span><span class="w"> </span><span class="nx">err</span><span class="w"> </span><span class="o">!=</span><span class="w"> </span><span class="kc">nil</span><span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span><span class="nx">err</span><span class="w"> </span><span class="o">!=</span><span class="w"> </span><span class="nx">io</span><span class="p">.</span><span class="nx">EOF</span><span class="w"> </span><span class="p">{</span>
+<span class="w">            </span><span class="nx">b</span><span class="p">.</span><span class="nx">Fatal</span><span class="p">(</span><span class="nx">err</span><span class="p">)</span>
 <span class="w">        </span><span class="p">}</span>
-<span class="w">        </span><span class="nx">sink</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="nx">jobs</span>
+<span class="w">        </span><span class="nx">sink</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="nx">buf</span>
 <span class="w">    </span><span class="p">}</span>
 <span class="p">}</span>
 
-<span class="kd">func</span><span class="w"> </span><span class="nx">BenchmarkPointerLargeSlice</span><span class="p">(</span><span class="nx">b</span><span class="w"> </span><span class="o">*</span><span class="nx">testing</span><span class="p">.</span><span class="nx">B</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="kd">func</span><span class="w"> </span><span class="nx">BenchmarkReadWithMmap</span><span class="p">(</span><span class="nx">b</span><span class="w"> </span><span class="o">*</span><span class="nx">testing</span><span class="p">.</span><span class="nx">B</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="nx">r</span><span class="p">,</span><span class="w"> </span><span class="nx">err</span><span class="w"> </span><span class="o">:=</span><span class="w"> </span><span class="nx">mmap</span><span class="p">.</span><span class="nx">Open</span><span class="p">(</span><span class="s">&quot;testdata/largefile.bin&quot;</span><span class="p">)</span>
+<span class="w">    </span><span class="k">if</span><span class="w"> </span><span class="nx">err</span><span class="w"> </span><span class="o">!=</span><span class="w"> </span><span class="kc">nil</span><span class="w"> </span><span class="p">{</span>
+<span class="w">        </span><span class="nx">b</span><span class="p">.</span><span class="nx">Fatalf</span><span class="p">(</span><span class="s">&quot;failed to mmap file: %v&quot;</span><span class="p">,</span><span class="w"> </span><span class="nx">err</span><span class="p">)</span>
+<span class="w">    </span><span class="p">}</span>
+<span class="w">    </span><span class="k">defer</span><span class="w"> </span><span class="nx">r</span><span class="p">.</span><span class="nx">Close</span><span class="p">()</span>
+
+<span class="w">    </span><span class="nx">buf</span><span class="w"> </span><span class="o">:=</span><span class="w"> </span><span class="nb">make</span><span class="p">([]</span><span class="kt">byte</span><span class="p">,</span><span class="w"> </span><span class="nx">r</span><span class="p">.</span><span class="nx">Len</span><span class="p">())</span>
+<span class="w">    </span><span class="nx">b</span><span class="p">.</span><span class="nx">ResetTimer</span><span class="p">()</span>
 <span class="w">    </span><span class="k">for</span><span class="w"> </span><span class="nx">i</span><span class="w"> </span><span class="o">:=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="nx">i</span><span class="w"> </span><span class="p">&lt;</span><span class="w"> </span><span class="nx">b</span><span class="p">.</span><span class="nx">N</span><span class="p">;</span><span class="w"> </span><span class="nx">i</span><span class="o">++</span><span class="w"> </span><span class="p">{</span>
-<span class="w">        </span><span class="kd">var</span><span class="w"> </span><span class="nx">jobs</span><span class="w"> </span><span class="p">[]</span><span class="nx">Worker</span>
-<span class="w">        </span><span class="k">for</span><span class="w"> </span><span class="nx">j</span><span class="w"> </span><span class="o">:=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="nx">j</span><span class="w"> </span><span class="p">&lt;</span><span class="w"> </span><span class="mi">1000</span><span class="p">;</span><span class="w"> </span><span class="nx">j</span><span class="o">++</span><span class="w"> </span><span class="p">{</span>
-<span class="w">            </span><span class="nx">job</span><span class="w"> </span><span class="o">:=</span><span class="w"> </span><span class="o">&amp;</span><span class="nx">LargeJob</span><span class="p">{}</span>
-<span class="w">            </span><span class="nx">jobs</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="nb">append</span><span class="p">(</span><span class="nx">jobs</span><span class="p">,</span><span class="w"> </span><span class="nx">job</span><span class="p">)</span>
+<span class="w">        </span><span class="nx">_</span><span class="p">,</span><span class="w"> </span><span class="nx">err</span><span class="w"> </span><span class="o">:=</span><span class="w"> </span><span class="nx">r</span><span class="p">.</span><span class="nx">ReadAt</span><span class="p">(</span><span class="nx">buf</span><span class="p">,</span><span class="w"> </span><span class="mi">0</span><span class="p">)</span>
+<span class="w">        </span><span class="k">if</span><span class="w"> </span><span class="nx">err</span><span class="w"> </span><span class="o">!=</span><span class="w"> </span><span class="kc">nil</span><span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span><span class="nx">err</span><span class="w"> </span><span class="o">!=</span><span class="w"> </span><span class="nx">io</span><span class="p">.</span><span class="nx">EOF</span><span class="w"> </span><span class="p">{</span>
+<span class="w">            </span><span class="nx">b</span><span class="p">.</span><span class="nx">Fatal</span><span class="p">(</span><span class="nx">err</span><span class="p">)</span>
 <span class="w">        </span><span class="p">}</span>
-<span class="w">        </span><span class="nx">sink</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="nx">jobs</span>
+<span class="w">        </span><span class="nx">sink</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="nx">buf</span>
 <span class="w">    </span><span class="p">}</span>
 <span class="p">}</span>
 </code></pre></div>
+<details class="info">
+<summary>How to run the benchmark</summary>
+<p>To run the benchmark involving <code>mmap</code>, you’ll need to install the required package and create a test file:</p>
+<div class="highlight"><pre><span></span><code>go<span class="w"> </span>get<span class="w"> </span>golang.org/x/exp/mmap
+mkdir<span class="w"> </span>-p<span class="w"> </span>testdata
+dd<span class="w"> </span><span class="k">if</span><span class="o">=</span>/dev/urandom<span class="w"> </span><span class="nv">of</span><span class="o">=</span>./testdata/largefile.bin<span class="w"> </span><span class="nv">bs</span><span class="o">=</span>1M<span class="w"> </span><span class="nv">count</span><span class="o">=</span><span class="m">4</span>
+</code></pre></div>
+</details>
 <p>Benchmark Results</p>
 <table>
 <thead>
@@ -904,68 +928,20 @@
 </thead>
 <tbody>
 <tr>
-<td>BoxedLargeSliceGrowth</td>
-<td>404,649</td>
-<td>~4.13 MB</td>
-<td>1011</td>
+<td>ReadWithCopy</td>
+<td>94,650</td>
+<td>0</td>
+<td>0</td>
 </tr>
 <tr>
-<td>PointerLargeSliceGrowth</td>
-<td>340,549</td>
-<td>~4.13 MB</td>
-<td>1011</td>
+<td>ReadWithMmap</td>
+<td>50,082</td>
+<td>0</td>
+<td>0</td>
 </tr>
 </tbody>
 </table>
-<p>Boxing large values is significantly slower—about 19% in this case—due to the cost of copying the entire 4KB struct for each interface assignment. Boxing a pointer, however, avoids that cost and keeps the copy small (just 8 bytes). While both approaches allocate the same overall memory (since all values escape to the heap), pointer boxing has clear performance advantages under pressure.</p>
-<h3 id="passing-to-a-function-that-accepts-an-interface">Passing to a Function That Accepts an Interface<a class="headerlink" href="#passing-to-a-function-that-accepts-an-interface" title="Permanent link">&para;</a></h3>
-<p>Another common source of boxing is when a large value is passed directly to a function that accepts an interface. Even without storing to a slice, boxing will occur at the call site.</p>
-<div class="highlight"><pre><span></span><code><span class="kd">var</span><span class="w"> </span><span class="nx">sinkOne</span><span class="w"> </span><span class="nx">Worker</span>
-
-<span class="kd">func</span><span class="w"> </span><span class="nx">call</span><span class="p">(</span><span class="nx">w</span><span class="w"> </span><span class="nx">Worker</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
-<span class="w">    </span><span class="nx">sinkOne</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="nx">w</span>
-<span class="p">}</span>
-
-<span class="kd">func</span><span class="w"> </span><span class="nx">BenchmarkCallWithValue</span><span class="p">(</span><span class="nx">b</span><span class="w"> </span><span class="o">*</span><span class="nx">testing</span><span class="p">.</span><span class="nx">B</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
-<span class="w">    </span><span class="k">for</span><span class="w"> </span><span class="nx">i</span><span class="w"> </span><span class="o">:=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="nx">i</span><span class="w"> </span><span class="p">&lt;</span><span class="w"> </span><span class="nx">b</span><span class="p">.</span><span class="nx">N</span><span class="p">;</span><span class="w"> </span><span class="nx">i</span><span class="o">++</span><span class="w"> </span><span class="p">{</span>
-<span class="w">        </span><span class="kd">var</span><span class="w"> </span><span class="nx">j</span><span class="w"> </span><span class="nx">LargeJob</span>
-<span class="w">        </span><span class="nx">call</span><span class="p">(</span><span class="nx">j</span><span class="p">)</span>
-<span class="w">    </span><span class="p">}</span>
-<span class="p">}</span>
-
-<span class="kd">func</span><span class="w"> </span><span class="nx">BenchmarkCallWithPointer</span><span class="p">(</span><span class="nx">b</span><span class="w"> </span><span class="o">*</span><span class="nx">testing</span><span class="p">.</span><span class="nx">B</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
-<span class="w">    </span><span class="k">for</span><span class="w"> </span><span class="nx">i</span><span class="w"> </span><span class="o">:=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="nx">i</span><span class="w"> </span><span class="p">&lt;</span><span class="w"> </span><span class="nx">b</span><span class="p">.</span><span class="nx">N</span><span class="p">;</span><span class="w"> </span><span class="nx">i</span><span class="o">++</span><span class="w"> </span><span class="p">{</span>
-<span class="w">        </span><span class="nx">j</span><span class="w"> </span><span class="o">:=</span><span class="w"> </span><span class="o">&amp;</span><span class="nx">LargeJob</span><span class="p">{}</span>
-<span class="w">        </span><span class="nx">call</span><span class="p">(</span><span class="nx">j</span><span class="p">)</span>
-<span class="w">    </span><span class="p">}</span>
-<span class="p">}</span>
-</code></pre></div>
-<p>Benchmark Results</p>
-<table>
-<thead>
-<tr>
-<th>Benchmark</th>
-<th>ns/op</th>
-<th>B/op</th>
-<th>allocs/op</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td>CallWithValue</td>
-<td>422.5</td>
-<td>4096</td>
-<td>1</td>
-</tr>
-<tr>
-<td>CallWithPointer</td>
-<td>379.9</td>
-<td>4096</td>
-<td>1</td>
-</tr>
-</tbody>
-</table>
-<p>Passing a value to a function expecting an interface causes boxing, copying the full struct and allocating it on the heap. In our benchmark, this results in approximately 11% higher CPU cost compared to using a pointer. Passing a pointer avoids copying the struct, reduces memory movement, and results in smaller, more cache-friendly interface values, making it the more efficient choice in performance-sensitive scenarios.</p>
+<p>The memory-mapped version (<code>mmap</code>) is nearly 2× faster than the standard read call. This illustrates how zero-copy access through memory mapping can substantially reduce read latency and CPU usage for large files.</p>
 <details class="example">
 <summary>Show the complete benchmark file</summary>
 <div class="highlight"><pre><span></span><code><span class="kn">package</span><span class="w"> </span><span class="nx">perf</span>
@@ -1035,54 +1011,26 @@
 <span class="c1">// bench-call-end</span>
 </code></pre></div>
 </details>
-<h2 id="when-interface-boxing-is-acceptable">When Interface Boxing Is Acceptable<a class="headerlink" href="#when-interface-boxing-is-acceptable" title="Permanent link">&para;</a></h2>
-<p>Despite its performance implications in some contexts, interface boxing is often perfectly reasonable—and sometimes preferred.</p>
-<h3 id="when-abstraction-is-more-important-than-performance">When abstraction is more important than performance<a class="headerlink" href="#when-abstraction-is-more-important-than-performance" title="Permanent link">&para;</a></h3>
-<p>Interfaces enable decoupling and modularity. If you're designing a clean, testable API, the cost of boxing is negligible compared to the benefit of abstraction.</p>
-<div class="highlight"><pre><span></span><code><span class="kd">type</span><span class="w"> </span><span class="nx">Storage</span><span class="w"> </span><span class="kd">interface</span><span class="w"> </span><span class="p">{</span>
-<span class="w">    </span><span class="nx">Save</span><span class="p">([]</span><span class="kt">byte</span><span class="p">)</span><span class="w"> </span><span class="kt">error</span>
-<span class="p">}</span>
-<span class="kd">func</span><span class="w"> </span><span class="nx">Process</span><span class="p">(</span><span class="nx">s</span><span class="w"> </span><span class="nx">Storage</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="cm">/* ... */</span><span class="w"> </span><span class="p">}</span>
-</code></pre></div>
-<h3 id="when-values-are-small-and-boxing-is-allocation-free">When values are small and boxing is allocation-free<a class="headerlink" href="#when-values-are-small-and-boxing-is-allocation-free" title="Permanent link">&para;</a></h3>
-<p>Boxing small, copyable values like <code>int</code>, <code>float64</code>, or small structs typically causes no allocations.</p>
-<div class="highlight"><pre><span></span><code><span class="kd">var</span><span class="w"> </span><span class="nx">i</span><span class="w"> </span><span class="kd">interface</span><span class="p">{}</span>
-<span class="nx">i</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="mi">123</span><span class="w"> </span><span class="c1">// safe and cheap</span>
-</code></pre></div>
-<h3 id="when-values-are-short-lived">When values are short-lived<a class="headerlink" href="#when-values-are-short-lived" title="Permanent link">&para;</a></h3>
-<p>If the boxed value is used briefly (e.g. for logging or interface-based sorting), the overhead is minimal.</p>
-<div class="highlight"><pre><span></span><code><span class="nx">fmt</span><span class="p">.</span><span class="nx">Println</span><span class="p">(</span><span class="s">&quot;value:&quot;</span><span class="p">,</span><span class="w"> </span><span class="nx">someStruct</span><span class="p">)</span><span class="w"> </span><span class="c1">// implicit boxing is fine</span>
-</code></pre></div>
-<h3 id="when-dynamic-behavior-is-required">When dynamic behavior is required<a class="headerlink" href="#when-dynamic-behavior-is-required" title="Permanent link">&para;</a></h3>
-<p>Interfaces allow runtime polymorphism. If you need different types to implement the same behavior, boxing is necessary and idiomatic.</p>
-<div class="highlight"><pre><span></span><code><span class="k">for</span><span class="w"> </span><span class="nx">_</span><span class="p">,</span><span class="w"> </span><span class="nx">s</span><span class="w"> </span><span class="o">:=</span><span class="w"> </span><span class="k">range</span><span class="w"> </span><span class="p">[]</span><span class="nx">Shape</span><span class="p">{</span><span class="nx">Circle</span><span class="p">{},</span><span class="w"> </span><span class="nx">Square</span><span class="p">{}}</span><span class="w"> </span><span class="p">{</span>
-<span class="w">    </span><span class="nx">fmt</span><span class="p">.</span><span class="nx">Println</span><span class="p">(</span><span class="nx">s</span><span class="p">.</span><span class="nx">Area</span><span class="p">())</span>
-<span class="p">}</span>
-</code></pre></div>
-<p>Use boxing when it supports clarity, reusability, or design goals—and avoid it only in performance-critical code paths.</p>
-<h2 id="how-to-avoid-interface-boxing">How to Avoid Interface Boxing<a class="headerlink" href="#how-to-avoid-interface-boxing" title="Permanent link">&para;</a></h2>
+<h2 id="when-to-use-zero-copy">When to Use Zero-Copy<a class="headerlink" href="#when-to-use-zero-copy" title="Permanent link">&para;</a></h2>
+<p>Zero-copy techniques are highly beneficial for:</p>
 <ul>
-<li>
-<p>Use pointers when assigning to interfaces:
-   If the method set requires a pointer receiver or the value is large, explicitly pass a pointer to avoid repeated copying and heap allocation.
-    <div class="highlight"><pre><span></span><code><span class="k">for</span><span class="w"> </span><span class="nx">i</span><span class="w"> </span><span class="o">:=</span><span class="w"> </span><span class="k">range</span><span class="w"> </span><span class="nx">tasks</span><span class="w"> </span><span class="p">{</span>
-<span class="w">   </span><span class="nx">result</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="nb">append</span><span class="p">(</span><span class="nx">result</span><span class="p">,</span><span class="w"> </span><span class="o">&amp;</span><span class="nx">tasks</span><span class="p">[</span><span class="nx">i</span><span class="p">])</span><span class="w"> </span><span class="c1">// Avoids boxing copies</span>
-<span class="p">}</span>
-</code></pre></div></p>
-</li>
-<li>
-<p>Avoid interfaces in hot paths:
-   If the concrete type is known and stable, avoid interface indirection entirely—especially in compute-intensive or allocation-sensitive functions.</p>
-</li>
-<li>
-<p><strong>Use type-specific containers</strong>:
-   Instead of <code>[]interface{}</code>, prefer generic slices or typed collections where feasible. This preserves static typing and reduces unnecessary allocations.</p>
-</li>
-<li>
-<p><strong>Benchmark and inspect with pprof</strong>:
-   Use <code>go test -bench</code> and <code>pprof</code> to observe where allocations occur. If the allocation site is in <code>runtime.convT2E</code> (convert T to interface), you're likely boxing.</p>
-</li>
+<li>Network servers handling large amounts of concurrent data streams.</li>
+<li>Applications with heavy I/O operations like file streaming or real-time data processing.</li>
 </ul>
+<div class="admonition warning">
+<p class="admonition-title">Warning</p>
+<p>Zero-copy should be used judiciously. Since slices share underlying memory, care must be taken to prevent unintended data mutations. Zero-copy can introduce complexity, so measuring and confirming performance improvements justify the added complexity.</p>
+</div>
+<h3 id="real-world-use-cases-and-libraries">Real-World Use Cases and Libraries<a class="headerlink" href="#real-world-use-cases-and-libraries" title="Permanent link">&para;</a></h3>
+<p>Zero-copy strategies aren't just theoretical—they're used in production by performance-critical Go systems:</p>
+<ul>
+<li><a href="https://github.com/valyala/fasthttp">fasthttp</a>: A high-performance HTTP server designed to avoid allocations. It returns slices directly and avoids <code>string</code> conversions to minimize copying.</li>
+<li><a href="https://github.com/grpc/grpc-go">gRPC-Go</a>: Uses internal buffer pools and avoids deep copying of large request/response messages to reduce GC pressure.</li>
+<li><a href="https://github.com/minio/minio">MinIO</a>: An object storage system that streams data directly between disk and network using <code>io.Reader</code> without unnecessary buffer replication.</li>
+<li><a href="https://github.com/protocolbuffers/protobuf">Protobuf</a> and <a href="https://github.com/vmihailenco/msgpack">MsgPack</a> libraries: Efficient serialization frameworks like <code>google.golang.org/protobuf</code> and <code>vmihailenco/msgpack</code> support decoding directly into user-managed buffers.</li>
+<li><a href="https://github.com/influxdata/influxdb">InfluxDB</a> and <a href="https://github.com/hypermodeinc/badger">Badger</a>: These storage engines use <code>mmap</code> extensively for fast, zero-copy access to database files.</li>
+</ul>
+<p>These libraries show how zero-copy techniques help reduce allocations, GC overhead, and system call frequency—all while increasing throughput.</p>
 
 
 
@@ -1103,7 +1051,7 @@
     <span class="md-icon" title="Last update">
       <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M21 13.1c-.1 0-.3.1-.4.2l-1 1 2.1 2.1 1-1c.2-.2.2-.6 0-.8l-1.3-1.3c-.1-.1-.2-.2-.4-.2m-1.9 1.8-6.1 6V23h2.1l6.1-6.1zM12.5 7v5.2l4 2.4-1 1L11 13V7zM11 21.9c-5.1-.5-9-4.8-9-9.9C2 6.5 6.5 2 12 2c5.3 0 9.6 4.1 10 9.3-.3-.1-.6-.2-1-.2s-.7.1-1 .2C19.6 7.2 16.2 4 12 4c-4.4 0-8 3.6-8 8 0 4.1 3.1 7.5 7.1 7.9l-.1.2z"/></svg>
     </span>
-    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-date" title="March 25, 2025 12:09:00">March 25, 2025</span>
+    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-date" title="March 26, 2025 09:20:08">March 26, 2025</span>
   </span>
 
     
