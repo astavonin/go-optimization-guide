@@ -860,8 +860,7 @@
 <li>Low-latency paths where locks are too expensive</li>
 </ul>
 <h3 id="memory-model-and-comparison-to-c">Memory Model and Comparison to C++<a class="headerlink" href="#memory-model-and-comparison-to-c" title="Permanent link">&para;</a></h3>
-<p>Understanding memory models is crucial when reasoning about concurrency. In C++, developers have fine-grained control over atomic operations via memory orderings, which allows them to trade-off between performance and consistency. Here's how Go's model aligns with the C++ standards:</p>
-<p>By default, Go's atomic operations enforce sequential consistency, which means they behave like <code>std::memory_order_seq_cst</code> in C++. This is the strongest and safest memory ordering:</p>
+<p>Understanding memory models is crucial when reasoning about concurrency. In C++, developers have fine-grained control over atomic operations via memory orderings, which allows them to trade-off between performance and consistency. By default, Go's atomic operations enforce sequential consistency, which means they behave like <code>std::memory_order_seq_cst</code> in C++. This is the strongest and safest memory ordering:</p>
 <ul>
 <li>All threads observe atomic operations in the same order.</li>
 <li>Full memory barrier are applied before and after each operation.</li>
