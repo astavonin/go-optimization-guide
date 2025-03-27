@@ -8,7 +8,7 @@
       
       
       
-        <link rel="canonical" href="https://astavonin.github.io/go-performance-book/01-common-patterns/interface-boxing/">
+        <link rel="canonical" href="https://goperf.dev/01-common-patterns/interface-boxing/">
       
       
         <link rel="prev" href="../fields-alignment/">
@@ -167,7 +167,7 @@
     
     
       <div class="md-header__source">
-        <a href="https://github.com/astavonin/go-performance-book" title="Go to repository" class="md-source" data-md-component="source">
+        <a href="https://github.com/astavonin/go-optimization-guide" title="Go to repository" class="md-source" data-md-component="source">
   <div class="md-source__icon md-icon">
     
     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 6.7.2 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2024 Fonticons, Inc.--><path d="M439.55 236.05 244 40.45a28.87 28.87 0 0 0-40.81 0l-40.66 40.63 51.52 51.52c27.06-9.14 52.68 16.77 43.39 43.68l49.66 49.66c34.23-11.8 61.18 31 35.47 56.69-26.49 26.49-70.21-2.87-56-37.34L240.22 199v121.85c25.3 12.54 22.26 41.85 9.08 55a34.34 34.34 0 0 1-48.55 0c-17.57-17.6-11.07-46.91 11.25-56v-123c-20.8-8.51-24.6-30.74-18.64-45L142.57 101 8.45 235.14a28.86 28.86 0 0 0 0 40.81l195.61 195.6a28.86 28.86 0 0 0 40.8 0l194.69-194.69a28.86 28.86 0 0 0 0-40.81"/></svg>
@@ -213,7 +213,7 @@
   </label>
   
     <div class="md-nav__source">
-      <a href="https://github.com/astavonin/go-performance-book" title="Go to repository" class="md-source" data-md-component="source">
+      <a href="https://github.com/astavonin/go-optimization-guide" title="Go to repository" class="md-source" data-md-component="source">
   <div class="md-source__icon md-icon">
     
     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 6.7.2 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2024 Fonticons, Inc.--><path d="M439.55 236.05 244 40.45a28.87 28.87 0 0 0-40.81 0l-40.66 40.63 51.52 51.52c27.06-9.14 52.68 16.77 43.39 43.68l49.66 49.66c34.23-11.8 61.18 31 35.47 56.69-26.49 26.49-70.21-2.87-56-37.34L240.22 199v121.85c25.3 12.54 22.26 41.85 9.08 55a34.34 34.34 0 0 1-48.55 0c-17.57-17.6-11.07-46.91 11.25-56v-123c-20.8-8.51-24.6-30.74-18.64-45L142.57 101 8.45 235.14a28.86 28.86 0 0 0 0 40.81l195.61 195.6a28.86 28.86 0 0 0 40.8 0l194.69-194.69a28.86 28.86 0 0 0 0-40.81"/></svg>
@@ -260,6 +260,8 @@
       
         
           
+        
+      
         
       
         
@@ -717,6 +719,28 @@
 
               
             
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../immutable-data/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Immutable Data Sharing
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
           </ul>
         </nav>
       
@@ -881,9 +905,8 @@
 
 
 <h1 id="avoiding-interface-boxing">Avoiding Interface Boxing<a class="headerlink" href="#avoiding-interface-boxing" title="Permanent link">&para;</a></h1>
-<p>Interfaces in Go are a powerful abstraction mechanism, enabling polymorphism and decoupled designs. But this flexibility comes with a hidden cost. When a value is assigned to an interface, Go performs what’s known as interface boxing—wrapping the value in a structure that holds type information and a pointer to the actual data.</p>
-<p>Boxing may seem harmless, but in performance-critical code paths it can lead to hidden heap allocations, unnecessary memory copying, and garbage collection pressure. These issues often go unnoticed until they surface as latency spikes or memory inefficiencies in production.</p>
-<p>Understanding when boxing happens—and how to avoid it—can significantly improve the efficiency of your Go application.</p>
+<p>Go’s interfaces make it easy to write flexible, decoupled code. But behind that convenience is a detail that can trip up performance: when a concrete value is assigned to an interface, Go wraps it in a hidden structure—a process called interface boxing.</p>
+<p>In many cases, boxing is harmless. But in performance-sensitive code—like tight loops, hot paths, or high-throughput services—it can introduce hidden heap allocations, extra memory copying, and added pressure on the garbage collector. These effects often go unnoticed during development, only showing up later as latency spikes or memory bloat.</p>
 <h2 id="what-is-interface-boxing">What is Interface Boxing?<a class="headerlink" href="#what-is-interface-boxing" title="Permanent link">&para;</a></h2>
 <p>Interface boxing refers to the process of converting a concrete value to an interface type. In Go, an interface value consists of two parts internally:</p>
 <ul>
@@ -1134,26 +1157,14 @@
 <p>Use boxing when it supports clarity, reusability, or design goals—and avoid it only in performance-critical code paths.</p>
 <h2 id="how-to-avoid-interface-boxing">How to Avoid Interface Boxing<a class="headerlink" href="#how-to-avoid-interface-boxing" title="Permanent link">&para;</a></h2>
 <ul>
-<li>
-<p>Use pointers when assigning to interfaces:
-   If the method set requires a pointer receiver or the value is large, explicitly pass a pointer to avoid repeated copying and heap allocation.
+<li>Use pointers when assigning to interfaces. If the method set requires a pointer receiver or the value is large, explicitly pass a pointer to avoid repeated copying and heap allocation.
     <div class="highlight"><pre><span></span><code><span class="k">for</span><span class="w"> </span><span class="nx">i</span><span class="w"> </span><span class="o">:=</span><span class="w"> </span><span class="k">range</span><span class="w"> </span><span class="nx">tasks</span><span class="w"> </span><span class="p">{</span>
 <span class="w">   </span><span class="nx">result</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="nb">append</span><span class="p">(</span><span class="nx">result</span><span class="p">,</span><span class="w"> </span><span class="o">&amp;</span><span class="nx">tasks</span><span class="p">[</span><span class="nx">i</span><span class="p">])</span><span class="w"> </span><span class="c1">// Avoids boxing copies</span>
 <span class="p">}</span>
-</code></pre></div></p>
-</li>
-<li>
-<p>Avoid interfaces in hot paths:
-   If the concrete type is known and stable, avoid interface indirection entirely—especially in compute-intensive or allocation-sensitive functions.</p>
-</li>
-<li>
-<p><strong>Use type-specific containers</strong>:
-   Instead of <code>[]interface{}</code>, prefer generic slices or typed collections where feasible. This preserves static typing and reduces unnecessary allocations.</p>
-</li>
-<li>
-<p><strong>Benchmark and inspect with pprof</strong>:
-   Use <code>go test -bench</code> and <code>pprof</code> to observe where allocations occur. If the allocation site is in <code>runtime.convT2E</code> (convert T to interface), you're likely boxing.</p>
-</li>
+</code></pre></div></li>
+<li>Avoid interfaces in hot paths. If the concrete type is known and stable, avoid interface indirection entirely—especially in compute-intensive or allocation-sensitive functions.</li>
+<li>Use type-specific containers. Instead of <code>[]interface{}</code>, prefer generic slices or typed collections where feasible. This preserves static typing and reduces unnecessary allocations.</li>
+<li>Benchmark and inspect with pprof. Use <code>go test -bench</code> and <code>pprof</code> to observe where allocations occur. If the allocation site is in <code>runtime.convT2E</code> (convert T to interface), you're likely boxing.</li>
 </ul>
 
 
@@ -1175,7 +1186,7 @@
     <span class="md-icon" title="Last update">
       <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M21 13.1c-.1 0-.3.1-.4.2l-1 1 2.1 2.1 1-1c.2-.2.2-.6 0-.8l-1.3-1.3c-.1-.1-.2-.2-.4-.2m-1.9 1.8-6.1 6V23h2.1l6.1-6.1zM12.5 7v5.2l4 2.4-1 1L11 13V7zM11 21.9c-5.1-.5-9-4.8-9-9.9C2 6.5 6.5 2 12 2c5.3 0 9.6 4.1 10 9.3-.3-.1-.6-.2-1-.2s-.7.1-1 .2C19.6 7.2 16.2 4 12 4c-4.4 0-8 3.6-8 8 0 4.1 3.1 7.5 7.1 7.9l-.1.2z"/></svg>
     </span>
-    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-date" title="March 25, 2025 12:09:00">March 25, 2025</span>
+    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-date" title="March 27, 2025 12:56:16">March 27, 2025</span>
   </span>
 
     

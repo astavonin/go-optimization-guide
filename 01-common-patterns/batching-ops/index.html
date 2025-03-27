@@ -8,7 +8,7 @@
       
       
       
-        <link rel="canonical" href="https://astavonin.github.io/go-performance-book/01-common-patterns/batching-ops/">
+        <link rel="canonical" href="https://goperf.dev/01-common-patterns/batching-ops/">
       
       
         <link rel="prev" href="../worker-pool/">
@@ -167,7 +167,7 @@
     
     
       <div class="md-header__source">
-        <a href="https://github.com/astavonin/go-performance-book" title="Go to repository" class="md-source" data-md-component="source">
+        <a href="https://github.com/astavonin/go-optimization-guide" title="Go to repository" class="md-source" data-md-component="source">
   <div class="md-source__icon md-icon">
     
     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 6.7.2 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2024 Fonticons, Inc.--><path d="M439.55 236.05 244 40.45a28.87 28.87 0 0 0-40.81 0l-40.66 40.63 51.52 51.52c27.06-9.14 52.68 16.77 43.39 43.68l49.66 49.66c34.23-11.8 61.18 31 35.47 56.69-26.49 26.49-70.21-2.87-56-37.34L240.22 199v121.85c25.3 12.54 22.26 41.85 9.08 55a34.34 34.34 0 0 1-48.55 0c-17.57-17.6-11.07-46.91 11.25-56v-123c-20.8-8.51-24.6-30.74-18.64-45L142.57 101 8.45 235.14a28.86 28.86 0 0 0 0 40.81l195.61 195.6a28.86 28.86 0 0 0 40.8 0l194.69-194.69a28.86 28.86 0 0 0 0-40.81"/></svg>
@@ -213,7 +213,7 @@
   </label>
   
     <div class="md-nav__source">
-      <a href="https://github.com/astavonin/go-performance-book" title="Go to repository" class="md-source" data-md-component="source">
+      <a href="https://github.com/astavonin/go-optimization-guide" title="Go to repository" class="md-source" data-md-component="source">
   <div class="md-source__icon md-icon">
     
     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 6.7.2 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2024 Fonticons, Inc.--><path d="M439.55 236.05 244 40.45a28.87 28.87 0 0 0-40.81 0l-40.66 40.63 51.52 51.52c27.06-9.14 52.68 16.77 43.39 43.68l49.66 49.66c34.23-11.8 61.18 31 35.47 56.69-26.49 26.49-70.21-2.87-56-37.34L240.22 199v121.85c25.3 12.54 22.26 41.85 9.08 55a34.34 34.34 0 0 1-48.55 0c-17.57-17.6-11.07-46.91 11.25-56v-123c-20.8-8.51-24.6-30.74-18.64-45L142.57 101 8.45 235.14a28.86 28.86 0 0 0 0 40.81l195.61 195.6a28.86 28.86 0 0 0 40.8 0l194.69-194.69a28.86 28.86 0 0 0 0-40.81"/></svg>
@@ -260,6 +260,8 @@
       
         
           
+        
+      
         
       
         
@@ -642,6 +644,28 @@
 
               
             
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../immutable-data/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Immutable Data Sharing
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
           </ul>
         </nav>
       
@@ -731,7 +755,7 @@
 
 
 <h1 id="batching-operations-in-go">Batching Operations in Go<a class="headerlink" href="#batching-operations-in-go" title="Permanent link">&para;</a></h1>
-<p>Batching operations is a powerful performance optimization technique often overlooked in high-throughput Go applications. Rather than performing each expensive operation individually, batching consolidates multiple operations into a single call. This strategy dramatically reduces overhead, whether it's network latency, file system I/O, database transactions, or even CPU-intensive processing.</p>
+<p>Batching is a simple but effective way to boost performance in high-throughput Go applications. By grouping multiple operations into a single call, you can minimize repeated overhead—from network round-trips and disk I/O to database commits and CPU cycles. It’s a practical technique that can make a big difference in both latency and resource usage.</p>
 <h2 id="why-batching-matters">Why Batching Matters<a class="headerlink" href="#why-batching-matters" title="Permanent link">&para;</a></h2>
 <p>Systems frequently encounter performance issues not because individual operations are inherently costly, but because they occur in high volume. Each call to external resources—such as APIs, databases, or storage—introduces latency, system calls, and potential context switching. Batching groups these operations to minimize repeated overhead, substantially improving throughput and efficiency.</p>
 <p>Consider a logging service writing to disk:</p>
@@ -916,17 +940,17 @@ In-memory string manipulation showed a modest performance delta. While the batch
 <p>File I/O benchmarks showed the most dramatic gains. The batched version was over 12 times faster than the unbatched one, with far fewer syscalls and significantly lower execution time. Grouping disk writes amortized the I/O cost, leading to a huge efficiency boost despite temporarily using more memory.</p>
 <p>The cryptographic benchmarks demonstrated batching’s value in CPU-bound scenarios. Batched hashing nearly halved the total processing time while reducing allocation count by more than 70x. This reinforces batching as an effective strategy even in CPU-intensive workloads where fewer operations yield better locality and cache behavior.</p>
 <h2 id="when-to-use-batching">When To Use Batching<a class="headerlink" href="#when-to-use-batching" title="Permanent link">&para;</a></h2>
-<p>✅  Use batching when:</p>
+<p>✅ Use batching when:</p>
 <ul>
-<li>Individual operations are expensive (e.g., I/O, RPC, DB writes)</li>
-<li>The system benefits from reducing the frequency of external interactions</li>
-<li>You have some tolerance for per-item latency in favor of higher throughput</li>
+<li>Individual operations are expensive (e.g., I/O, RPC, DB writes). Grouping multiple operations into a single batch reduces the overhead of repeated calls and improves efficiency.</li>
+<li>The system benefits from reducing the frequency of external interactions. Fewer external calls can ease load on downstream systems and reduce contention or rate-limiting issues.</li>
+<li>You have some tolerance for per-item latency in favor of higher throughput. Batching introduces slight delays but can significantly increase overall system throughput.</li>
 </ul>
 <p>❌ Avoid batching when:</p>
 <ul>
-<li>Immediate action is required for each individual input</li>
-<li>Holding data introduces risk (e.g., crash before flush)</li>
-<li>Predictable latency is more important than throughput</li>
+<li>Immediate action is required for each individual input. Delaying processing to build a batch may violate time-sensitive requirements.</li>
+<li>Holding data introduces risk (e.g., crash before flush). If data must be processed or persisted immediately to avoid loss, batching can be unsafe.</li>
+<li>Predictable latency is more important than throughput. Batching adds variability in timing, which may not be acceptable in systems with strict latency expectations.</li>
 </ul>
 
 
@@ -948,7 +972,7 @@ In-memory string manipulation showed a modest performance delta. While the batch
     <span class="md-icon" title="Last update">
       <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M21 13.1c-.1 0-.3.1-.4.2l-1 1 2.1 2.1 1-1c.2-.2.2-.6 0-.8l-1.3-1.3c-.1-.1-.2-.2-.4-.2m-1.9 1.8-6.1 6V23h2.1l6.1-6.1zM12.5 7v5.2l4 2.4-1 1L11 13V7zM11 21.9c-5.1-.5-9-4.8-9-9.9C2 6.5 6.5 2 12 2c5.3 0 9.6 4.1 10 9.3-.3-.1-.6-.2-1-.2s-.7.1-1 .2C19.6 7.2 16.2 4 12 4c-4.4 0-8 3.6-8 8 0 4.1 3.1 7.5 7.1 7.9l-.1.2z"/></svg>
     </span>
-    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-date" title="March 25, 2025 12:09:00">March 25, 2025</span>
+    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-date" title="March 27, 2025 12:56:16">March 27, 2025</span>
   </span>
 
     

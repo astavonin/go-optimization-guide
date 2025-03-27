@@ -1,55 +1,59 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
     <url>
-         <loc>https://astavonin.github.io/go-performance-book/</loc>
+         <loc>https://goperf.dev/</loc>
          <lastmod>2025-03-27</lastmod>
     </url>
     <url>
-         <loc>https://astavonin.github.io/go-performance-book/01-common-patterns/</loc>
+         <loc>https://goperf.dev/01-common-patterns/</loc>
          <lastmod>2025-03-27</lastmod>
     </url>
     <url>
-         <loc>https://astavonin.github.io/go-performance-book/01-common-patterns/atomic-ops/</loc>
+         <loc>https://goperf.dev/01-common-patterns/atomic-ops/</loc>
          <lastmod>2025-03-27</lastmod>
     </url>
     <url>
-         <loc>https://astavonin.github.io/go-performance-book/01-common-patterns/batching-ops/</loc>
+         <loc>https://goperf.dev/01-common-patterns/batching-ops/</loc>
          <lastmod>2025-03-27</lastmod>
     </url>
     <url>
-         <loc>https://astavonin.github.io/go-performance-book/01-common-patterns/buffered-io/</loc>
+         <loc>https://goperf.dev/01-common-patterns/buffered-io/</loc>
          <lastmod>2025-03-27</lastmod>
     </url>
     <url>
-         <loc>https://astavonin.github.io/go-performance-book/01-common-patterns/context/</loc>
+         <loc>https://goperf.dev/01-common-patterns/context/</loc>
          <lastmod>2025-03-27</lastmod>
     </url>
     <url>
-         <loc>https://astavonin.github.io/go-performance-book/01-common-patterns/fields-alignment/</loc>
+         <loc>https://goperf.dev/01-common-patterns/fields-alignment/</loc>
          <lastmod>2025-03-27</lastmod>
     </url>
     <url>
-         <loc>https://astavonin.github.io/go-performance-book/01-common-patterns/interface-boxing/</loc>
+         <loc>https://goperf.dev/01-common-patterns/immutable-data/</loc>
          <lastmod>2025-03-27</lastmod>
     </url>
     <url>
-         <loc>https://astavonin.github.io/go-performance-book/01-common-patterns/lazy-init/</loc>
+         <loc>https://goperf.dev/01-common-patterns/interface-boxing/</loc>
          <lastmod>2025-03-27</lastmod>
     </url>
     <url>
-         <loc>https://astavonin.github.io/go-performance-book/01-common-patterns/mem-prealloc/</loc>
+         <loc>https://goperf.dev/01-common-patterns/lazy-init/</loc>
          <lastmod>2025-03-27</lastmod>
     </url>
     <url>
-         <loc>https://astavonin.github.io/go-performance-book/01-common-patterns/object-pooling/</loc>
+         <loc>https://goperf.dev/01-common-patterns/mem-prealloc/</loc>
          <lastmod>2025-03-27</lastmod>
     </url>
     <url>
-         <loc>https://astavonin.github.io/go-performance-book/01-common-patterns/worker-pool/</loc>
+         <loc>https://goperf.dev/01-common-patterns/object-pooling/</loc>
          <lastmod>2025-03-27</lastmod>
     </url>
     <url>
-         <loc>https://astavonin.github.io/go-performance-book/01-common-patterns/zero-copy/</loc>
+         <loc>https://goperf.dev/01-common-patterns/worker-pool/</loc>
+         <lastmod>2025-03-27</lastmod>
+    </url>
+    <url>
+         <loc>https://goperf.dev/01-common-patterns/zero-copy/</loc>
          <lastmod>2025-03-27</lastmod>
     </url>
 </urlset>

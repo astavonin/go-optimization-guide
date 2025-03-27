@@ -8,7 +8,7 @@
       
       
       
-        <link rel="canonical" href="https://astavonin.github.io/go-performance-book/01-common-patterns/lazy-init/">
+        <link rel="canonical" href="https://goperf.dev/01-common-patterns/lazy-init/">
       
       
         <link rel="prev" href="../atomic-ops/">
@@ -167,7 +167,7 @@
     
     
       <div class="md-header__source">
-        <a href="https://github.com/astavonin/go-performance-book" title="Go to repository" class="md-source" data-md-component="source">
+        <a href="https://github.com/astavonin/go-optimization-guide" title="Go to repository" class="md-source" data-md-component="source">
   <div class="md-source__icon md-icon">
     
     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 6.7.2 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2024 Fonticons, Inc.--><path d="M439.55 236.05 244 40.45a28.87 28.87 0 0 0-40.81 0l-40.66 40.63 51.52 51.52c27.06-9.14 52.68 16.77 43.39 43.68l49.66 49.66c34.23-11.8 61.18 31 35.47 56.69-26.49 26.49-70.21-2.87-56-37.34L240.22 199v121.85c25.3 12.54 22.26 41.85 9.08 55a34.34 34.34 0 0 1-48.55 0c-17.57-17.6-11.07-46.91 11.25-56v-123c-20.8-8.51-24.6-30.74-18.64-45L142.57 101 8.45 235.14a28.86 28.86 0 0 0 0 40.81l195.61 195.6a28.86 28.86 0 0 0 40.8 0l194.69-194.69a28.86 28.86 0 0 0 0-40.81"/></svg>
@@ -213,7 +213,7 @@
   </label>
   
     <div class="md-nav__source">
-      <a href="https://github.com/astavonin/go-performance-book" title="Go to repository" class="md-source" data-md-component="source">
+      <a href="https://github.com/astavonin/go-optimization-guide" title="Go to repository" class="md-source" data-md-component="source">
   <div class="md-source__icon md-icon">
     
     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 6.7.2 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2024 Fonticons, Inc.--><path d="M439.55 236.05 244 40.45a28.87 28.87 0 0 0-40.81 0l-40.66 40.63 51.52 51.52c27.06-9.14 52.68 16.77 43.39 43.68l49.66 49.66c34.23-11.8 61.18 31 35.47 56.69-26.49 26.49-70.21-2.87-56-37.34L240.22 199v121.85c25.3 12.54 22.26 41.85 9.08 55a34.34 34.34 0 0 1-48.55 0c-17.57-17.6-11.07-46.91 11.25-56v-123c-20.8-8.51-24.6-30.74-18.64-45L142.57 101 8.45 235.14a28.86 28.86 0 0 0 0 40.81l195.61 195.6a28.86 28.86 0 0 0 40.8 0l194.69-194.69a28.86 28.86 0 0 0 0-40.81"/></svg>
@@ -260,6 +260,8 @@
       
         
           
+        
+      
         
       
         
@@ -671,6 +673,28 @@
 
               
             
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../immutable-data/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Immutable Data Sharing
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
           </ul>
         </nav>
       
@@ -793,7 +817,7 @@
   <h1>Lazy Initialization</h1>
 
 <h2 id="lazy-initialization-for-performance-in-go">Lazy Initialization for Performance in Go<a class="headerlink" href="#lazy-initialization-for-performance-in-go" title="Permanent link">&para;</a></h2>
-<p>Lazy initialization is a powerful technique used to delay the creation of resources until they're genuinely needed. In high-performance Go applications, lazy initialization helps reduce memory usage, shorten startup time, and improve overall responsiveness.</p>
+<p>In Go, some resources are expensive to initialize, or simply unnecessary unless certain code paths are triggered. That’s where lazy initialization becomes useful: it defers the construction of a value until the moment it’s actually needed. This pattern can improve performance, reduce startup overhead, and avoid unnecessary work—especially in high-concurrency applications.</p>
 <h3 id="why-lazy-initialization-matters">Why Lazy Initialization Matters<a class="headerlink" href="#why-lazy-initialization-matters" title="Permanent link">&para;</a></h3>
 <p>Initializing complex resources—such as database connections, caches, or large data structures—at application startup can significantly delay launch time and unnecessarily consume memory. Lazy initialization ensures these resources are only created when needed, optimizing resource usage and performance.</p>
 <p>Additionally, lazy initialization is crucial when you have code that might be executed multiple times, but you need a resource or logic executed precisely once. This pattern helps ensure idempotency and avoids redundant processing.</p>
@@ -833,10 +857,10 @@
 <p>There is typically nothing specific to benchmark with lazy initialization itself, as the main benefit is deferring expensive resource creation. The performance gains are inherently tied to the avoided cost of unnecessary initialization, startup speed improvements, and reduced memory consumption, rather than direct runtime throughput differences.</p>
 <h2 id="when-to-choose-lazy-initialization">When to Choose Lazy Initialization<a class="headerlink" href="#when-to-choose-lazy-initialization" title="Permanent link">&para;</a></h2>
 <ul>
-<li>When resource initialization is costly or involves I/O</li>
-<li>To improve startup performance and memory efficiency</li>
-<li>When not all resources are needed immediately or at all during runtime</li>
-<li>To guarantee a block of code executes exactly once despite repeated calls</li>
+<li>When resource initialization is costly or involves I/O. Delaying construction avoids paying the cost of setup—like opening files, querying databases, or loading large structures—unless it’s actually needed.</li>
+<li>To improve startup performance and memory efficiency. Deferring work until first use allows your application to start faster and avoid allocating memory for resources that may never be used.</li>
+<li>When not all resources are needed immediately or at all during runtime. Lazy initialization helps you avoid initializing fields or services that only apply in specific code paths.</li>
+<li>To guarantee a block of code executes exactly once despite repeated calls. Using tools like <code>sync.Once</code> ensures thread-safe, one-time setup in concurrent environments.</li>
 </ul>
 
 
@@ -858,7 +882,7 @@
     <span class="md-icon" title="Last update">
       <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M21 13.1c-.1 0-.3.1-.4.2l-1 1 2.1 2.1 1-1c.2-.2.2-.6 0-.8l-1.3-1.3c-.1-.1-.2-.2-.4-.2m-1.9 1.8-6.1 6V23h2.1l6.1-6.1zM12.5 7v5.2l4 2.4-1 1L11 13V7zM11 21.9c-5.1-.5-9-4.8-9-9.9C2 6.5 6.5 2 12 2c5.3 0 9.6 4.1 10 9.3-.3-.1-.6-.2-1-.2s-.7.1-1 .2C19.6 7.2 16.2 4 12 4c-4.4 0-8 3.6-8 8 0 4.1 3.1 7.5 7.1 7.9l-.1.2z"/></svg>
     </span>
-    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-date" title="March 27, 2025 03:05:40">March 27, 2025</span>
+    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-date" title="March 27, 2025 12:56:16">March 27, 2025</span>
   </span>
 
     

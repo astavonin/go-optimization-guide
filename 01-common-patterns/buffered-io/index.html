@@ -8,7 +8,7 @@
       
       
       
-        <link rel="canonical" href="https://astavonin.github.io/go-performance-book/01-common-patterns/buffered-io/">
+        <link rel="canonical" href="https://goperf.dev/01-common-patterns/buffered-io/">
       
       
         <link rel="prev" href="../mem-prealloc/">
@@ -167,7 +167,7 @@
     
     
       <div class="md-header__source">
-        <a href="https://github.com/astavonin/go-performance-book" title="Go to repository" class="md-source" data-md-component="source">
+        <a href="https://github.com/astavonin/go-optimization-guide" title="Go to repository" class="md-source" data-md-component="source">
   <div class="md-source__icon md-icon">
     
     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 6.7.2 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2024 Fonticons, Inc.--><path d="M439.55 236.05 244 40.45a28.87 28.87 0 0 0-40.81 0l-40.66 40.63 51.52 51.52c27.06-9.14 52.68 16.77 43.39 43.68l49.66 49.66c34.23-11.8 61.18 31 35.47 56.69-26.49 26.49-70.21-2.87-56-37.34L240.22 199v121.85c25.3 12.54 22.26 41.85 9.08 55a34.34 34.34 0 0 1-48.55 0c-17.57-17.6-11.07-46.91 11.25-56v-123c-20.8-8.51-24.6-30.74-18.64-45L142.57 101 8.45 235.14a28.86 28.86 0 0 0 0 40.81l195.61 195.6a28.86 28.86 0 0 0 40.8 0l194.69-194.69a28.86 28.86 0 0 0 0-40.81"/></svg>
@@ -213,7 +213,7 @@
   </label>
   
     <div class="md-nav__source">
-      <a href="https://github.com/astavonin/go-performance-book" title="Go to repository" class="md-source" data-md-component="source">
+      <a href="https://github.com/astavonin/go-optimization-guide" title="Go to repository" class="md-source" data-md-component="source">
   <div class="md-source__icon md-icon">
     
     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 6.7.2 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2024 Fonticons, Inc.--><path d="M439.55 236.05 244 40.45a28.87 28.87 0 0 0-40.81 0l-40.66 40.63 51.52 51.52c27.06-9.14 52.68 16.77 43.39 43.68l49.66 49.66c34.23-11.8 61.18 31 35.47 56.69-26.49 26.49-70.21-2.87-56-37.34L240.22 199v121.85c25.3 12.54 22.26 41.85 9.08 55a34.34 34.34 0 0 1-48.55 0c-17.57-17.6-11.07-46.91 11.25-56v-123c-20.8-8.51-24.6-30.74-18.64-45L142.57 101 8.45 235.14a28.86 28.86 0 0 0 0 40.81l195.61 195.6a28.86 28.86 0 0 0 40.8 0l194.69-194.69a28.86 28.86 0 0 0 0-40.81"/></svg>
@@ -260,6 +260,8 @@
       
         
           
+        
+      
         
       
         
@@ -657,6 +659,28 @@
 
               
             
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../immutable-data/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Immutable Data Sharing
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
           </ul>
         </nav>
       
@@ -870,14 +894,14 @@ BenchmarkWriteBuffered-14                   3241            379703 ns/op        
 <h2 id="when-to-buffer">When To Buffer<a class="headerlink" href="#when-to-buffer" title="Permanent link">&para;</a></h2>
 <p>✅ Use buffering when:</p>
 <ul>
-<li>Performing frequent, small-sized I/O operations.</li>
-<li>Reducing syscall overhead is crucial.</li>
-<li>High throughput is more important than minimal latency.</li>
+<li>Performing frequent, small-sized I/O operations. Buffering groups small writes or reads into larger batches, which reduces the overhead of each individual operation.</li>
+<li>Reducing syscall overhead is crucial. Fewer syscalls mean lower context-switching costs and improved performance, especially in I/O-heavy applications.</li>
+<li>High throughput is more important than minimal latency. Buffered I/O can increase total data processed per second, even if it introduces slight delays in delivery.</li>
 </ul>
 <p>❌ Avoid buffering when:</p>
 <ul>
-<li>Immediate data availability and low latency are critical.</li>
-<li>Buffering excessively might lead to uncontrolled memory usage.</li>
+<li>Immediate data availability and low latency are critical. Buffers introduce delays by design, which can be unacceptable in real-time or interactive systems.</li>
+<li>Buffering excessively might lead to uncontrolled memory usage. Without limits or proper flushing, buffers can grow large and put pressure on system memory.</li>
 </ul>
 
 
@@ -899,7 +923,7 @@ BenchmarkWriteBuffered-14                   3241            379703 ns/op        
     <span class="md-icon" title="Last update">
       <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M21 13.1c-.1 0-.3.1-.4.2l-1 1 2.1 2.1 1-1c.2-.2.2-.6 0-.8l-1.3-1.3c-.1-.1-.2-.2-.4-.2m-1.9 1.8-6.1 6V23h2.1l6.1-6.1zM12.5 7v5.2l4 2.4-1 1L11 13V7zM11 21.9c-5.1-.5-9-4.8-9-9.9C2 6.5 6.5 2 12 2c5.3 0 9.6 4.1 10 9.3-.3-.1-.6-.2-1-.2s-.7.1-1 .2C19.6 7.2 16.2 4 12 4c-4.4 0-8 3.6-8 8 0 4.1 3.1 7.5 7.1 7.9l-.1.2z"/></svg>
     </span>
-    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-date" title="March 22, 2025 12:15:30">March 22, 2025</span>
+    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-date" title="March 27, 2025 12:56:16">March 27, 2025</span>
   </span>
 
     
