@@ -1110,14 +1110,14 @@ dd<span class="w"> </span><span class="k">if</span><span class="o">=</span>/dev/
 </code></pre></div>
 </details>
 <h2 id="when-to-use-zero-copy">When to Use Zero-Copy<a class="headerlink" href="#when-to-use-zero-copy" title="Permanent link">&para;</a></h2>
-<p>Zero-copy techniques are highly beneficial for:</p>
+<p>✅ Zero-copy techniques are highly beneficial for:</p>
 <ul>
 <li>Network servers handling large amounts of concurrent data streams. Avoiding unnecessary memory copies helps reduce CPU usage and latency, especially under high load.</li>
 <li>Applications with heavy I/O operations like file streaming or real-time data processing. Zero-copy allows data to move through the system efficiently without redundant allocations or copies.</li>
 </ul>
 <div class="admonition warning">
 <p class="admonition-title">Warning</p>
-<p>Zero-copy should be used judiciously. Since slices share underlying memory, care must be taken to prevent unintended data mutations. Shared memory can lead to subtle bugs if one part of the system modifies data still in use elsewhere. Zero-copy can also introduce additional complexity, so it’s important to measure and confirm that the performance gains are worth the tradeoffs.</p>
+<p>❌ Zero-copy should be used judiciously. Since slices share underlying memory, care must be taken to prevent unintended data mutations. Shared memory can lead to subtle bugs if one part of the system modifies data still in use elsewhere. Zero-copy can also introduce additional complexity, so it’s important to measure and confirm that the performance gains are worth the tradeoffs.</p>
 </div>
 <h3 id="real-world-use-cases-and-libraries">Real-World Use Cases and Libraries<a class="headerlink" href="#real-world-use-cases-and-libraries" title="Permanent link">&para;</a></h3>
 <p>Zero-copy strategies aren't just theoretical—they're used in production by performance-critical Go systems:</p>

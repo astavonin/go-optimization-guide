@@ -803,7 +803,8 @@
 
 
 <h1 id="memory-preallocation">Memory Preallocation<a class="headerlink" href="#memory-preallocation" title="Permanent link">&para;</a></h1>
-<p>Memory preallocation is a powerful and straightforward optimization technique in Go. By explicitly allocating required memory upfront, developers reduce hidden costs associated with dynamic resizing—such as frequent memory allocations, data copying, and increased garbage collection (GC) activity. Effective preallocation leads to predictable, efficient performance, especially crucial for performance-critical or high-throughput systems.</p>
+<p>Memory preallocation is a practical way to improve performance in Go programs that deal with growing slices or maps. By allocating enough space upfront, you can avoid the overhead of repeated resizing, which often involves memory allocation, data copying, and extra work for the garbage collector.</p>
+<p>In high-throughput or performance-sensitive code, preallocating memory helps keep execution predictable and efficient, especially when working with large or known workloads.</p>
 <h2 id="why-preallocation-matters">Why Preallocation Matters<a class="headerlink" href="#why-preallocation-matters" title="Permanent link">&para;</a></h2>
 <p>In Go, slices and maps dynamically expand to accommodate new elements. While convenient, this automatic growth introduces overhead. When a slice or map reaches its capacity, Go must allocate a new memory block and copy existing data into it. Frequent resizing operations significantly degrade performance, especially within tight loops or resource-intensive tasks.</p>
 <p>Go employs a specific growth strategy for slices to balance memory efficiency and performance. Initially, slice capacities double with each expansion, ensuring rapid growth. However, once a slice exceeds approximately 1024 elements, the capacity growth rate reduces to about 25%. For example, starting from a capacity of 1, slices grow sequentially to capacities of 2, 4, 8, and so forth. But after surpassing 1024 elements, the next capacity increment would typically be around 1280 rather than doubling to 2048. This controlled growth reduces memory waste but increases allocation frequency if the final slice size is predictable but not explicitly preallocated.</p>
@@ -890,15 +891,15 @@ BenchmarkAppendWithPrealloc-14            170154              7093 ns/op        
 <h2 id="when-to-preallocate">When To Preallocate<a class="headerlink" href="#when-to-preallocate" title="Permanent link">&para;</a></h2>
 <p>✅ Preallocate when:</p>
 <ul>
-<li>The number of elements in slices or maps is known or reasonably predictable.</li>
-<li>Your application involves tight loops or high-throughput data processing.</li>
-<li>Minimizing garbage collection overhead is crucial for your application's performance.</li>
+<li>The number of elements in slices or maps is known or reasonably predictable. Allocating memory up front avoids the cost of repeated resizing as the data structure grows.</li>
+<li>Your application involves tight loops or high-throughput data processing. Preallocation reduces per-iteration overhead and helps maintain steady performance under load.</li>
+<li>Minimizing garbage collection overhead is crucial for your application's performance. Fewer allocations mean less work for the garbage collector, resulting in lower latency and more consistent behavior.</li>
 </ul>
 <p>❌ Avoid preallocation when:</p>
 <ul>
-<li>The data size is highly variable and unpredictable.</li>
-<li>Over-allocation risks significant memory waste.</li>
-<li>You're prematurely optimizing—always profile to confirm the benefit.</li>
+<li>The data size is highly variable and unpredictable. Allocating too much or too little memory can either waste resources or negate the performance benefit.</li>
+<li>Over-allocation risks significant memory waste. Reserving more memory than needed can increase your application’s footprint unnecessarily.</li>
+<li>You're prematurely optimizing—always profile to confirm the benefit. Preallocation is helpful, but only when it solves a real, measurable problem in your workload.</li>
 </ul>
 
 
@@ -920,7 +921,7 @@ BenchmarkAppendWithPrealloc-14            170154              7093 ns/op        
     <span class="md-icon" title="Last update">
       <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M21 13.1c-.1 0-.3.1-.4.2l-1 1 2.1 2.1 1-1c.2-.2.2-.6 0-.8l-1.3-1.3c-.1-.1-.2-.2-.4-.2m-1.9 1.8-6.1 6V23h2.1l6.1-6.1zM12.5 7v5.2l4 2.4-1 1L11 13V7zM11 21.9c-5.1-.5-9-4.8-9-9.9C2 6.5 6.5 2 12 2c5.3 0 9.6 4.1 10 9.3-.3-.1-.6-.2-1-.2s-.7.1-1 .2C19.6 7.2 16.2 4 12 4c-4.4 0-8 3.6-8 8 0 4.1 3.1 7.5 7.1 7.9l-.1.2z"/></svg>
     </span>
-    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-date" title="March 22, 2025 12:15:30">March 22, 2025</span>
+    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-date" title="March 27, 2025 12:56:16">March 27, 2025</span>
   </span>
 
     

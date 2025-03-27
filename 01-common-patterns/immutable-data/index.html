@@ -1155,7 +1155,7 @@
 <p>Benchmarking immutable data sharing in real-world systems is difficult to do in a generic, meaningful way. Factors like structure size, read/write ratio, and memory layout all heavily influence results.</p>
 <p>Rather than presenting artificial benchmarks here, we recommend reviewing the results in the <a href="../atomic-ops/#performance-benchmarking">Atomic Operations and Synchronization Primitives</a> article. Those benchmarks clearly illustrate the potential performance benefits of using atomic.Value over traditional synchronization primitives like sync.RWMutex, especially in highly concurrent read scenarios.</p>
 <h2 id="when-to-use-this-pattern">When to Use This Pattern<a class="headerlink" href="#when-to-use-this-pattern" title="Permanent link">&para;</a></h2>
-<p>Immutable data sharing is ideal when:</p>
+<p>✅ Immutable data sharing is ideal when:</p>
 <ul>
 <li>
 <p>The data is read-heavy and write-light (e.g., configuration, feature flags, global mappings). This works well because the cost of creating new immutable versions is amortized over many reads, and avoiding locks provides a performance boost.</p>
@@ -1167,7 +1167,7 @@
 <p>You can tolerate minor delays between update and read (eventual consistency). Since data updates are not coordinated with readers, there might be a small delay before all goroutines see the new version. If exact timing isn't critical, this tradeoff simplifies your concurrency model.</p>
 </li>
 </ul>
-<p>It’s less suitable when updates must be transactional across multiple pieces of data or happen frequently. In those cases, the cost of repeated copying or lack of coordination can outweigh the benefits.</p>
+<p>❌ It’s less suitable when updates must be transactional across multiple pieces of data or happen frequently. In those cases, the cost of repeated copying or lack of coordination can outweigh the benefits.</p>
 
 
 
@@ -1188,7 +1188,7 @@
     <span class="md-icon" title="Last update">
       <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M21 13.1c-.1 0-.3.1-.4.2l-1 1 2.1 2.1 1-1c.2-.2.2-.6 0-.8l-1.3-1.3c-.1-.1-.2-.2-.4-.2m-1.9 1.8-6.1 6V23h2.1l6.1-6.1zM12.5 7v5.2l4 2.4-1 1L11 13V7zM11 21.9c-5.1-.5-9-4.8-9-9.9C2 6.5 6.5 2 12 2c5.3 0 9.6 4.1 10 9.3-.3-.1-.6-.2-1-.2s-.7.1-1 .2C19.6 7.2 16.2 4 12 4c-4.4 0-8 3.6-8 8 0 4.1 3.1 7.5 7.1 7.9l-.1.2z"/></svg>
     </span>
-    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-date" title="March 27, 2025 12:11:11">March 27, 2025</span>
+    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-date" title="March 27, 2025 12:56:16">March 27, 2025</span>
   </span>
 
     
