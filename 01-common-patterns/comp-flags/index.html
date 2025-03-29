@@ -8,26 +8,28 @@
       
       
       
-        <link rel="canonical" href="https://goperf.dev/">
+        <link rel="canonical" href="https://goperf.dev/01-common-patterns/comp-flags/">
       
       
+        <link rel="prev" href="../batching-ops/">
       
-        <link rel="next" href="01-common-patterns/">
+      
+        <link rel="next" href="../stack-alloc/">
       
       
-      <link rel="icon" href="assets/images/favicon.png">
+      <link rel="icon" href="../../assets/images/favicon.png">
       <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.6.9">
     
     
       
-        <title>Go Optimization Guide</title>
+        <title>Leveraging Compiler Optimization Flags - Go Optimization Guide</title>
       
     
     
-      <link rel="stylesheet" href="assets/stylesheets/main.4af4bdda.min.css">
+      <link rel="stylesheet" href="../../assets/stylesheets/main.4af4bdda.min.css">
       
         
-        <link rel="stylesheet" href="assets/stylesheets/palette.06af60db.min.css">
+        <link rel="stylesheet" href="../../assets/stylesheets/palette.06af60db.min.css">
       
       
 
@@ -52,7 +54,7 @@
       
     
     
-    <script>__md_scope=new URL(".",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    <script>__md_scope=new URL("../..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
     
       
 
@@ -76,7 +78,7 @@
     <div data-md-component="skip">
       
         
-        <a href="#go-optimization-guide-patterns-and-techniques-for-high-performance-applications" class="md-skip">
+        <a href="#leveraging-compiler-optimization-flags" class="md-skip">
           Skip to content
         </a>
       
@@ -92,7 +94,7 @@
 
 <header class="md-header md-header--shadow" data-md-component="header">
   <nav class="md-header__inner md-grid" aria-label="Header">
-    <a href="." title="Go Optimization Guide" class="md-header__button md-logo" aria-label="Go Optimization Guide" data-md-component="logo">
+    <a href="../.." title="Go Optimization Guide" class="md-header__button md-logo" aria-label="Go Optimization Guide" data-md-component="logo">
       
   
   <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
@@ -112,7 +114,7 @@
         <div class="md-header__topic" data-md-component="header-topic">
           <span class="md-ellipsis">
             
-              Home
+              Leveraging Compiler Optimization Flags
             
           </span>
         </div>
@@ -201,7 +203,7 @@
 
 <nav class="md-nav md-nav--primary" aria-label="Navigation" data-md-level="0">
   <label class="md-nav__title" for="__drawer">
-    <a href="." title="Go Optimization Guide" class="md-nav__button md-logo" aria-label="Go Optimization Guide" data-md-component="logo">
+    <a href="../.." title="Go Optimization Guide" class="md-nav__button md-logo" aria-label="Go Optimization Guide" data-md-component="logo">
       
   
   <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
@@ -228,31 +230,10 @@
       
   
   
-    
   
   
-  
-    <li class="md-nav__item md-nav__item--active">
-      
-      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
-      
-      
-        
-      
-      
-        <label class="md-nav__link md-nav__link--active" for="__toc">
-          
-  
-  <span class="md-ellipsis">
-    Home
-    
-  </span>
-  
-
-          <span class="md-nav__icon md-icon"></span>
-        </label>
-      
-      <a href="." class="md-nav__link md-nav__link--active">
+    <li class="md-nav__item">
+      <a href="../.." class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -262,83 +243,6 @@
   
 
       </a>
-      
-        
-
-<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
-  
-  
-  
-    
-  
-  
-    <label class="md-nav__title" for="__toc">
-      <span class="md-nav__icon md-icon"></span>
-      Table of contents
-    </label>
-    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
-      
-        <li class="md-nav__item">
-  <a href="#whats-covered-so-far" class="md-nav__link">
-    <span class="md-ellipsis">
-      📌 What’s Covered So Far
-    </span>
-  </a>
-  
-    <nav class="md-nav" aria-label="📌 What’s Covered So Far">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#common-go-patterns-for-performance" class="md-nav__link">
-    <span class="md-ellipsis">
-      Common Go Patterns for Performance
-    </span>
-  </a>
-  
-</li>
-        
-      </ul>
-    </nav>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#whats-coming-next" class="md-nav__link">
-    <span class="md-ellipsis">
-      🔜 What’s Coming Next
-    </span>
-  </a>
-  
-    <nav class="md-nav" aria-label="🔜 What’s Coming Next">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#high-performance-networking-in-go-working-title" class="md-nav__link">
-    <span class="md-ellipsis">
-      High-Performance Networking in Go (working title)
-    </span>
-  </a>
-  
-</li>
-        
-      </ul>
-    </nav>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#who-this-is-for" class="md-nav__link">
-    <span class="md-ellipsis">
-      🎯 Who This Is For
-    </span>
-  </a>
-  
-</li>
-      
-    </ul>
-  
-</nav>
-      
     </li>
   
 
@@ -347,6 +251,8 @@
       
   
   
+    
+  
   
   
     
@@ -367,18 +273,16 @@
     
     
     
-    <li class="md-nav__item md-nav__item--nested">
+    <li class="md-nav__item md-nav__item--active md-nav__item--nested">
       
         
         
-          
-        
-        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_2" >
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_2" checked>
         
           
           
           <div class="md-nav__link md-nav__container">
-            <a href="01-common-patterns/" class="md-nav__link ">
+            <a href="../" class="md-nav__link ">
               
   
   <span class="md-ellipsis">
@@ -396,7 +300,7 @@
             
           </div>
         
-        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_2_label" aria-expanded="false">
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_2_label" aria-expanded="true">
           <label class="md-nav__title" for="__nav_2">
             <span class="md-nav__icon md-icon"></span>
             Common Go Patterns for Performance
@@ -466,7 +370,7 @@
   
   
     <li class="md-nav__item">
-      <a href="01-common-patterns/object-pooling/" class="md-nav__link">
+      <a href="../object-pooling/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -488,7 +392,7 @@
   
   
     <li class="md-nav__item">
-      <a href="01-common-patterns/mem-prealloc/" class="md-nav__link">
+      <a href="../mem-prealloc/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -510,7 +414,7 @@
   
   
     <li class="md-nav__item">
-      <a href="01-common-patterns/fields-alignment/" class="md-nav__link">
+      <a href="../fields-alignment/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -532,7 +436,7 @@
   
   
     <li class="md-nav__item">
-      <a href="01-common-patterns/interface-boxing/" class="md-nav__link">
+      <a href="../interface-boxing/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -554,7 +458,7 @@
   
   
     <li class="md-nav__item">
-      <a href="01-common-patterns/zero-copy/" class="md-nav__link">
+      <a href="../zero-copy/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -576,7 +480,7 @@
   
   
     <li class="md-nav__item">
-      <a href="01-common-patterns/gc/" class="md-nav__link">
+      <a href="../gc/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -598,7 +502,7 @@
   
   
     <li class="md-nav__item">
-      <a href="01-common-patterns/stack-alloc/" class="md-nav__link">
+      <a href="../stack-alloc/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -678,7 +582,7 @@
   
   
     <li class="md-nav__item">
-      <a href="01-common-patterns/worker-pool/" class="md-nav__link">
+      <a href="../worker-pool/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -700,7 +604,7 @@
   
   
     <li class="md-nav__item">
-      <a href="01-common-patterns/atomic-ops/" class="md-nav__link">
+      <a href="../atomic-ops/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -722,7 +626,7 @@
   
   
     <li class="md-nav__item">
-      <a href="01-common-patterns/lazy-init/" class="md-nav__link">
+      <a href="../lazy-init/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -744,7 +648,7 @@
   
   
     <li class="md-nav__item">
-      <a href="01-common-patterns/immutable-data/" class="md-nav__link">
+      <a href="../immutable-data/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -766,7 +670,7 @@
   
   
     <li class="md-nav__item">
-      <a href="01-common-patterns/context/" class="md-nav__link">
+      <a href="../context/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -840,7 +744,7 @@
   
   
     <li class="md-nav__item">
-      <a href="01-common-patterns/buffered-io/" class="md-nav__link">
+      <a href="../buffered-io/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -862,7 +766,7 @@
   
   
     <li class="md-nav__item">
-      <a href="01-common-patterns/batching-ops/" class="md-nav__link">
+      <a href="../batching-ops/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -889,8 +793,10 @@
                 
   
   
+    
   
   
+  
     
     
       
@@ -901,13 +807,11 @@
     
     
     
-    <li class="md-nav__item md-nav__item--nested">
+    <li class="md-nav__item md-nav__item--active md-nav__item--nested">
       
         
         
-          
-        
-        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_2_5" >
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_2_5" checked>
         
           
           <label class="md-nav__link" for="__nav_2_5" id="__nav_2_5_label" tabindex="0">
@@ -922,7 +826,7 @@
             <span class="md-nav__icon md-icon"></span>
           </label>
         
-        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_2_5_label" aria-expanded="false">
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_2_5_label" aria-expanded="true">
           <label class="md-nav__title" for="__nav_2_5">
             <span class="md-nav__icon md-icon"></span>
             Compiler-Level Optimization and Tuning
@@ -933,10 +837,31 @@
                 
   
   
+    
   
   
-    <li class="md-nav__item">
-      <a href="01-common-patterns/comp-flags/" class="md-nav__link">
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  <span class="md-ellipsis">
+    Leveraging Compiler Optimization Flags
+    
+  </span>
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
         
   
   <span class="md-ellipsis">
@@ -946,6 +871,125 @@
   
 
       </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#why-compiler-flags-matter" class="md-nav__link">
+    <span class="md-ellipsis">
+      Why Compiler Flags Matter
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Why Compiler Flags Matter">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#use-cases-include" class="md-nav__link">
+    <span class="md-ellipsis">
+      Use cases include:
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#key-compiler-and-linker-flags" class="md-nav__link">
+    <span class="md-ellipsis">
+      Key Compiler and Linker Flags
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Key Compiler and Linker Flags">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#-ldflags-s-w-strip-debug-info" class="md-nav__link">
+    <span class="md-ellipsis">
+      -ldflags="-s -w" — Strip Debug Info
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#-gcflags-control-compiler-optimizations" class="md-nav__link">
+    <span class="md-ellipsis">
+      -gcflags — Control Compiler Optimizations
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#cross-compilation-flags" class="md-nav__link">
+    <span class="md-ellipsis">
+      Cross-Compilation Flags
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#build-tags" class="md-nav__link">
+    <span class="md-ellipsis">
+      Build Tags
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Build Tags">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#example" class="md-nav__link">
+    <span class="md-ellipsis">
+      Example:
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#-ldflags-x-inject-build-time-variables" class="md-nav__link">
+    <span class="md-ellipsis">
+      -ldflags="-X ..." — Inject Build-Time Variables
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
     </li>
   
 
@@ -958,7 +1002,7 @@
   
   
     <li class="md-nav__item">
-      <a href="01-common-patterns/stack-alloc/" class="md-nav__link">
+      <a href="../stack-alloc/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -1015,19 +1059,19 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#whats-covered-so-far" class="md-nav__link">
+  <a href="#why-compiler-flags-matter" class="md-nav__link">
     <span class="md-ellipsis">
-      📌 What’s Covered So Far
+      Why Compiler Flags Matter
     </span>
   </a>
   
-    <nav class="md-nav" aria-label="📌 What’s Covered So Far">
+    <nav class="md-nav" aria-label="Why Compiler Flags Matter">
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
-  <a href="#common-go-patterns-for-performance" class="md-nav__link">
+  <a href="#use-cases-include" class="md-nav__link">
     <span class="md-ellipsis">
-      Common Go Patterns for Performance
+      Use cases include:
     </span>
   </a>
   
@@ -1039,19 +1083,56 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#whats-coming-next" class="md-nav__link">
+  <a href="#key-compiler-and-linker-flags" class="md-nav__link">
     <span class="md-ellipsis">
-      🔜 What’s Coming Next
+      Key Compiler and Linker Flags
     </span>
   </a>
   
-    <nav class="md-nav" aria-label="🔜 What’s Coming Next">
+    <nav class="md-nav" aria-label="Key Compiler and Linker Flags">
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
-  <a href="#high-performance-networking-in-go-working-title" class="md-nav__link">
+  <a href="#-ldflags-s-w-strip-debug-info" class="md-nav__link">
     <span class="md-ellipsis">
-      High-Performance Networking in Go (working title)
+      -ldflags="-s -w" — Strip Debug Info
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#-gcflags-control-compiler-optimizations" class="md-nav__link">
+    <span class="md-ellipsis">
+      -gcflags — Control Compiler Optimizations
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#cross-compilation-flags" class="md-nav__link">
+    <span class="md-ellipsis">
+      Cross-Compilation Flags
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#build-tags" class="md-nav__link">
+    <span class="md-ellipsis">
+      Build Tags
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Build Tags">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#example" class="md-nav__link">
+    <span class="md-ellipsis">
+      Example:
     </span>
   </a>
   
@@ -1061,13 +1142,18 @@
     </nav>
   
 </li>
-      
-        <li class="md-nav__item">
-  <a href="#who-this-is-for" class="md-nav__link">
+        
+          <li class="md-nav__item">
+  <a href="#-ldflags-x-inject-build-time-variables" class="md-nav__link">
     <span class="md-ellipsis">
-      🎯 Who This Is For
+      -ldflags="-X ..." — Inject Build-Time Variables
     </span>
   </a>
+  
+</li>
+        
+      </ul>
+    </nav>
   
 </li>
       
@@ -1090,48 +1176,80 @@
   
 
 
-<h1 id="go-optimization-guide-patterns-and-techniques-for-high-performance-applications">Go Optimization Guide: Patterns and Techniques for High-Performance Applications<a class="headerlink" href="#go-optimization-guide-patterns-and-techniques-for-high-performance-applications" title="Permanent link">&para;</a></h1>
-<p>The <strong>Go App Optimization Series</strong> is a collection of technical articles aimed at helping developers write faster, more efficient Go applications. Whether you're building high-throughput APIs, microservices, or distributed systems, this series offers practical patterns, real-world use cases, and low-level performance insights to guide your optimization efforts.</p>
-<p>While Go doesn’t expose as many knobs for performance tuning as languages like C++ or Rust, it still provides <strong>plenty of opportunities</strong> to make your applications significantly faster. From memory reuse and allocation control to efficient networking and concurrency patterns, Go offers a pragmatic set of tools for writing high-performance code.</p>
-<p>We focus on <strong>concrete techniques</strong> you can apply immediately—covering everything from core language features to advanced networking strategies.</p>
-<h2 id="whats-covered-so-far">📌 What’s Covered So Far<a class="headerlink" href="#whats-covered-so-far" title="Permanent link">&para;</a></h2>
-<h3 id="common-go-patterns-for-performance"><a href="01-common-patterns/">Common Go Patterns for Performance</a><a class="headerlink" href="#common-go-patterns-for-performance" title="Permanent link">&para;</a></h3>
-<p>In this first article, we explore a curated set of high-impact performance patterns every Go developer should know:</p>
+<h1 id="leveraging-compiler-optimization-flags">Leveraging Compiler Optimization Flags<a class="headerlink" href="#leveraging-compiler-optimization-flags" title="Permanent link">&para;</a></h1>
+<p>When optimizing Go applications for performance, we often focus on profiling, memory allocations, or concurrency patterns. But there's another layer worth considering: how the Go compiler itself optimizes your code during the build process.</p>
+<p>While Go doesn’t expose the same granular set of compiler flags as C or Rust, it still provides useful ways to influence how your code is built—especially when targeting performance, binary size, or specific environments.</p>
+<p>In this guide, we’ll walk through how to leverage Go compiler and linker flags effectively, what they do, and when to use them.</p>
+<h2 id="why-compiler-flags-matter">Why Compiler Flags Matter<a class="headerlink" href="#why-compiler-flags-matter" title="Permanent link">&para;</a></h2>
+<p>Go's compiler (specifically <code>cmd/compile</code> and <code>cmd/link</code>) performs several default optimizations: inlining, escape analysis, dead code elimination, and more. However, there are scenarios where you can squeeze more performance or control from your build using the right flags.</p>
+<h3 id="use-cases-include">Use cases include:<a class="headerlink" href="#use-cases-include" title="Permanent link">&para;</a></h3>
 <ul>
-<li>Using <code>sync.Pool</code> effectively</li>
-<li>Avoiding unnecessary allocations</li>
-<li>Struct layout and memory alignment</li>
-<li>Efficient error handling</li>
-<li>Zero-cost abstractions with interfaces</li>
-<li>In-place sorting and slices reuse</li>
+<li>Reducing binary size for minimal containers or embedded systems  </li>
+<li>Building for specific architectures or OSes  </li>
+<li>Removing debug information for release builds  </li>
+<li>Disabling optimizations temporarily for easier debugging  </li>
+<li>Enabling experimental or unsafe performance tricks (carefully)</li>
 </ul>
-<p>Each pattern is grounded in practical use cases, with benchmarks and examples you can copy into your own codebase.</p>
-<hr />
-<h2 id="whats-coming-next">🔜 What’s Coming Next<a class="headerlink" href="#whats-coming-next" title="Permanent link">&para;</a></h2>
-<h3 id="high-performance-networking-in-go-working-title">High-Performance Networking in Go <em>(working title)</em><a class="headerlink" href="#high-performance-networking-in-go-working-title" title="Permanent link">&para;</a></h3>
-<p>In our upcoming deep dive into networking, we'll focus on building high-throughput network services with Go’s standard library and beyond. This includes:</p>
+<h2 id="key-compiler-and-linker-flags">Key Compiler and Linker Flags<a class="headerlink" href="#key-compiler-and-linker-flags" title="Permanent link">&para;</a></h2>
+<h3 id="-ldflags-s-w-strip-debug-info"><code>-ldflags="-s -w"</code> — Strip Debug Info<a class="headerlink" href="#-ldflags-s-w-strip-debug-info" title="Permanent link">&para;</a></h3>
+<p>When you want to shrink binary size, especially in production or containers:</p>
+<div class="highlight"><pre><span></span><code>go<span class="w"> </span>build<span class="w"> </span>-ldflags<span class="o">=</span><span class="s2">&quot;-s -w&quot;</span><span class="w"> </span>-o<span class="w"> </span>app<span class="w"> </span>main.go
+</code></pre></div>
 <ul>
-<li>Efficient use of <code>net/http</code> and <code>net.Conn</code></li>
-<li>Reusing buffers and minimizing GC pressure</li>
-<li>Managing large volumes of concurrent connections</li>
-<li>Performance tuning with epoll/kqueue and <code>GOMAXPROCS</code></li>
-<li>Load testing techniques and bottleneck diagnostics</li>
+<li><code>-s</code>: Omit the symbol table</li>
+<li><code>-w</code>: Omit DWARF debugging information</li>
 </ul>
-<p>We'll also explore when to drop down to lower-level libraries like <code>fasthttp</code>, and how to balance performance with maintainability.</p>
-<blockquote>
-<p>📖 <em>Want to suggest a better title for this section? We're considering alternatives like "Go Networking for Speed" or "Scaling Go Network Services."</em></p>
-</blockquote>
-<hr />
-<h2 id="who-this-is-for">🎯 Who This Is For<a class="headerlink" href="#who-this-is-for" title="Permanent link">&para;</a></h2>
-<p>This series is ideal for:</p>
+<p>Why it matters: This can reduce binary size by up to 30-40%, depending on your codebase. Useful in Docker images or when distributing binaries.</p>
+<h3 id="-gcflags-control-compiler-optimizations"><code>-gcflags</code> — Control Compiler Optimizations<a class="headerlink" href="#-gcflags-control-compiler-optimizations" title="Permanent link">&para;</a></h3>
+<p>The <code>-gcflags</code> flag allows you to control how the compiler treats specific packages. For example, you can disable optimizations for debugging:</p>
+<div class="highlight"><pre><span></span><code>go<span class="w"> </span>build<span class="w"> </span>-gcflags<span class="o">=</span><span class="s2">&quot;all=-N -l&quot;</span><span class="w"> </span>-o<span class="w"> </span>app<span class="w"> </span>main.go
+</code></pre></div>
 <ul>
-<li>Backend engineers optimizing Go services in production</li>
-<li>Developers working on latency-sensitive systems</li>
-<li>Teams migrating to Go and building performance-critical paths</li>
-<li>Anyone curious about Go’s performance model and trade-offs</li>
+<li><code>-N</code>: Disable optimizations</li>
+<li><code>-l</code>: Disable inlining</li>
 </ul>
-<hr />
-<p>Stay tuned—more articles, code samples, and tools are on the way. You can bookmark this page to follow the series as it evolves.</p>
+<p>When to use: During debugging sessions with Delve or similar tools. Disabling inlining and optimizations makes stack traces and breakpoints more reliable.</p>
+<h3 id="cross-compilation-flags">Cross-Compilation Flags<a class="headerlink" href="#cross-compilation-flags" title="Permanent link">&para;</a></h3>
+<p>Need to build for another OS or architecture?</p>
+<div class="highlight"><pre><span></span><code><span class="nv">GOOS</span><span class="o">=</span>linux<span class="w"> </span><span class="nv">GOARCH</span><span class="o">=</span>arm64<span class="w"> </span>go<span class="w"> </span>build<span class="w"> </span>-o<span class="w"> </span>app<span class="w"> </span>main.go
+</code></pre></div>
+<ul>
+<li><code>GOOS</code>, <code>GOARCH</code>: Set target OS and architecture</li>
+<li>Common values: <code>windows</code>, <code>darwin</code>, <code>linux</code>, <code>amd64</code>, <code>arm64</code>, <code>386</code>, <code>wasm</code></li>
+</ul>
+<h3 id="build-tags">Build Tags<a class="headerlink" href="#build-tags" title="Permanent link">&para;</a></h3>
+<p>Build tags allow conditional compilation. Use <code>//go:build</code> or <code>// +build</code> in your source code to control what gets compiled in.</p>
+<h4 id="example">Example:<a class="headerlink" href="#example" title="Permanent link">&para;</a></h4>
+<div class="highlight"><pre><span></span><code><span class="c1">//go:build debug</span>
+
+<span class="kn">package</span><span class="w"> </span><span class="nx">main</span>
+
+<span class="kn">import</span><span class="w"> </span><span class="s">&quot;log&quot;</span>
+
+<span class="kd">func</span><span class="w"> </span><span class="nx">debugLog</span><span class="p">(</span><span class="nx">msg</span><span class="w"> </span><span class="kt">string</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="nx">log</span><span class="p">.</span><span class="nx">Println</span><span class="p">(</span><span class="s">&quot;[DEBUG]&quot;</span><span class="p">,</span><span class="w"> </span><span class="nx">msg</span><span class="p">)</span>
+<span class="p">}</span>
+</code></pre></div>
+<p>Then build with:</p>
+<div class="highlight"><pre><span></span><code>go<span class="w"> </span>build<span class="w"> </span>-tags<span class="o">=</span>debug<span class="w"> </span>-o<span class="w"> </span>app<span class="w"> </span>main.go
+</code></pre></div>
+<h3 id="-ldflags-x-inject-build-time-variables"><code>-ldflags="-X ..."</code> — Inject Build-Time Variables<a class="headerlink" href="#-ldflags-x-inject-build-time-variables" title="Permanent link">&para;</a></h3>
+<p>You can inject version numbers or metadata into your binary at build time:</p>
+<div class="highlight"><pre><span></span><code><span class="c1">// main.go</span>
+<span class="kn">package</span><span class="w"> </span><span class="nx">main</span>
+
+<span class="kn">import</span><span class="w"> </span><span class="s">&quot;fmt&quot;</span>
+
+<span class="kd">var</span><span class="w"> </span><span class="nx">version</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="s">&quot;dev&quot;</span>
+
+<span class="kd">func</span><span class="w"> </span><span class="nx">main</span><span class="p">()</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="nx">fmt</span><span class="p">.</span><span class="nx">Printf</span><span class="p">(</span><span class="s">&quot;App version: %s\n&quot;</span><span class="p">,</span><span class="w"> </span><span class="nx">version</span><span class="p">)</span>
+<span class="p">}</span>
+</code></pre></div>
+<p>Then build with:</p>
+<div class="highlight"><pre><span></span><code>go<span class="w"> </span>build<span class="w"> </span>-ldflags<span class="o">=</span><span class="s2">&quot;-s -w -X main.version=1.0.0&quot;</span><span class="w"> </span>-o<span class="w"> </span>app<span class="w"> </span>main.go
+</code></pre></div>
+<p>This sets the <code>version</code> variable at link time without modifying your source code. It's useful for embedding release versions, commit hashes, or build dates.</p>
 
 
 
@@ -1152,7 +1270,7 @@
     <span class="md-icon" title="Last update">
       <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M21 13.1c-.1 0-.3.1-.4.2l-1 1 2.1 2.1 1-1c.2-.2.2-.6 0-.8l-1.3-1.3c-.1-.1-.2-.2-.4-.2m-1.9 1.8-6.1 6V23h2.1l6.1-6.1zM12.5 7v5.2l4 2.4-1 1L11 13V7zM11 21.9c-5.1-.5-9-4.8-9-9.9C2 6.5 6.5 2 12 2c5.3 0 9.6 4.1 10 9.3-.3-.1-.6-.2-1-.2s-.7.1-1 .2C19.6 7.2 16.2 4 12 4c-4.4 0-8 3.6-8 8 0 4.1 3.1 7.5 7.1 7.9l-.1.2z"/></svg>
     </span>
-    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-date" title="March 29, 2025 11:55:14">March 29, 2025</span>
+    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-date" title="March 29, 2025 13:27:49">March 29, 2025</span>
   </span>
 
     
@@ -1199,10 +1317,10 @@
     </div>
     
     
-    <script id="__config" type="application/json">{"base": ".", "features": ["navigation.indexes", "navigation.instant", "navigation.tracking", "navigation.expand", "navigation.path", "search.suggest", "search.highlight", "content.code.copy", "content.code.annotate", "toc.follow"], "search": "assets/javascripts/workers/search.f8cc74c7.min.js", "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}}</script>
+    <script id="__config" type="application/json">{"base": "../..", "features": ["navigation.indexes", "navigation.instant", "navigation.tracking", "navigation.expand", "navigation.path", "search.suggest", "search.highlight", "content.code.copy", "content.code.annotate", "toc.follow"], "search": "../../assets/javascripts/workers/search.f8cc74c7.min.js", "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}}</script>
     
     
-      <script src="assets/javascripts/bundle.c8b220af.min.js"></script>
+      <script src="../../assets/javascripts/bundle.c8b220af.min.js"></script>
       
     
   </body>
