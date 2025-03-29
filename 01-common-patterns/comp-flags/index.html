@@ -78,7 +78,7 @@
     <div data-md-component="skip">
       
         
-        <a href="#leveraging-compiler-optimization-flags" class="md-skip">
+        <a href="#leveraging-compiler-optimization-flags-in-go" class="md-skip">
           Skip to content
         </a>
       
@@ -894,21 +894,6 @@
     </span>
   </a>
   
-    <nav class="md-nav" aria-label="Why Compiler Flags Matter">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#use-cases-include" class="md-nav__link">
-    <span class="md-ellipsis">
-      Use cases include:
-    </span>
-  </a>
-  
-</li>
-        
-      </ul>
-    </nav>
-  
 </li>
       
         <li class="md-nav__item">
@@ -955,21 +940,6 @@
     </span>
   </a>
   
-    <nav class="md-nav" aria-label="Build Tags">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#example" class="md-nav__link">
-    <span class="md-ellipsis">
-      Example:
-    </span>
-  </a>
-  
-</li>
-        
-      </ul>
-    </nav>
-  
 </li>
         
           <li class="md-nav__item">
@@ -978,6 +948,30 @@
       -ldflags="-X ..." — Inject Build-Time Variables
     </span>
   </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#-extldflags-static-build-fully-static-binaries" class="md-nav__link">
+    <span class="md-ellipsis">
+      -extldflags='-static' — Build Fully Static Binaries
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="-extldflags=&#39;-static&#39; — Build Fully Static Binaries">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#example-static-build-with-libcurl-via-cgo" class="md-nav__link">
+    <span class="md-ellipsis">
+      Example: Static Build with libcurl via CGO
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
   
 </li>
         
@@ -1065,21 +1059,6 @@
     </span>
   </a>
   
-    <nav class="md-nav" aria-label="Why Compiler Flags Matter">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#use-cases-include" class="md-nav__link">
-    <span class="md-ellipsis">
-      Use cases include:
-    </span>
-  </a>
-  
-</li>
-        
-      </ul>
-    </nav>
-  
 </li>
       
         <li class="md-nav__item">
@@ -1126,21 +1105,6 @@
     </span>
   </a>
   
-    <nav class="md-nav" aria-label="Build Tags">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#example" class="md-nav__link">
-    <span class="md-ellipsis">
-      Example:
-    </span>
-  </a>
-  
-</li>
-        
-      </ul>
-    </nav>
-  
 </li>
         
           <li class="md-nav__item">
@@ -1149,6 +1113,30 @@
       -ldflags="-X ..." — Inject Build-Time Variables
     </span>
   </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#-extldflags-static-build-fully-static-binaries" class="md-nav__link">
+    <span class="md-ellipsis">
+      -extldflags='-static' — Build Fully Static Binaries
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="-extldflags=&#39;-static&#39; — Build Fully Static Binaries">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#example-static-build-with-libcurl-via-cgo" class="md-nav__link">
+    <span class="md-ellipsis">
+      Example: Static Build with libcurl via CGO
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
   
 </li>
         
@@ -1176,13 +1164,12 @@
   
 
 
-<h1 id="leveraging-compiler-optimization-flags">Leveraging Compiler Optimization Flags<a class="headerlink" href="#leveraging-compiler-optimization-flags" title="Permanent link">&para;</a></h1>
-<p>When optimizing Go applications for performance, we often focus on profiling, memory allocations, or concurrency patterns. But there's another layer worth considering: how the Go compiler itself optimizes your code during the build process.</p>
+<h1 id="leveraging-compiler-optimization-flags-in-go">Leveraging Compiler Optimization Flags in Go<a class="headerlink" href="#leveraging-compiler-optimization-flags-in-go" title="Permanent link">&para;</a></h1>
+<p>When optimizing Go applications for performance, we often focus on profiling, memory allocations, or concurrency patterns. But another layer worth considering is how the Go compiler optimizes your code during the build process.</p>
 <p>While Go doesn’t expose the same granular set of compiler flags as C or Rust, it still provides useful ways to influence how your code is built—especially when targeting performance, binary size, or specific environments.</p>
-<p>In this guide, we’ll walk through how to leverage Go compiler and linker flags effectively, what they do, and when to use them.</p>
 <h2 id="why-compiler-flags-matter">Why Compiler Flags Matter<a class="headerlink" href="#why-compiler-flags-matter" title="Permanent link">&para;</a></h2>
 <p>Go's compiler (specifically <code>cmd/compile</code> and <code>cmd/link</code>) performs several default optimizations: inlining, escape analysis, dead code elimination, and more. However, there are scenarios where you can squeeze more performance or control from your build using the right flags.</p>
-<h3 id="use-cases-include">Use cases include:<a class="headerlink" href="#use-cases-include" title="Permanent link">&para;</a></h3>
+<p>Use cases include:</p>
 <ul>
 <li>Reducing binary size for minimal containers or embedded systems  </li>
 <li>Building for specific architectures or OSes  </li>
@@ -1199,16 +1186,16 @@
 <li><code>-s</code>: Omit the symbol table</li>
 <li><code>-w</code>: Omit DWARF debugging information</li>
 </ul>
-<p>Why it matters: This can reduce binary size by up to 30-40%, depending on your codebase. Useful in Docker images or when distributing binaries.</p>
+<p>Why it matters: This can reduce binary size by up to 30-40%, depending on your codebase. It is useful in Docker images or when distributing binaries.</p>
 <h3 id="-gcflags-control-compiler-optimizations"><code>-gcflags</code> — Control Compiler Optimizations<a class="headerlink" href="#-gcflags-control-compiler-optimizations" title="Permanent link">&para;</a></h3>
-<p>The <code>-gcflags</code> flag allows you to control how the compiler treats specific packages. For example, you can disable optimizations for debugging:</p>
+<p>The <code>-gcflags</code> flag allows you to control how the compiler treats specific packages. For example, you cab disable optimizations for debugging:</p>
 <div class="highlight"><pre><span></span><code>go<span class="w"> </span>build<span class="w"> </span>-gcflags<span class="o">=</span><span class="s2">&quot;all=-N -l&quot;</span><span class="w"> </span>-o<span class="w"> </span>app<span class="w"> </span>main.go
 </code></pre></div>
 <ul>
 <li><code>-N</code>: Disable optimizations</li>
 <li><code>-l</code>: Disable inlining</li>
 </ul>
-<p>When to use: During debugging sessions with Delve or similar tools. Disabling inlining and optimizations makes stack traces and breakpoints more reliable.</p>
+<p>When to use: During debugging sessions with Delve or similar tools. Turning off inlining and optimizations make stack traces and breakpoints more reliable.</p>
 <h3 id="cross-compilation-flags">Cross-Compilation Flags<a class="headerlink" href="#cross-compilation-flags" title="Permanent link">&para;</a></h3>
 <p>Need to build for another OS or architecture?</p>
 <div class="highlight"><pre><span></span><code><span class="nv">GOOS</span><span class="o">=</span>linux<span class="w"> </span><span class="nv">GOARCH</span><span class="o">=</span>arm64<span class="w"> </span>go<span class="w"> </span>build<span class="w"> </span>-o<span class="w"> </span>app<span class="w"> </span>main.go
@@ -1219,7 +1206,7 @@
 </ul>
 <h3 id="build-tags">Build Tags<a class="headerlink" href="#build-tags" title="Permanent link">&para;</a></h3>
 <p>Build tags allow conditional compilation. Use <code>//go:build</code> or <code>// +build</code> in your source code to control what gets compiled in.</p>
-<h4 id="example">Example:<a class="headerlink" href="#example" title="Permanent link">&para;</a></h4>
+<p>Example:</p>
 <div class="highlight"><pre><span></span><code><span class="c1">//go:build debug</span>
 
 <span class="kn">package</span><span class="w"> </span><span class="nx">main</span>
@@ -1250,6 +1237,50 @@
 <div class="highlight"><pre><span></span><code>go<span class="w"> </span>build<span class="w"> </span>-ldflags<span class="o">=</span><span class="s2">&quot;-s -w -X main.version=1.0.0&quot;</span><span class="w"> </span>-o<span class="w"> </span>app<span class="w"> </span>main.go
 </code></pre></div>
 <p>This sets the <code>version</code> variable at link time without modifying your source code. It's useful for embedding release versions, commit hashes, or build dates.</p>
+<h3 id="-extldflags-static-build-fully-static-binaries"><code>-extldflags='-static'</code> — Build Fully Static Binaries<a class="headerlink" href="#-extldflags-static-build-fully-static-binaries" title="Permanent link">&para;</a></h3>
+<p>The <code>-extldflags '-static'</code> option passes the <code>-static</code> flag to the external system linker, instructing it to produce a <strong>fully statically linked binary</strong>.</p>
+<p>This is especially useful when you're using CGO and want to avoid runtime dynamic library dependencies:</p>
+<div class="highlight"><pre><span></span><code><span class="nv">CGO_ENABLED</span><span class="o">=</span><span class="m">1</span><span class="w"> </span><span class="nv">GOOS</span><span class="o">=</span>linux<span class="w"> </span><span class="nv">GOARCH</span><span class="o">=</span>amd64<span class="w"> </span><span class="se">\</span>
+<span class="nv">CC</span><span class="o">=</span>gcc<span class="w"> </span><span class="se">\</span>
+go<span class="w"> </span>build<span class="w"> </span>-ldflags<span class="o">=</span><span class="s2">&quot;-linkmode=external -extldflags &#39;-static&#39;&quot;</span><span class="w"> </span>-o<span class="w"> </span>app<span class="w"> </span>main.go
+</code></pre></div>
+<p>What it does:</p>
+<ul>
+<li>Statically links all C libraries into the binary</li>
+<li>Produces a portable, self-contained executable</li>
+<li>Ideal for minimal containers (like <code>scratch</code> or <code>distroless</code>)</li>
+</ul>
+<p>To go further and ensure your binary avoids relying on C library DNS resolution (such as <code>glibc</code>'s <code>getaddrinfo</code>), you can use the <code>netgo</code> build tag. This forces Go to use its pure Go implementation of the DNS resolver:</p>
+<div class="highlight"><pre><span></span><code><span class="nv">CGO_ENABLED</span><span class="o">=</span><span class="m">1</span><span class="w"> </span><span class="nv">GOOS</span><span class="o">=</span>linux<span class="w"> </span><span class="nv">GOARCH</span><span class="o">=</span>amd64<span class="w"> </span><span class="se">\</span>
+<span class="nv">CC</span><span class="o">=</span>gcc<span class="w"> </span><span class="se">\</span>
+go<span class="w"> </span>build<span class="w"> </span>-tags<span class="w"> </span>netgo<span class="w"> </span>-ldflags<span class="o">=</span><span class="s2">&quot;-linkmode=external -extldflags &#39;-static&#39;&quot;</span><span class="w"> </span>-o<span class="w"> </span>app<span class="w"> </span>main.go
+</code></pre></div>
+<p>This step is especially important when building for minimal container environments, where dynamic libc dependencies may not be available.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Static linking requires static versions (<code>.a</code>) of the libraries you're using, and may not work with all C libraries by default.</p>
+</div>
+<h4 id="example-static-build-with-libcurl-via-cgo">Example: Static Build with libcurl via CGO<a class="headerlink" href="#example-static-build-with-libcurl-via-cgo" title="Permanent link">&para;</a></h4>
+<p>If you’re using libcurl via CGO, here’s how you can create a statically linked Go binary:</p>
+<div class="highlight"><pre><span></span><code><span class="kn">package</span><span class="w"> </span><span class="nx">main</span>
+
+<span class="cm">/*</span>
+<span class="cm">#cgo LDFLAGS: -lcurl</span>
+<span class="cm">#include &lt;curl/curl.h&gt;</span>
+<span class="cm">*/</span>
+<span class="kn">import</span><span class="w"> </span><span class="s">&quot;C&quot;</span>
+<span class="kn">import</span><span class="w"> </span><span class="s">&quot;fmt&quot;</span>
+
+<span class="kd">func</span><span class="w"> </span><span class="nx">main</span><span class="p">()</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="nx">fmt</span><span class="p">.</span><span class="nx">Println</span><span class="p">(</span><span class="s">&quot;libcurl version:&quot;</span><span class="p">,</span><span class="w"> </span><span class="nx">C</span><span class="p">.</span><span class="nx">GoString</span><span class="p">(</span><span class="nx">C</span><span class="p">.</span><span class="nx">curl_version</span><span class="p">()))</span>
+<span class="p">}</span>
+</code></pre></div>
+<p>Static Build Command:</p>
+<div class="highlight"><pre><span></span><code><span class="nv">CGO_ENABLED</span><span class="o">=</span><span class="m">1</span><span class="w"> </span><span class="nv">GOOS</span><span class="o">=</span>linux<span class="w"> </span><span class="nv">GOARCH</span><span class="o">=</span>amd64<span class="w"> </span><span class="se">\</span>
+<span class="nv">CC</span><span class="o">=</span>gcc<span class="w"> </span><span class="se">\</span>
+go<span class="w"> </span>build<span class="w"> </span>-tags<span class="w"> </span>netgo<span class="w"> </span>-ldflags<span class="o">=</span><span class="s2">&quot;-linkmode=external -extldflags &#39;-static&#39;&quot;</span><span class="w"> </span>-o<span class="w"> </span>app<span class="w"> </span>main.go
+</code></pre></div>
+<p>Ensure the static version of libcurl (<code>libcurl.a</code>) is available on your system. You may need to install development packages or build libcurl from source with <code>--enable-static</code>.</p>
 
 
 
