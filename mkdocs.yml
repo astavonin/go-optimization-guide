@@ -77,6 +77,11 @@ nav:
       - Batching Operations: 01-common-patterns/batching-ops.md
     - Compiler-Level Optimization and Tuning:
       - Leveraging Compiler Optimization Flags: 01-common-patterns/comp-flags.md
+  - Practical Networking Patterns:
+    - 02-networking/index.md
+    - Benchmarking First:
+      - Benchmarking and Load Testing for Networked Go Apps: 02-networking/bench-and-load.md
+      - Practicle example of Profiling Networked Go Applications with pprof: 02-networking/gc-endpoint-profiling.md
 
 markdown_extensions:
   - toc:
@@ -87,6 +92,9 @@ markdown_extensions:
   - pymdownx.inlinehilite
   - pymdownx.tilde
   - pymdownx.details
+  - attr_list
+  - md_in_html
+  - pymdownx.blocks.caption
   - pymdownx.superfences:
       custom_fences:
         - name: mermaid
@@ -100,6 +108,7 @@ markdown_extensions:
 plugins:
   - search
   - blog
+  - glightbox
   - git-revision-date-localized:
       enable_creation_date: true
       type: timeago
