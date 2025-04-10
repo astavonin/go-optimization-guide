@@ -8,7 +8,7 @@ We focus on **concrete techniques** with **measurable impact** you can apply imm
 
 ## :material-note-check: What’s Covered So Far
 
-### [Common Go Patterns for Performance](./01-common-patterns/index.md)
+### [Common Go Patterns for Performance](01-common-patterns/index.md)
 
 In this first article, we explore a curated set of high-impact performance patterns every Go developer should know:
 
@@ -25,7 +25,7 @@ Each pattern is grounded in practical use cases, with benchmarks and examples yo
 
 ## :material-progress-check: What’s Coming Next
 
-### High-Performance Networking in Go
+### [High-Performance Networking in Go](02-networking/index.md)
 
 In our upcoming deep dive into networking, we'll focus on building high-throughput network services with Go’s standard library and beyond. This includes:
 
