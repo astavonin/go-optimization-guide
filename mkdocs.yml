@@ -82,6 +82,8 @@ nav:
     - Benchmarking First:
       - Benchmarking and Load Testing for Networked Go Apps: 02-networking/bench-and-load.md
       - Practicle example of Profiling Networked Go Applications with pprof: 02-networking/gc-endpoint-profiling.md
+    - Foundations and Core Concepts:
+      - How Go Handles Networking: 02-networking/networking-internals.md
 
 markdown_extensions:
   - toc:

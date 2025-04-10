@@ -14,7 +14,7 @@ A 15-part guide to building scalable, efficient, and resilient networked applica
 
 ## Foundations and Core Concepts
 
-- How Go Handles Networking: Concurrency, Goroutines, and the net Package
+- [How Go Handles Networking: Concurrency, Goroutines, and the net Package](networking-internals.md)
 
 	Understand Go’s approach to networking from the ground up. Covers how goroutines, the `net` package, and the runtime scheduler interact, including blocking I/O behavior, connection handling, and the use of pollers like `epoll` or `kqueue` under the hood.
 
