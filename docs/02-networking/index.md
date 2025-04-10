@@ -18,7 +18,7 @@ A 15-part guide to building scalable, efficient, and resilient networked applica
 
 	Understand Go’s approach to networking from the ground up. Covers how goroutines, the `net` package, and the runtime scheduler interact, including blocking I/O behavior, connection handling, and the use of pollers like `epoll` or `kqueue` under the hood.
 
-- Efficient Use of net/http and net.Conn in High-Traffic Services
+- [Efficient Use of `net/http`, `net.Conn`, and UDP](efficient-net-use.md)
 
 	Compare idiomatic and advanced usage of `net/http` vs raw `net.Conn`. Dive into connection pooling, custom dialers, stream reuse, and buffer tuning. Demonstrates how to avoid common pitfalls like leaking connections, blocking handlers, or over-allocating buffers.
 
