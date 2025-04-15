@@ -85,6 +85,8 @@ nav:
     - Foundations and Core Concepts:
       - How Go Handles Networking: 02-networking/networking-internals.md
       - Efficient Use of net/http, net.Conn, and UDP: 02-networking/efficient-net-use.md
+    - Scaling and Performance Engineering:
+      - Managing 100K+ Concurrent Connections in Go: 02-networking/100k-connections.md
 
 markdown_extensions:
   - toc:

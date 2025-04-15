@@ -129,12 +129,9 @@ func main() {
 				continue
 			}
 
-			// Prepare the echo response.
-			response := append([]byte(""), readBuf[:nread]...)
-
 			// Write the response back to the client.
 			// In production you may need to handle partial writes and buffer remaining data.
-			nwritten, err := syscall.Write(fd, response)
+			nwritten, err := syscall.Write(fd, readBuf)
 			if err != nil {
 				if err == syscall.EAGAIN || err == syscall.EWOULDBLOCK {
 					continue
