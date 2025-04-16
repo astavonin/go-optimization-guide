@@ -26,7 +26,7 @@ A 15-part guide to building scalable, efficient, and resilient networked applica
 
 ## Scaling and Performance Engineering
 
-- [Managing 100K+ Concurrent Connections in Go](100k-connections.md)
+- [Managing 10K++ Concurrent Connections in Go](10k-connections.md)
 
 	Handling massive concurrency requires intentional architecture. Explore how to efficiently serve 100,000+ concurrent sockets using Go’s goroutines, proper resource capping, socket tuning, and runtime configuration. Focuses on connection lifecycles, scaling pitfalls, and real-world tuning.
 
