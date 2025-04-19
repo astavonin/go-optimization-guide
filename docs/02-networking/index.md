@@ -30,7 +30,7 @@ A 15-part guide to building scalable, efficient, and resilient networked applica
 
 	Handling massive concurrency requires intentional architecture. Explore how to efficiently serve 100,000+ concurrent sockets using Go’s goroutines, proper resource capping, socket tuning, and runtime configuration. Focuses on connection lifecycles, scaling pitfalls, and real-world tuning.
 
-- GOMAXPROCS, epoll/kqueue, and Scheduler-Level Tuning
+- [GOMAXPROCS, epoll/kqueue, and Scheduler-Level Tuning](a-bit-more-tuning.md)
 
 	Dive into low-level performance knobs like `GOMAXPROCS`, `GODEBUG`, thread pinning, and how Go’s scheduler interacts with epoll/kqueue. Learn when increasing parallelism helps—and when it doesn’t. Includes tools for CPU affinity and benchmarking the effect of these changes.
 

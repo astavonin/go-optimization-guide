@@ -87,6 +87,7 @@ nav:
       - Efficient Use of net/http, net.Conn, and UDP: 02-networking/efficient-net-use.md
     - Scaling and Performance Engineering:
       - Managing 10K+ Concurrent Connections in Go: 02-networking/10k-connections.md
+      - GOMAXPROCS, epoll/kqueue, and Scheduler-Level Tuning: 02-networking/a-bit-more-tuning.md
 
 markdown_extensions:
   - toc:
