@@ -33,7 +33,7 @@ Why it matters: This can reduce binary size by up to 30-40%, depending on your c
 
 ### `-gcflags` — Control Compiler Optimizations
 
-The `-gcflags` flag allows you to control how the compiler treats specific packages. For example, you cab disable optimizations for debugging:
+The `-gcflags` flag allows you to control how the compiler treats specific packages. For example, you can disable optimizations for debugging:
 
 ```bash
 go build -gcflags="all=-N -l" -o app main.go
