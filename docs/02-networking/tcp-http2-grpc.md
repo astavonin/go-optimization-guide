@@ -182,6 +182,6 @@ func main() {
 
 - **Internal APIs and microservices**: gRPC usually hits the sweet spot—it’s fast, strongly typed, and easy to work with once the tooling is in place.
 - **Low-latency systems and trading platforms:** Raw TCP with custom framing gives you the lowest overhead, but you’re on your own for everything else.
-- Pu**blic APIs or general web services:** HTTP/2 via net/http is a solid choice. You get connection reuse, multiplexing, and good performance without needing to pull in a full RPC stack.
+- **Public APIs or general web services:** HTTP/2 via net/http is a solid choice. You get connection reuse, multiplexing, and good performance without needing to pull in a full RPC stack.
 
 Raw TCP gives you maximum control and the best performance on paper—but it also means building everything yourself: framing, flow control, error handling. HTTP/2 and gRPC trade some of that raw speed for built-in structure, better connection handling, and less code to maintain. What’s right depends entirely on where performance matters and how much complexity you want to own.
