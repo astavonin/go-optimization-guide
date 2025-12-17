@@ -67,6 +67,7 @@ Temporary Items
 [._]sw[a-p]
 
 # Session
+.session.vim
 Session.vim
 Sessionx.vim
 
@@ -85,3 +86,4 @@ tags
 #MkDocs
 
 /site/
+/venv/
