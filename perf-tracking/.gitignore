@@ -1,0 +1,34 @@
+# Go version installations
+.go-versions/
+
+# Build artifacts
+tools/benchcompare/benchcompare
+*.exe
+*.dll
+*.so
+*.dylib
+
+# Benchmark results (raw data)
+results/raw/**/*.json
+results/raw/**/*.jsonl
+results/raw/**/*.txt
+
+# Comparison results (generated)
+results/comparisons/**/*.json
+results/comparisons/**/*.md
+
+# Temporary files
+*.tmp
+*.temp
+*.log
+*.swp
+*.swo
+*~
+
+# System check logs
+.system-check-*
+.warmup-*
+
+# Go test cache
+*.test
+*.out

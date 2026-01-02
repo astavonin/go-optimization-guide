@@ -15,22 +15,69 @@ perf-tracking/
     └── comparisons/     # Generated comparison reports
 ```
 
-## Running Benchmarks
+## Development Workflow
+
+### Setting Up Go Versions
+
+Install specific Go versions locally for benchmarking:
+
+```bash
+cd perf-tracking
+
+# Install Go versions
+./tools/setup-go-versions.sh install 1.24.0
+./tools/setup-go-versions.sh install 1.25.0
+
+# List installed versions
+./tools/setup-go-versions.sh list
+
+# Get path to specific version
+./tools/setup-go-versions.sh path 1.24
+```
+
+Go versions are installed to `.go-versions/` (excluded from git).
+
+### Linting
+
+Before committing changes, run the linter to ensure code quality:
+
+```bash
+cd perf-tracking/benchmarks
+./lint.sh
+```
+
+The linter runs:
+- `go vet` - Basic Go static analysis
+- `staticcheck` - Advanced static analysis
+- `gopls check` - LSP diagnostics (includes additional analyzers)
+- `gofmt` - Code formatting verification
+
+### Running Benchmarks
+
+Collect benchmark results with specific Go versions:
+
+```bash
+cd perf-tracking
+
+# Collect results for Go 1.24
+./tools/collect-local.sh 1.24
+
+# Collect results for Go 1.25
+./tools/collect-local.sh 1.25
+```
+
+Results are saved to `results/raw/goX.Y/` with metadata and benchmark data.
+
+For manual testing:
 
 ```bash
 cd perf-tracking/benchmarks
 
-# Run all core benchmarks
+# Run all core benchmarks (uses system Go)
 go test -bench=. -benchmem ./core/
 
-# Multiple iterations for statistical significance
-go test -bench=. -benchmem -count=10 -benchtime=3s ./core/
-
-# Specific benchmark
-go test -bench=BenchmarkSmallAllocation -benchmem ./core/
-
-# JSON output for processing
-go test -bench=. -benchmem -json ./core/ > ../results/raw/go1.24/results.json
+# Run with specific version
+$(./../tools/setup-go-versions.sh path 1.24) test -bench=. -benchmem ./core/
 ```
 
 ## Comparing Results
