@@ -1,3 +1,3 @@
 module github.com/astavonin/go-optimization-guide/benchmarks
 
-go 1.24
+go 1.23

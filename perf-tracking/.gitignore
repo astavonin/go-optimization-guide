@@ -8,14 +8,8 @@ tools/benchcompare/benchcompare
 *.so
 *.dylib
 
-# Benchmark results (raw data)
-results/raw/**/*.json
-results/raw/**/*.jsonl
-results/raw/**/*.txt
-
-# Comparison results (generated)
-results/comparisons/**/*.json
-results/comparisons/**/*.md
+# Benchmark results (generated)
+results/stable/
 
 # Temporary files
 *.tmp
