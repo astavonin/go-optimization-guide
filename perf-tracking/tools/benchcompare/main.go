@@ -141,13 +141,52 @@ func printComparisons(comparisons []Comparison, baseMetadata, targetMetadata Met
 }
 
 func main() {
+	// Comparison mode flags
 	baseline := flag.String("baseline", "", "Baseline results JSON file")
 	target := flag.String("target", "", "Target results JSON file")
 	output := flag.String("output", "", "Output comparison file (JSON)")
+
+	// Export mode flags
+	exportMode := flag.Bool("export", false, "Export mode: convert benchmark .txt to web JSON")
+	exportAllFlag := flag.Bool("export-all", false, "Export all versions from results directory")
+	input := flag.String("input", "", "Input benchmark .txt file (for --export)")
+	version := flag.String("version", "", "Go version string (for --export)")
+	resultsDir := flag.String("results-dir", "", "Results directory (for --export-all)")
+	outputDir := flag.String("output-dir", "", "Output directory (for --export-all)")
+
 	flag.Parse()
 
+	// Export mode
+	if *exportAllFlag {
+		if *resultsDir == "" || *outputDir == "" {
+			fmt.Println("Usage: benchcompare --export-all --results-dir <dir> --output-dir <dir>")
+			os.Exit(1)
+		}
+		if err := exportAll(*resultsDir, *outputDir); err != nil {
+			fmt.Printf("Error: %v\n", err)
+			os.Exit(1)
+		}
+		return
+	}
+
+	if *exportMode {
+		if *input == "" || *version == "" || *output == "" {
+			fmt.Println("Usage: benchcompare --export --input <file> --version <ver> --output <file>")
+			os.Exit(1)
+		}
+		if err := exportVersion(*input, *version, *output); err != nil {
+			fmt.Printf("Error: %v\n", err)
+			os.Exit(1)
+		}
+		return
+	}
+
+	// Comparison mode (original behavior)
 	if *baseline == "" || *target == "" {
-		fmt.Println("Usage: benchcompare -baseline <file> -target <file> [-output <file>]")
+		fmt.Println("Usage:")
+		fmt.Println("  Compare:    benchcompare -baseline <file> -target <file> [-output <file>]")
+		fmt.Println("  Export one: benchcompare --export --input <file> --version <ver> --output <file>")
+		fmt.Println("  Export all: benchcompare --export-all --results-dir <dir> --output-dir <dir>")
 		os.Exit(1)
 	}
 

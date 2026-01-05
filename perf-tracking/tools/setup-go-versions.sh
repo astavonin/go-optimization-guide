@@ -45,7 +45,8 @@ download_and_install() {
     # Verify installation
     if [ -x "${INSTALL_PATH}/bin/go" ]; then
         echo "✓ Go ${VERSION} installed successfully"
-        "${INSTALL_PATH}/bin/go" version
+        # Disable automatic toolchain switching for verification
+        GOTOOLCHAIN=local "${INSTALL_PATH}/bin/go" version
     else
         echo "✗ Installation failed"
         rm -rf "$INSTALL_PATH"
@@ -62,7 +63,7 @@ list_installed() {
 
     for dir in "$INSTALL_DIR"/go*; do
         if [ -d "$dir" ] && [ -x "$dir/bin/go" ]; then
-            local version=$("$dir/bin/go" version)
+            local version=$(GOTOOLCHAIN=local "$dir/bin/go" version)
             echo "  ${dir} -> ${version}"
         fi
     done
