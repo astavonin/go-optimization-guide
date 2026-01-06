@@ -94,17 +94,30 @@ go test -bench=. -benchmem ./core/
 
 ## Web Visualization
 
-Export data and serve locally:
-```bash
-# Export to JSON
-./tools/benchcompare/benchcompare --export-all \
-  --results-dir results/stable \
-  --output-dir ../docs/03-version-tracking/data
+Interactive UI for comparing Go versions with charts and statistics.
 
-# Serve docs
-cd ../docs && mkdocs serve
-# Open http://localhost:8000/03-version-tracking/interactive/
+**Export data:**
+```bash
+cd tools/benchcompare && go build
+./benchcompare --export-all \
+  --results-dir ../../results/stable \
+  --output-dir ../../../docs/03-version-tracking/data
 ```
+
+**View locally:**
+```bash
+cd ../docs/03-version-tracking
+python3 -m http.server 8000
+# Open http://localhost:8000/interactive.html
+```
+
+**Published:** https://goperf.dev/03-version-tracking/interactive.html
+
+**Features:**
+- Compare any two Go versions
+- Interactive charts (time, allocations, performance delta)
+- Statistical variance indicators
+- System metadata display
 
 ## Tips
 

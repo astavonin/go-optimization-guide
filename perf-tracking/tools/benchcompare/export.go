@@ -220,15 +220,27 @@ func exportVersion(inputFile, version, outputFile string) error {
 
 // IndexData represents the index.json file
 type IndexData struct {
-	Versions    []VersionInfo `json:"versions"`
-	Benchmarks  []string      `json:"benchmarks"`
-	LastUpdated string        `json:"last_updated"`
+	Versions    []VersionInfo    `json:"versions"`
+	Benchmarks  []BenchmarkInfo  `json:"benchmarks"`
+	Repository  RepositoryInfo   `json:"repository"`
+	LastUpdated string           `json:"last_updated"`
+}
+
+type RepositoryInfo struct {
+	URL        string `json:"url"`
+	SourcePath string `json:"source_path"`
 }
 
 type VersionInfo struct {
 	Version     string `json:"version"`
 	File        string `json:"file"`
 	CollectedAt string `json:"collected_at"`
+}
+
+type BenchmarkInfo struct {
+	Name        string `json:"name"`
+	Description string `json:"description"`
+	SourceFile  string `json:"source_file"`
 }
 
 // exportAll exports all versions found in the results directory
@@ -292,15 +304,25 @@ func exportAll(resultsDir, outputDir string) error {
 	}
 
 	// Generate index.json
-	var benchmarks []string
+	var benchmarks []BenchmarkInfo
 	for name := range benchmarkNames {
-		benchmarks = append(benchmarks, name)
+		benchmarks = append(benchmarks, BenchmarkInfo{
+			Name:        name,
+			Description: getBenchmarkDescription(name),
+			SourceFile:  "perf-tracking/benchmarks/core/allocation_test.go",
+		})
 	}
-	sort.Strings(benchmarks)
+	sort.Slice(benchmarks, func(i, j int) bool {
+		return benchmarks[i].Name < benchmarks[j].Name
+	})
 
 	indexData := IndexData{
-		Versions:    versions,
-		Benchmarks:  benchmarks,
+		Versions: versions,
+		Benchmarks: benchmarks,
+		Repository: RepositoryInfo{
+			URL:        "https://github.com/astavonin/go-optimization-guide",
+			SourcePath: "blob/main",
+		},
 		LastUpdated: time.Now().Format(time.RFC3339),
 	}
 
