@@ -34,29 +34,7 @@ func process(buffer []byte) []byte {
 
 Slices in Go are inherently zero-copy since they reference the underlying array.
 
-### Memory Mapping (`mmap`)
-
-Using memory mapping enables direct access to file contents without explicit read operations:
-
-```go
-import "golang.org/x/exp/mmap"
-
-func ReadFileZeroCopy(path string) ([]byte, error) {
-	r, err := mmap.Open(path)
-	if err != nil {
-		return nil, err
-	}
-	defer r.Close()
-
-	data := make([]byte, r.Len())
-	_, err = r.ReadAt(data, 0)
-	return data, err
-}
-```
-
-This approach maps file contents directly into memory, entirely eliminating copying between kernel and user-space.
-
-## Benchmarking Impact
+### Benchmarking Impact
 
 Here's a basic benchmark illustrating performance differences between explicit copying and zero-copy slicing:
 
@@ -74,15 +52,21 @@ In `BenchmarkCopy`, each iteration copies a 64KB buffer into a fresh slice—all
 !!! info
 	These two functions are not equivalent in behavior—`BenchmarkCopy` makes an actual deep copy of the buffer, while `BenchmarkSlice` only creates a new slice header pointing to the same underlying data. This benchmark is not comparing functional correctness but is intentionally contrasting performance characteristics to highlight the cost of unnecessary copying.
 
-	| Benchmark                | Time per op (ns) | Bytes per op | Allocs per op |
-	|--------------------------|---------|--------|------------|
-	| BenchmarkCopy            | 4,246   | 65536 | 1          |
-	| BenchmarkSlice           | 0.592   | 0     | 0          |
+| Benchmark                | Time per op (ns) | Bytes per op | Allocs per op |
+|--------------------------|---------|--------|------------|
+| BenchmarkCopy            | 4,246   | 65536 | 1          |
+| BenchmarkSlice           | 0.592   | 0     | 0          |
 
 
-### File I/O: Memory Mapping vs. Standard Read
+## Memory Mapping (`mmap`): Syscall Avoidance vs. Zero-Copy
 
-We also benchmarked file reading performance using `os.ReadAt` versus `mmap.Open` for a 4MB binary file.
+Memory mapping is often described as a zero-copy technique, but that description only holds for a specific access pattern (see [Issue#25](https://github.com/astavonin/go-optimization-guide/issues/25) for more details). Mapping a file does not, by itself, eliminate copying. Zero-copy only occurs when the application operates directly on the mapped pages. If data is copied out into another buffer, the copy cost remains, regardless of how the file was opened.
+
+This section separates two effects that are often conflated: avoiding per-iteration syscalls and avoiding memory copies.
+
+## `mmap` with `Copy`: Avoiding Syscalls, Not Copies
+
+The first comparison uses `os.ReadAt` versus `golang.org/x/exp/mmap` with `ReadAt`:
 
 ```go
 {%
@@ -92,28 +76,122 @@ We also benchmarked file reading performance using `os.ReadAt` versus `mmap.Open
 %}
 ```
 
-??? info "How to run the benchmark"
-	To run the benchmark involving `mmap`, you’ll need to install the required package and create a test file:
+Both benchmarks copy 4MB of data into a user-space buffer on every iteration. The difference is where the copy is initiated.
 
-	```bash
-	go get golang.org/x/exp/mmap
-	mkdir -p testdata
-	dd if=/dev/urandom of=./testdata/largefile.bin bs=1M count=4
-	```
+* `ReadAt` performs a system call on each iteration and copies data from the kernel page cache into user memory.
+* `mmap.ReadAt` still copies data into a user buffer, but avoids the per-iteration syscall by reading from already-mapped pages.
 
-Benchmark Results
+!!! warning
+	This benchmark does **not** measure zero-copy behavior. It measures syscall and context-switch overhead.
 
-| Benchmark                | Time per op (ns) | Bytes per op | Allocs per op |
-|--------------------------|---------|------|------------|
-| ReadWithCopy             | 94,650  | 0    | 0          |
-| ReadWithMmap             | 50,082  | 0    | 0          |
+### Benchmarking Impact
 
-The memory-mapped version (`mmap`) is nearly 2× faster than the standard read call. This illustrates how zero-copy access through memory mapping can substantially reduce read latency and CPU usage for large files.
+| Benchmark    | Time per op (ns) | Syscalls per iter |
+| ------------ | ---------------- | ---------------  |
+| BenchmarkReadWithCopy | 241,354     | 1 (`pread`)       |
+| BenchmarkReadWithMmap | 181,191     | 0                 |
+
+The performance difference comes from syscall avoidance, not from reduced memory movement. It is also worth noting that `golang.org/x/exp/mmap` does not expose the mapped memory directly. As long as access goes through `ReadAt`, a copy is unavoidable.
+
+## True Zero-Copy with `unix.Mmap`
+
+Memory mapping becomes zero-copy only when the application operates directly on the mapped pages. To demonstrate this, the next benchmarks use `unix.Mmap` and consume the mapped memory without copying it into a separate buffer. To ensure the mapped data is actually read and not optimized away, each iteration processes a fixed 4MB window.
+
+### Memory-Bound Workload (`XXHash`)
+
+In the copy-based version, each iteration performs:
+
+* a kernel-to-user memory copy
+* hashing over the copied buffer
+
+```go
+{%
+    include-markdown "01-common-patterns/src/zero-copy_test.go"
+    start="// bench-hash-start"
+    end="// bench-hash-end"
+%}
+```
+
+In the mmap version:
+
+* file-backed pages are accessed directly
+* no additional user-space copy occurs
+
+```go
+{%
+    include-markdown "01-common-patterns/src/zero-copy_test.go"
+    start="// bench-hash-mmap-start"
+    end="// bench-hash-mmap-end"
+%}
+```
+
+XXHash is used here because it is lightweight enough that memory movement and cache behavior remain visible in the measurements.
+
+#### Benchmarking Impact
+
+| Benchmark        | Time per op (ns) | Copies per iter | Dominant cost       |
+| ---------------- | ---------------- | --------------- | ------------------- |
+| ReadAtCopyXXHash | 539,512         | 1 (4MB)         | Copy + hash         |
+| MmapNoCopyXXHash | 281,249         | 0               | Hash + memory reads |
+
+The roughly 2× difference reflects the removal of a full 4MB memory copy from the critical path. This is an actual zero-copy scenario.
+
+### Compute-Dominated Workload (SHA256)
+
+These tests are identical to XXHash-based tests but use a different approach to simulate a more compute-intensive workflow via SHA calculations.
+
+BenchmarkReadAtCopySHA:
+
+```go
+{%
+    include-markdown "01-common-patterns/src/zero-copy_test.go"
+    start="// bench-sha-start"
+    end="// bench-sha-end"
+%}
+```
+
+BenchmarkMmapNoCopySHA:
+
+```go
+{%
+    include-markdown "01-common-patterns/src/zero-copy_test.go"
+    start="// bench-sha-mmap-start"
+    end="// bench-sha-mmap-end"
+%}
+```
+
+#### Benchmarking Impact
+
+| Benchmark     | Time per op (ns) | Copies per iter | Dominant cost      |
+| ------------- | ---------------- | --------------- | ------------------ |
+| ReadAtCopySHA | 2,636,956       | 1 (4MB)         | SHA256 computation |
+| MmapNoCopySHA | 2,287,858       | 0               | SHA256 computation |
+
+The `mmap` version remains faster, but the difference is smaller. Once the CPU is dominated by cryptographic computation, eliminating a memory copy has a reduced impact on total runtime. The remaining improvement comes from lower memory bandwidth pressure and cache effects.
+
+### Summary Comparison
+
+| Scenario                      | Zero-Copy | Primary Effect         | Observed Impact         |
+| ----------------------------- | --------- | ---------------------- | ----------------------- |
+| mmap + `ReadAt`               | No        | Syscall avoidance      | Moderate improvement    |
+| mmap + direct access          | Yes       | Copy elimination       | Large (memory-bound)    |
+| mmap + direct access + SHA256 | Yes       | Reduced memory traffic | Limited (compute-bound) |
 
 ??? example "Show the complete benchmark file"
     ```go
     {% include "01-common-patterns/src/interface-boxing_test.go" %}
     ```
+
+??? info "How to run the benchmark"
+	To run the benchmark involving `mmap`, you’ll need to install the required package and create a test file:
+
+	```bash
+	go get golang.org/x/exp/mmap
+	go get golang.org/x/sys/unix
+	mkdir -p testdata
+	dd if=/dev/urandom of=./testdata/largefile.bin bs=1M count=4
+	```
+
 
 ## When to Use Zero-Copy
 
