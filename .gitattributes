@@ -1,0 +1,8 @@
+# Force include all Go files in language statistics
+*.go linguist-detectable=true linguist-documentation=false linguist-vendored=false linguist-generated=false
+
+# Explicitly override docs directory exclusion
+docs/**/*.go linguist-documentation=false
+
+# Include markdown files in language statistics
+*.md linguist-detectable=true linguist-documentation=false
