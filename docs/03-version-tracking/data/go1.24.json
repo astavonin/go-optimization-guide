@@ -1,0 +1,73 @@
+{
+  "version": "1.24",
+  "metadata": {
+    "go_version_full": "go version go1.24 linux/amd64",
+    "collected_at": "2026-01-02T21:37:00+06:00",
+    "system": {
+      "cpu": "13th Gen Intel(R) Core(TM) i5-13450HX",
+      "os": "linux",
+      "arch": "amd64"
+    },
+    "benchmark_config": {
+      "iterations": 20,
+      "benchtime": "3s"
+    }
+  },
+  "benchmarks": {
+    "BenchmarkGCPressure": {
+      "name": "BenchmarkGCPressure",
+      "ns_per_op": 171.305,
+      "ns_per_op_stddev": 14.232901144882586,
+      "ns_per_op_variance": 0.08308514722210435,
+      "bytes_per_op": 1024,
+      "allocs_per_op": 1,
+      "iterations": 0,
+      "samples": 20,
+      "description": "GC behavior under allocation pressure"
+    },
+    "BenchmarkLargeAllocation": {
+      "name": "BenchmarkLargeAllocation",
+      "ns_per_op": 198482.45,
+      "ns_per_op_stddev": 21162.60731213193,
+      "ns_per_op_variance": 0.10662205808187036,
+      "bytes_per_op": 1048580,
+      "allocs_per_op": 1,
+      "iterations": 0,
+      "samples": 20,
+      "description": "1MB allocation performance"
+    },
+    "BenchmarkMapAllocation": {
+      "name": "BenchmarkMapAllocation",
+      "ns_per_op": 1674.4,
+      "ns_per_op_stddev": 37.43046887229708,
+      "ns_per_op_variance": 0.02235455618269056,
+      "bytes_per_op": 2344,
+      "allocs_per_op": 3,
+      "iterations": 0,
+      "samples": 20,
+      "description": "Map with 100 entries"
+    },
+    "BenchmarkSliceAppend": {
+      "name": "BenchmarkSliceAppend",
+      "ns_per_op": 4214.85,
+      "ns_per_op_stddev": 113.7274263315582,
+      "ns_per_op_variance": 0.026982556041509946,
+      "bytes_per_op": 25208,
+      "allocs_per_op": 12,
+      "iterations": 0,
+      "samples": 20,
+      "description": "Slice growth with 1000 appends"
+    },
+    "BenchmarkSmallAllocation": {
+      "name": "BenchmarkSmallAllocation",
+      "ns_per_op": 0.14994500000000002,
+      "ns_per_op_stddev": 0.005710820869192101,
+      "ns_per_op_variance": 0.038086104032759346,
+      "bytes_per_op": 0,
+      "allocs_per_op": 0,
+      "iterations": 0,
+      "samples": 20,
+      "description": "64-byte allocation performance"
+    }
+  }
+}

@@ -99,6 +99,7 @@ nav:
       - Tuning DNS Performance in Go Services: 02-networking/dns_performance.md
       - Optimizing TLS for Speed: 02-networking/tls-for-speed.md
       - Connection Lifecycle Observability: 02-networking/connection_observability.md
+  - Version Performance Tracking: 03-version-tracking/index.md
 
 markdown_extensions:
   - toc:

@@ -1,0 +1,51 @@
+{
+  "versions": [
+    {
+      "version": "1.23",
+      "file": "go1.23.json",
+      "collected_at": "2026-01-02T21:33:44+06:00"
+    },
+    {
+      "version": "1.24",
+      "file": "go1.24.json",
+      "collected_at": "2026-01-02T21:37:00+06:00"
+    },
+    {
+      "version": "1.25",
+      "file": "go1.25.json",
+      "collected_at": "2026-01-02T21:36:51+06:00"
+    }
+  ],
+  "benchmarks": [
+    {
+      "name": "BenchmarkGCPressure",
+      "description": "GC behavior under allocation pressure",
+      "source_file": "perf-tracking/benchmarks/core/allocation_test.go"
+    },
+    {
+      "name": "BenchmarkLargeAllocation",
+      "description": "1MB allocation performance",
+      "source_file": "perf-tracking/benchmarks/core/allocation_test.go"
+    },
+    {
+      "name": "BenchmarkMapAllocation",
+      "description": "Map with 100 entries",
+      "source_file": "perf-tracking/benchmarks/core/allocation_test.go"
+    },
+    {
+      "name": "BenchmarkSliceAppend",
+      "description": "Slice growth with 1000 appends",
+      "source_file": "perf-tracking/benchmarks/core/allocation_test.go"
+    },
+    {
+      "name": "BenchmarkSmallAllocation",
+      "description": "64-byte allocation performance",
+      "source_file": "perf-tracking/benchmarks/core/allocation_test.go"
+    }
+  ],
+  "repository": {
+    "url": "https://github.com/astavonin/go-optimization-guide",
+    "source_path": "blob/main"
+  },
+  "last_updated": "2026-01-06T10:03:28+06:00"
+}

@@ -1,0 +1,854 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Go Performance Tracking - Version Comparison</title>
+    <script src="https://cdn.plot.ly/plotly-2.27.0.min.js"></script>
+    <style>
+        :root {
+            --bg-primary: #f5f5f5;
+            --bg-card: #ffffff;
+            --bg-hover: #f8f9fa;
+            --text-primary: #333333;
+            --text-secondary: #7f8c8d;
+            --border-color: #e0e0e0;
+            --border-hover: #3498db;
+            --accent-color: #3498db;
+            --accent-hover: #2980b9;
+            --success-color: #27ae60;
+            --danger-color: #e74c3c;
+            --neutral-color: #95a5a6;
+            --chart-bg: #ffffff;
+            --chart-grid: #e0e0e0;
+        }
+
+        [data-md-color-scheme="slate"] {
+            --bg-primary: #1e1e1e;
+            --bg-card: #2d2d2d;
+            --bg-hover: #353535;
+            --text-primary: #ffffff;
+            --text-secondary: #9e9e9e;
+            --border-color: #404040;
+            --border-hover: #4a9eff;
+            --accent-color: #4a9eff;
+            --accent-hover: #6bb0ff;
+            --success-color: #2ecc71;
+            --danger-color: #e74c3c;
+            --neutral-color: #95a5a6;
+            --chart-bg: #2d2d2d;
+            --chart-grid: #404040;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            line-height: 1.6;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        header {
+            background: var(--bg-card);
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            margin-bottom: 30px;
+            border: 1px solid var(--border-color);
+        }
+
+        h1 {
+            color: var(--text-primary);
+            margin-bottom: 10px;
+        }
+
+        .subtitle {
+            color: var(--text-secondary);
+            font-size: 16px;
+        }
+
+        .controls {
+            background: var(--bg-card);
+            padding: 25px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            margin-bottom: 30px;
+            border: 1px solid var(--border-color);
+        }
+
+        .control-group {
+            display: flex;
+            gap: 20px;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+
+        .version-selector {
+            flex: 1;
+            min-width: 200px;
+        }
+
+        label {
+            display: block;
+            font-weight: 600;
+            margin-bottom: 8px;
+            color: var(--text-primary);
+        }
+
+        select {
+            width: 100%;
+            padding: 10px;
+            border: 2px solid var(--border-color);
+            border-radius: 6px;
+            font-size: 15px;
+            background: var(--bg-card);
+            color: var(--text-primary);
+            cursor: pointer;
+            transition: border-color 0.3s;
+        }
+
+        select:hover {
+            border-color: var(--border-hover);
+        }
+
+        select:focus {
+            outline: none;
+            border-color: var(--accent-hover);
+        }
+
+        .metadata {
+            background: var(--bg-card);
+            padding: 25px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            margin-bottom: 30px;
+            border: 1px solid var(--border-color);
+        }
+
+        .metadata-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+        }
+
+        .metadata-item {
+            padding: 15px;
+            background: var(--bg-hover);
+            border-radius: 6px;
+            border-left: 4px solid var(--accent-color);
+        }
+
+        .metadata-label {
+            font-size: 12px;
+            color: var(--text-secondary);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 5px;
+        }
+
+        .metadata-value {
+            font-size: 15px;
+            color: var(--text-primary);
+            font-weight: 500;
+        }
+
+        .summary {
+            background: var(--bg-card);
+            padding: 25px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            margin-bottom: 30px;
+            border: 1px solid var(--border-color);
+        }
+
+        .summary h2 {
+            color: var(--text-primary);
+            margin-bottom: 20px;
+            font-size: 20px;
+        }
+
+        .benchmark-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 15px;
+        }
+
+        .benchmark-table th {
+            background: var(--bg-hover);
+            padding: 12px;
+            text-align: left;
+            font-weight: 600;
+            color: var(--text-primary);
+            border-bottom: 2px solid var(--border-color);
+        }
+
+        .benchmark-table td {
+            padding: 12px;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .benchmark-table tr:hover {
+            background: var(--bg-hover);
+        }
+
+        .benchmark-link {
+            color: var(--accent-color);
+            text-decoration: none;
+            font-weight: 600;
+            transition: color 0.2s;
+        }
+
+        .benchmark-link:hover {
+            color: var(--accent-hover);
+            text-decoration: underline;
+        }
+
+        .benchmark-link::after {
+            content: " ↗";
+            font-size: 12px;
+            opacity: 0.6;
+        }
+
+        .delta-positive {
+            color: var(--success-color);
+            font-weight: 600;
+        }
+
+        .delta-negative {
+            color: var(--danger-color);
+            font-weight: 600;
+        }
+
+        .delta-neutral {
+            color: var(--neutral-color);
+        }
+
+        .chart-container {
+            background: var(--bg-card);
+            padding: 25px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            margin-bottom: 30px;
+            border: 1px solid var(--border-color);
+        }
+
+        .chart-container h2 {
+            color: var(--text-primary);
+            margin-bottom: 20px;
+            font-size: 20px;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 40px;
+            color: var(--text-secondary);
+        }
+
+        .error {
+            background: #ffe6e6;
+            border: 1px solid #ffcccc;
+            color: #c0392b;
+            padding: 15px;
+            border-radius: 6px;
+            margin-bottom: 20px;
+        }
+
+        .variance-badge {
+            display: inline-block;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+
+        .variance-low {
+            background: #d4edda;
+            color: #155724;
+        }
+
+        .variance-medium {
+            background: #fff3cd;
+            color: #856404;
+        }
+
+        .variance-high {
+            background: #f8d7da;
+            color: #721c24;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>Go Performance Tracking</h1>
+            <p class="subtitle">Compare benchmark performance across Go versions</p>
+        </header>
+
+        <div class="controls">
+            <div class="control-group">
+                <div class="version-selector">
+                    <label for="baseline-version">Baseline Version</label>
+                    <select id="baseline-version">
+                        <option value="">Loading...</option>
+                    </select>
+                </div>
+                <div class="version-selector">
+                    <label for="target-version">Target Version</label>
+                    <select id="target-version">
+                        <option value="">Loading...</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+
+        <div id="error-container"></div>
+        <div id="metadata-container"></div>
+        <div id="summary-container"></div>
+        <div id="charts-container"></div>
+    </div>
+
+    <script>
+        let indexData = null;
+        let baselineData = null;
+        let targetData = null;
+        let benchmarkMetadata = {}; // Map of benchmark name to metadata
+
+        // Theme detection and synchronization
+        function detectAndApplyTheme() {
+            let detectedTheme = null;
+            let parentBgColor = null;
+
+            // Method 1: Try to detect theme from parent window (same-origin only)
+            try {
+                if (window.parent !== window && window.parent.document) {
+                    const parentScheme = window.parent.document.documentElement.getAttribute('data-md-color-scheme');
+                    if (parentScheme) {
+                        detectedTheme = parentScheme;
+                        console.log('Theme from parent attribute:', parentScheme);
+                    }
+
+                    // Extract parent's actual background color
+                    const parentStyle = getComputedStyle(window.parent.document.body);
+                    parentBgColor = parentStyle.backgroundColor;
+                    console.log('Parent background color:', parentBgColor);
+
+                    // Calculate lighter shades for cards based on parent background
+                    if (parentBgColor) {
+                        const rgb = parentBgColor.match(/\d+/g);
+                        if (rgb && rgb.length >= 3) {
+                            const baseR = parseInt(rgb[0]);
+                            const baseG = parseInt(rgb[1]);
+                            const baseB = parseInt(rgb[2]);
+
+                            // Make cards ~15% lighter than background
+                            const r = Math.min(255, Math.round(baseR * 1.15));
+                            const g = Math.min(255, Math.round(baseG * 1.15));
+                            const b = Math.min(255, Math.round(baseB * 1.15));
+                            const cardColor = `rgb(${r}, ${g}, ${b})`;
+
+                            // Make hover/metadata items ~35% lighter for more contrast
+                            const hr = Math.min(255, Math.round(baseR * 1.35));
+                            const hg = Math.min(255, Math.round(baseG * 1.35));
+                            const hb = Math.min(255, Math.round(baseB * 1.35));
+                            const hoverColor = `rgb(${hr}, ${hg}, ${hb})`;
+
+                            document.documentElement.style.setProperty('--bg-card', cardColor);
+                            document.documentElement.style.setProperty('--bg-hover', hoverColor);
+                            document.documentElement.style.setProperty('--chart-bg', cardColor);
+                            console.log('Applied calculated colors - card:', cardColor, 'hover:', hoverColor);
+                        }
+                    }
+                }
+            } catch (e) {
+                // Cross-origin restrictions - can't access parent
+                console.log('Cannot access parent (cross-origin)');
+            }
+
+            // Method 2: Check URL parameter (?theme=dark or ?theme=light)
+            if (!detectedTheme) {
+                const urlParams = new URLSearchParams(window.location.search);
+                const themeParam = urlParams.get('theme');
+                if (themeParam === 'dark' || themeParam === 'slate') {
+                    detectedTheme = 'slate';
+                } else if (themeParam === 'light') {
+                    detectedTheme = 'default';
+                }
+            }
+
+            // Method 3: Detect from parent bg color brightness
+            if (!detectedTheme && parentBgColor) {
+                const rgb = parentBgColor.match(/\d+/g);
+                if (rgb && rgb.length >= 3) {
+                    const brightness = (parseInt(rgb[0]) + parseInt(rgb[1]) + parseInt(rgb[2])) / 3;
+                    detectedTheme = brightness < 128 ? 'slate' : 'default';
+                    console.log('Theme from brightness:', detectedTheme, 'brightness:', brightness);
+                }
+            }
+
+            // Method 4: Fall back to system preference
+            if (!detectedTheme) {
+                if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
+                    detectedTheme = 'slate';
+                } else {
+                    detectedTheme = 'default';
+                }
+            }
+
+            console.log('Final detected theme:', detectedTheme);
+            document.documentElement.setAttribute('data-md-color-scheme', detectedTheme);
+
+            // Apply parent's exact background color to iframe if available
+            if (parentBgColor) {
+                document.documentElement.style.setProperty('--bg-primary', parentBgColor);
+                document.body.style.backgroundColor = parentBgColor;
+                console.log('Applied parent background color:', parentBgColor);
+            }
+        }
+
+        // Listen for theme changes from parent window
+        window.addEventListener('message', (event) => {
+            if (event.data && event.data.theme) {
+                console.log('Received theme change message:', event.data.theme);
+                // Re-detect and apply theme (this will update all colors)
+                detectAndApplyTheme();
+                // Redraw charts with new theme
+                if (baselineData && targetData) {
+                    renderCharts();
+                }
+            }
+        });
+
+        // Apply theme on load
+        detectAndApplyTheme();
+
+        // Re-check theme periodically (in case parent loads after iframe)
+        let themeCheckCount = 0;
+        const themeCheckInterval = setInterval(() => {
+            detectAndApplyTheme();
+            themeCheckCount++;
+            if (themeCheckCount > 10) { // Stop after 5 seconds (10 * 500ms)
+                clearInterval(themeCheckInterval);
+            }
+        }, 500);
+
+        // Also check when window becomes visible
+        document.addEventListener('visibilitychange', () => {
+            if (!document.hidden) {
+                detectAndApplyTheme();
+            }
+        });
+
+        // Load index.json to get available versions
+        async function loadIndex() {
+            try {
+                const response = await fetch('data/index.json');
+                indexData = await response.json();
+
+                // Build benchmark metadata map
+                indexData.benchmarks.forEach(bench => {
+                    benchmarkMetadata[bench.name] = bench;
+                });
+
+                populateVersionSelectors();
+            } catch (error) {
+                showError('Failed to load version index: ' + error.message);
+            }
+        }
+
+        // Populate version dropdowns
+        function populateVersionSelectors() {
+            const baselineSelect = document.getElementById('baseline-version');
+            const targetSelect = document.getElementById('target-version');
+
+            baselineSelect.innerHTML = '<option value="">Select baseline version...</option>';
+            targetSelect.innerHTML = '<option value="">Select target version...</option>';
+
+            indexData.versions.forEach(version => {
+                const option1 = new Option(`Go ${version.version}`, version.file);
+                const option2 = new Option(`Go ${version.version}`, version.file);
+                baselineSelect.add(option1);
+                targetSelect.add(option2);
+            });
+
+            // Set defaults if we have at least 2 versions
+            if (indexData.versions.length >= 2) {
+                baselineSelect.value = indexData.versions[0].file;
+                targetSelect.value = indexData.versions[indexData.versions.length - 1].file;
+                compareVersions();
+            }
+        }
+
+        // Load version data
+        async function loadVersionData(filename) {
+            const response = await fetch(`data/${filename}`);
+            return await response.json();
+        }
+
+        // Compare versions
+        async function compareVersions() {
+            const baselineFile = document.getElementById('baseline-version').value;
+            const targetFile = document.getElementById('target-version').value;
+
+            if (!baselineFile || !targetFile) {
+                return;
+            }
+
+            if (baselineFile === targetFile) {
+                showError('Please select different versions to compare');
+                return;
+            }
+
+            try {
+                document.getElementById('error-container').innerHTML = '';
+
+                baselineData = await loadVersionData(baselineFile);
+                targetData = await loadVersionData(targetFile);
+
+                renderMetadata();
+                renderSummary();
+                renderCharts();
+            } catch (error) {
+                showError('Failed to load version data: ' + error.message);
+            }
+        }
+
+        // Render metadata
+        function renderMetadata() {
+            const container = document.getElementById('metadata-container');
+
+            const html = `
+                <div class="metadata">
+                    <h2>System Information</h2>
+                    <div class="metadata-grid">
+                        <div class="metadata-item">
+                            <div class="metadata-label">Baseline Version</div>
+                            <div class="metadata-value">${baselineData.metadata.go_version_full}</div>
+                        </div>
+                        <div class="metadata-item">
+                            <div class="metadata-label">Target Version</div>
+                            <div class="metadata-value">${targetData.metadata.go_version_full}</div>
+                        </div>
+                        <div class="metadata-item">
+                            <div class="metadata-label">CPU</div>
+                            <div class="metadata-value">${baselineData.metadata.system.cpu}</div>
+                        </div>
+                        <div class="metadata-item">
+                            <div class="metadata-label">Platform</div>
+                            <div class="metadata-value">${baselineData.metadata.system.os}/${baselineData.metadata.system.arch}</div>
+                        </div>
+                        <div class="metadata-item">
+                            <div class="metadata-label">Benchmark Config</div>
+                            <div class="metadata-value">${baselineData.metadata.benchmark_config.iterations} iterations × ${baselineData.metadata.benchmark_config.benchtime}</div>
+                        </div>
+                    </div>
+                </div>
+            `;
+
+            container.innerHTML = html;
+        }
+
+        // Calculate percentage change
+        function percentChange(baseline, target) {
+            return ((target - baseline) / baseline) * 100;
+        }
+
+        // Generate GitHub source link for a benchmark
+        function getBenchmarkSourceURL(benchmarkName) {
+            const metadata = benchmarkMetadata[benchmarkName];
+            if (!metadata || !indexData.repository) {
+                return null;
+            }
+
+            const { url, source_path } = indexData.repository;
+            const sourceFile = metadata.source_file;
+
+            // Use GitHub's text search anchor to jump to the function
+            const searchText = `func%20${benchmarkName}`;
+            return `${url}/${source_path}/${sourceFile}#:~:text=${searchText}`;
+        }
+
+        // Format delta with clear color coding
+        // Negative % = improvement (green), Positive % = regression (red)
+        function formatDelta(value) {
+            if (Math.abs(value) < 0.5) {
+                return '<span class="delta-neutral">~0%</span>';
+            }
+            const sign = value > 0 ? '+' : '';
+            const className = value < 0 ? 'delta-positive' : 'delta-negative';
+            return `<span class="${className}">${sign}${value.toFixed(2)}%</span>`;
+        }
+
+        // Get variance badge
+        function getVarianceBadge(variance) {
+            const percent = variance * 100;
+            if (percent < 5) {
+                return `<span class="variance-badge variance-low">±${percent.toFixed(1)}%</span>`;
+            } else if (percent < 10) {
+                return `<span class="variance-badge variance-medium">±${percent.toFixed(1)}%</span>`;
+            } else {
+                return `<span class="variance-badge variance-high">±${percent.toFixed(1)}%</span>`;
+            }
+        }
+
+        // Render summary table
+        function renderSummary() {
+            const container = document.getElementById('summary-container');
+
+            let tableRows = '';
+            const benchmarks = Object.keys(baselineData.benchmarks);
+
+            benchmarks.forEach(name => {
+                const baseline = baselineData.benchmarks[name];
+                const target = targetData.benchmarks[name];
+
+                if (!target) return;
+
+                const timeDelta = percentChange(baseline.ns_per_op, target.ns_per_op);
+                const allocDelta = percentChange(baseline.allocs_per_op, target.allocs_per_op);
+
+                // Create clickable benchmark name with link to source
+                const sourceURL = getBenchmarkSourceURL(name);
+                const displayName = name.replace('Benchmark', '');
+                const benchmarkCell = sourceURL
+                    ? `<a href="${sourceURL}" class="benchmark-link" target="_blank" rel="noopener">${displayName}</a>`
+                    : `<strong>${displayName}</strong>`;
+
+                tableRows += `
+                    <tr>
+                        <td>${benchmarkCell}</td>
+                        <td>${baseline.ns_per_op.toFixed(2)} ns/op</td>
+                        <td>${target.ns_per_op.toFixed(2)} ns/op</td>
+                        <td>${formatDelta(timeDelta)}</td>
+                        <td>${baseline.allocs_per_op}</td>
+                        <td>${target.allocs_per_op}</td>
+                        <td>${formatDelta(allocDelta)}</td>
+                        <td>${getVarianceBadge(target.ns_per_op_variance)}</td>
+                    </tr>
+                `;
+            });
+
+            const html = `
+                <div class="summary">
+                    <h2>Performance Comparison</h2>
+                    <p style="color: var(--text-secondary); font-size: 14px; margin-bottom: 15px;">
+                        <span class="delta-positive">Green (negative %)</span> = improvement,
+                        <span class="delta-negative">Red (positive %)</span> = regression
+                    </p>
+                    <table class="benchmark-table">
+                        <thead>
+                            <tr>
+                                <th>Benchmark</th>
+                                <th>Baseline Time</th>
+                                <th>Target Time</th>
+                                <th>Δ Time</th>
+                                <th>Baseline Allocs</th>
+                                <th>Target Allocs</th>
+                                <th>Δ Allocs</th>
+                                <th>Variance</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${tableRows}
+                        </tbody>
+                    </table>
+                </div>
+            `;
+
+            container.innerHTML = html;
+        }
+
+        // Get theme-aware chart layout
+        function getThemedLayout(baseLayout) {
+            const isDark = document.documentElement.getAttribute('data-md-color-scheme') === 'slate';
+            const computedStyle = getComputedStyle(document.documentElement);
+
+            return {
+                ...baseLayout,
+                paper_bgcolor: computedStyle.getPropertyValue('--chart-bg').trim() || (isDark ? '#252526' : '#ffffff'),
+                plot_bgcolor: computedStyle.getPropertyValue('--chart-bg').trim() || (isDark ? '#252526' : '#ffffff'),
+                font: {
+                    color: computedStyle.getPropertyValue('--text-primary').trim() || (isDark ? '#e0e0e0' : '#333333')
+                },
+                xaxis: {
+                    ...baseLayout.xaxis,
+                    gridcolor: computedStyle.getPropertyValue('--chart-grid').trim() || (isDark ? '#3e3e42' : '#e0e0e0'),
+                    color: computedStyle.getPropertyValue('--text-primary').trim() || (isDark ? '#e0e0e0' : '#333333'),
+                    zerolinecolor: computedStyle.getPropertyValue('--border-color').trim() || (isDark ? '#3e3e42' : '#e0e0e0')
+                },
+                yaxis: {
+                    ...baseLayout.yaxis,
+                    gridcolor: computedStyle.getPropertyValue('--chart-grid').trim() || (isDark ? '#3e3e42' : '#e0e0e0'),
+                    color: computedStyle.getPropertyValue('--text-primary').trim() || (isDark ? '#e0e0e0' : '#333333'),
+                    zerolinecolor: computedStyle.getPropertyValue('--border-color').trim() || (isDark ? '#3e3e42' : '#e0e0e0')
+                }
+            };
+        }
+
+        // Render charts
+        function renderCharts() {
+            const container = document.getElementById('charts-container');
+            container.innerHTML = `
+                <div class="chart-container">
+                    <h2>Performance Comparison (ns/op)</h2>
+                    <div id="time-chart"></div>
+                </div>
+                <div class="chart-container">
+                    <h2>Memory Allocations</h2>
+                    <div id="allocs-chart"></div>
+                </div>
+                <div class="chart-container">
+                    <h2>Performance Delta (%)</h2>
+                    <div id="delta-chart"></div>
+                </div>
+            `;
+
+            renderTimeChart();
+            renderAllocsChart();
+            renderDeltaChart();
+        }
+
+        // Render time comparison chart
+        function renderTimeChart() {
+            const benchmarks = Object.keys(baselineData.benchmarks);
+            const labels = benchmarks.map(name => name.replace('Benchmark', ''));
+
+            const baselineValues = benchmarks.map(name => baselineData.benchmarks[name].ns_per_op);
+            const targetValues = benchmarks.map(name => targetData.benchmarks[name].ns_per_op);
+
+            const trace1 = {
+                x: labels,
+                y: baselineValues,
+                name: `Go ${baselineData.version}`,
+                type: 'bar',
+                marker: { color: '#3498db' }
+            };
+
+            const trace2 = {
+                x: labels,
+                y: targetValues,
+                name: `Go ${targetData.version}`,
+                type: 'bar',
+                marker: { color: '#2ecc71' }
+            };
+
+            const layout = getThemedLayout({
+                barmode: 'group',
+                yaxis: { title: 'Time (ns/op)', type: 'log' },
+                xaxis: { title: 'Benchmark' },
+                margin: { t: 20, r: 20, b: 80, l: 80 },
+                height: 400
+            });
+
+            Plotly.newPlot('time-chart', [trace1, trace2], layout, { responsive: true });
+        }
+
+        // Render allocations chart
+        function renderAllocsChart() {
+            const benchmarks = Object.keys(baselineData.benchmarks);
+            const labels = benchmarks.map(name => name.replace('Benchmark', ''));
+
+            const baselineAllocs = benchmarks.map(name => baselineData.benchmarks[name].allocs_per_op);
+            const targetAllocs = benchmarks.map(name => targetData.benchmarks[name].allocs_per_op);
+
+            const trace1 = {
+                x: labels,
+                y: baselineAllocs,
+                name: `Go ${baselineData.version}`,
+                type: 'bar',
+                marker: { color: '#3498db' }
+            };
+
+            const trace2 = {
+                x: labels,
+                y: targetAllocs,
+                name: `Go ${targetData.version}`,
+                type: 'bar',
+                marker: { color: '#2ecc71' }
+            };
+
+            const layout = getThemedLayout({
+                barmode: 'group',
+                yaxis: { title: 'Allocations per op' },
+                xaxis: { title: 'Benchmark' },
+                margin: { t: 20, r: 20, b: 80, l: 80 },
+                height: 400
+            });
+
+            Plotly.newPlot('allocs-chart', [trace1, trace2], layout, { responsive: true });
+        }
+
+        // Render delta chart
+        function renderDeltaChart() {
+            const benchmarks = Object.keys(baselineData.benchmarks);
+            const labels = benchmarks.map(name => name.replace('Benchmark', ''));
+
+            const deltas = benchmarks.map(name => {
+                const baseline = baselineData.benchmarks[name].ns_per_op;
+                const target = targetData.benchmarks[name].ns_per_op;
+                return percentChange(baseline, target);
+            });
+
+            // Negative % = improvement (green), Positive % = regression (red)
+            const colors = deltas.map(d => d < 0 ? '#27ae60' : d > 0 ? '#e74c3c' : '#95a5a6');
+
+            const trace = {
+                x: labels,
+                y: deltas,
+                type: 'bar',
+                marker: { color: colors }
+            };
+
+            const computedStyle = getComputedStyle(document.documentElement);
+            const textSecondary = computedStyle.getPropertyValue('--text-secondary').trim();
+            const textPrimary = computedStyle.getPropertyValue('--text-primary').trim();
+
+            const layout = getThemedLayout({
+                yaxis: {
+                    title: 'Performance Change (%)',
+                    zeroline: true,
+                    zerolinewidth: 2,
+                    zerolinecolor: textPrimary
+                },
+                xaxis: { title: 'Benchmark' },
+                margin: { t: 20, r: 20, b: 80, l: 80 },
+                height: 400,
+                annotations: [{
+                    text: 'Negative % = Faster (better), Positive % = Slower (worse)',
+                    xref: 'paper',
+                    yref: 'paper',
+                    x: 0.5,
+                    y: 1.05,
+                    showarrow: false,
+                    font: { size: 12, color: textSecondary }
+                }]
+            });
+
+            Plotly.newPlot('delta-chart', [trace], layout, { responsive: true });
+        }
+
+        // Show error message
+        function showError(message) {
+            const container = document.getElementById('error-container');
+            container.innerHTML = `<div class="error">${message}</div>`;
+        }
+
+        // Event listeners
+        document.getElementById('baseline-version').addEventListener('change', compareVersions);
+        document.getElementById('target-version').addEventListener('change', compareVersions);
+
+        // Initialize
+        loadIndex();
+    </script>
+</body>
+</html>
