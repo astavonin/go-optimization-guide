@@ -178,6 +178,11 @@
             font-size: 20px;
         }
 
+        .table-wrapper {
+            overflow-x: auto;
+            -webkit-overflow-scrolling: touch;
+        }
+
         .benchmark-table {
             width: 100%;
             border-collapse: collapse;
@@ -285,6 +290,147 @@
         .variance-high {
             background: #f8d7da;
             color: #721c24;
+        }
+
+        /* Mobile Responsiveness */
+        @media (max-width: 768px) {
+            .container {
+                padding: 10px;
+            }
+
+            header {
+                padding: 20px 15px;
+                margin-bottom: 20px;
+            }
+
+            h1 {
+                font-size: 24px;
+            }
+
+            .subtitle {
+                font-size: 14px;
+            }
+
+            .controls {
+                padding: 15px;
+            }
+
+            .control-group {
+                flex-direction: column;
+                gap: 15px;
+            }
+
+            .version-selector {
+                min-width: 100%;
+            }
+
+            .metadata {
+                padding: 15px;
+            }
+
+            .metadata-grid {
+                grid-template-columns: 1fr;
+                gap: 10px;
+            }
+
+            .metadata-item {
+                padding: 12px;
+            }
+
+            .summary {
+                padding: 15px;
+            }
+
+            .summary h2 {
+                font-size: 18px;
+            }
+
+            /* Table wrapper for horizontal scroll */
+            .table-wrapper {
+                overflow-x: auto;
+                -webkit-overflow-scrolling: touch;
+                margin: 0 -15px;
+                padding: 0 15px;
+            }
+
+            .benchmark-table {
+                min-width: 600px;
+                font-size: 13px;
+            }
+
+            .benchmark-table th,
+            .benchmark-table td {
+                padding: 8px 6px;
+                white-space: nowrap;
+            }
+
+            .benchmark-table th:first-child,
+            .benchmark-table td:first-child {
+                position: sticky;
+                left: 0;
+                background: var(--bg-card);
+                z-index: 1;
+                min-width: 120px;
+                max-width: 150px;
+            }
+
+            .benchmark-table th:first-child {
+                background: var(--bg-hover);
+            }
+
+            .benchmark-link {
+                font-size: 13px;
+                display: inline-block;
+                max-width: 130px;
+                overflow: hidden;
+                text-overflow: ellipsis;
+            }
+
+            .chart-container {
+                padding: 15px;
+                margin-left: -5px;
+                margin-right: -5px;
+            }
+
+            .chart-container h2 {
+                font-size: 18px;
+            }
+
+            /* Make plotly charts responsive */
+            .js-plotly-plot {
+                width: 100% !important;
+            }
+
+            .variance-badge {
+                font-size: 10px;
+                padding: 3px 6px;
+            }
+        }
+
+        /* Extra small devices */
+        @media (max-width: 480px) {
+            h1 {
+                font-size: 20px;
+            }
+
+            .subtitle {
+                font-size: 13px;
+            }
+
+            .benchmark-table {
+                min-width: 500px;
+                font-size: 12px;
+            }
+
+            .benchmark-table th,
+            .benchmark-table td {
+                padding: 6px 4px;
+            }
+
+            .benchmark-link {
+                font-size: 12px;
+                max-width: 100px;
+            }
         }
     </style>
 </head>
@@ -627,12 +773,12 @@
                 tableRows += `
                     <tr>
                         <td>${benchmarkCell}</td>
+                        <td>${formatDelta(timeDelta)}</td>
                         <td>${baseline.ns_per_op.toFixed(2)} ns/op</td>
                         <td>${target.ns_per_op.toFixed(2)} ns/op</td>
-                        <td>${formatDelta(timeDelta)}</td>
+                        <td>${formatDelta(allocDelta)}</td>
                         <td>${baseline.allocs_per_op}</td>
                         <td>${target.allocs_per_op}</td>
-                        <td>${formatDelta(allocDelta)}</td>
                         <td>${getVarianceBadge(target.ns_per_op_variance)}</td>
                     </tr>
                 `;
@@ -645,23 +791,25 @@
                         <span class="delta-positive">Green (negative %)</span> = improvement,
                         <span class="delta-negative">Red (positive %)</span> = regression
                     </p>
-                    <table class="benchmark-table">
-                        <thead>
-                            <tr>
-                                <th>Benchmark</th>
-                                <th>Baseline Time</th>
-                                <th>Target Time</th>
-                                <th>Δ Time</th>
-                                <th>Baseline Allocs</th>
-                                <th>Target Allocs</th>
-                                <th>Δ Allocs</th>
-                                <th>Variance</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            ${tableRows}
-                        </tbody>
-                    </table>
+                    <div class="table-wrapper">
+                        <table class="benchmark-table">
+                            <thead>
+                                <tr>
+                                    <th>Benchmark</th>
+                                    <th>Δ Time</th>
+                                    <th>Baseline Time</th>
+                                    <th>Target Time</th>
+                                    <th>Δ Allocs</th>
+                                    <th>Baseline Allocs</th>
+                                    <th>Target Allocs</th>
+                                    <th>Variance</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                ${tableRows}
+                            </tbody>
+                        </table>
+                    </div>
                 </div>
             `;
 
@@ -718,6 +866,31 @@
             renderDeltaChart();
         }
 
+        // Adjust chart configuration for mobile
+        function getResponsiveChartConfig(baseConfig) {
+            const isMobile = window.innerWidth <= 768;
+            if (isMobile) {
+                return {
+                    ...baseConfig,
+                    margin: { t: 20, r: 10, b: 110, l: 50 },
+                    height: 420,
+                    xaxis: {
+                        ...baseConfig.xaxis,
+                        tickangle: -45,
+                        tickfont: { size: 9 },
+                        automargin: true
+                    },
+                    yaxis: {
+                        ...baseConfig.yaxis,
+                        tickfont: { size: 10 },
+                        automargin: true
+                    },
+                    bargap: 0.3
+                };
+            }
+            return baseConfig;
+        }
+
         // Render time comparison chart
         function renderTimeChart() {
             const benchmarks = Object.keys(baselineData.benchmarks);
@@ -742,13 +915,13 @@
                 marker: { color: '#2ecc71' }
             };
 
-            const layout = getThemedLayout({
+            const layout = getThemedLayout(getResponsiveChartConfig({
                 barmode: 'group',
                 yaxis: { title: 'Time (ns/op)', type: 'log' },
                 xaxis: { title: 'Benchmark' },
                 margin: { t: 20, r: 20, b: 80, l: 80 },
                 height: 400
-            });
+            }));
 
             Plotly.newPlot('time-chart', [trace1, trace2], layout, { responsive: true });
         }
@@ -777,13 +950,13 @@
                 marker: { color: '#2ecc71' }
             };
 
-            const layout = getThemedLayout({
+            const layout = getThemedLayout(getResponsiveChartConfig({
                 barmode: 'group',
                 yaxis: { title: 'Allocations per op' },
                 xaxis: { title: 'Benchmark' },
                 margin: { t: 20, r: 20, b: 80, l: 80 },
                 height: 400
-            });
+            }));
 
             Plotly.newPlot('allocs-chart', [trace1, trace2], layout, { responsive: true });
         }
@@ -813,7 +986,7 @@
             const textSecondary = computedStyle.getPropertyValue('--text-secondary').trim();
             const textPrimary = computedStyle.getPropertyValue('--text-primary').trim();
 
-            const layout = getThemedLayout({
+            const layout = getThemedLayout(getResponsiveChartConfig({
                 yaxis: {
                     title: 'Performance Change (%)',
                     zeroline: true,
@@ -832,7 +1005,7 @@
                     showarrow: false,
                     font: { size: 12, color: textSecondary }
                 }]
-            });
+            }));
 
             Plotly.newPlot('delta-chart', [trace], layout, { responsive: true });
         }
