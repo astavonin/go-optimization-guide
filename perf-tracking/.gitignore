@@ -2,7 +2,7 @@
 .go-versions/
 
 # Build artifacts
-tools/benchcompare/benchcompare
+tools/benchexport/benchexport
 *.exe
 *.dll
 *.so

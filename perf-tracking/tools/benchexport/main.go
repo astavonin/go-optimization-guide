@@ -159,7 +159,7 @@ func main() {
 	// Export mode
 	if *exportAllFlag {
 		if *resultsDir == "" || *outputDir == "" {
-			fmt.Println("Usage: benchcompare --export-all --results-dir <dir> --output-dir <dir>")
+			fmt.Println("Usage: benchexport --export-all --results-dir <dir> --output-dir <dir>")
 			os.Exit(1)
 		}
 		if err := exportAll(*resultsDir, *outputDir); err != nil {
@@ -171,7 +171,7 @@ func main() {
 
 	if *exportMode {
 		if *input == "" || *version == "" || *output == "" {
-			fmt.Println("Usage: benchcompare --export --input <file> --version <ver> --output <file>")
+			fmt.Println("Usage: benchexport --export --input <file> --version <ver> --output <file>")
 			os.Exit(1)
 		}
 		if err := exportVersion(*input, *version, *output); err != nil {
@@ -184,9 +184,9 @@ func main() {
 	// Comparison mode (original behavior)
 	if *baseline == "" || *target == "" {
 		fmt.Println("Usage:")
-		fmt.Println("  Compare:    benchcompare -baseline <file> -target <file> [-output <file>]")
-		fmt.Println("  Export one: benchcompare --export --input <file> --version <ver> --output <file>")
-		fmt.Println("  Export all: benchcompare --export-all --results-dir <dir> --output-dir <dir>")
+		fmt.Println("  Compare:    benchexport -baseline <file> -target <file> [-output <file>]")
+		fmt.Println("  Export one: benchexport --export --input <file> --version <ver> --output <file>")
+		fmt.Println("  Export all: benchexport --export-all --results-dir <dir> --output-dir <dir>")
 		os.Exit(1)
 	}
 

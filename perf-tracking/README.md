@@ -44,10 +44,10 @@ benchstat old.txt new.txt                    # Compare two files
 benchstat -alpha 0.01 old.txt new.txt        # Stricter significance
 ```
 
-**`benchcompare`** - Export for web
+**`benchexport`** - Export for web
 ```bash
-cd tools/benchcompare && go build
-./benchcompare --export-all \
+cd tools/benchexport && go build
+./benchexport --export-all \
   --results-dir ../../results/stable \
   --output-dir ../../../docs/03-version-tracking/data
 ```
@@ -61,7 +61,7 @@ perf-tracking/
 │   ├── go.mod               # Set to minimum Go version (1.23)
 │   └── lint.sh              # Run linters
 ├── tools/
-│   ├── benchcompare/        # Export tool
+│   ├── benchexport/        # Export tool
 │   ├── setup-go-versions.sh # Go version management
 │   ├── collect-stable.sh    # Benchmark collection
 │   ├── system-check.sh      # System validation
@@ -98,8 +98,8 @@ Interactive UI for comparing Go versions with charts and statistics.
 
 **Export data:**
 ```bash
-cd tools/benchcompare && go build
-./benchcompare --export-all \
+cd tools/benchexport && go build
+./benchexport --export-all \
   --results-dir ../../results/stable \
   --output-dir ../../../docs/03-version-tracking/data
 ```
