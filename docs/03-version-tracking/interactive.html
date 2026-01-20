@@ -390,15 +390,18 @@
                 padding: 15px;
                 margin-left: -5px;
                 margin-right: -5px;
+                overflow-x: auto;
+                -webkit-overflow-scrolling: touch;
             }
 
             .chart-container h2 {
                 font-size: 18px;
             }
 
-            /* Make plotly charts responsive */
+            /* Make plotly charts responsive with minimum width */
             .js-plotly-plot {
                 width: 100% !important;
+                min-width: 500px;
             }
 
             .variance-badge {
@@ -874,6 +877,7 @@
                     ...baseConfig,
                     margin: { t: 20, r: 10, b: 110, l: 50 },
                     height: 420,
+                    width: 500,
                     xaxis: {
                         ...baseConfig.xaxis,
                         tickangle: -45,
@@ -885,7 +889,8 @@
                         tickfont: { size: 10 },
                         automargin: true
                     },
-                    bargap: 0.3
+                    bargap: 0.15,
+                    bargroupgap: 0.05
                 };
             }
             return baseConfig;
