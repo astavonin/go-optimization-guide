@@ -11,10 +11,12 @@ cd perf-tracking
 ./tools/install-tools.sh
 
 # 2. Set up Go versions
+./tools/setup-go-versions.sh install 1.23.0
 ./tools/setup-go-versions.sh install 1.24.0
 ./tools/setup-go-versions.sh install 1.25.0
 
 # 3. Collect benchmarks
+./tools/collect-stable.sh 1.23
 ./tools/collect-stable.sh 1.24
 ./tools/collect-stable.sh 1.25
 
@@ -57,39 +59,78 @@ cd tools/benchexport && go build
 ```
 perf-tracking/
 ├── benchmarks/
-│   ├── core/                # Benchmarks (5 total)
-│   ├── go.mod               # Set to minimum Go version (1.23)
-│   └── lint.sh              # Run linters
+│   ├── runtime/             # GC, sync, memory (12 benchmarks)
+│   ├── stdlib/              # encoding, I/O, crypto, hash, text (12 benchmarks)
+│   ├── networking/          # TCP, TLS, HTTP/2, pools (9 benchmarks)
+│   ├── go.mod.template      # Minimal template (go 1.23)
+│   ├── go.mod.1.23.0        # Go 1.23 dependencies
+│   ├── go.mod.1.24.0        # Go 1.24 dependencies
+│   └── go.mod.1.25.0        # Go 1.25 dependencies
 ├── tools/
-│   ├── benchexport/        # Export tool
+│   ├── benchexport/         # Export tool
 │   ├── setup-go-versions.sh # Go version management
-│   ├── collect-stable.sh    # Benchmark collection
+│   ├── collect-stable.sh    # Benchmark collection (uses templates)
 │   ├── system-check.sh      # System validation
 │   └── install-tools.sh     # Install benchstat, staticcheck, gopls
+├── .go-versions/
+│   ├── go1.23.0/            # Isolated Go 1.23.0 installation
+│   ├── go1.24.0/            # Isolated Go 1.24.0 installation
+│   └── go1.25.0/            # Isolated Go 1.25.0 installation
 └── results/stable/          # Results by version
+    ├── go1.23/
     ├── go1.24/
     └── go1.25/
 ```
 
 ## Benchmarks
 
-- **SmallAllocation** - 64-byte allocation
-- **LargeAllocation** - 1MB allocation
-- **MapAllocation** - Map with 100 entries
-- **SliceAppend** - Slice growth (1000 appends)
-- **GCPressure** - GC under allocation pressure
+**Runtime & GC** (12 benchmarks in `runtime/`):
+- GC throughput, latency, small objects, mixed workload
+- sync.Map, Swiss Tables, map presizing, iteration
+- Stack growth, small allocations, goroutine creation, mutex contention
+
+**Standard Library** (12 benchmarks in `stdlib/`):
+- JSON encode/decode, binary encoding
+- I/O (ReadAll, buffered I/O)
+- Crypto (AES-CTR, AES-GCM, SHA-1/256/512, SHA3-256, RSA keygen)
+- Hash (CRC32, FNV-1a)
+- Regexp (compile, match)
+
+**Networking** (9 benchmarks in `networking/`):
+- TCP: connect, keep-alive, throughput
+- TLS: handshake (1.2/1.3/ECDHE), resume, throughput
+- HTTP: request, HTTP/2 (sequential, parallel)
+- Connection pooling (cold, warm, parallel)
+
+## Dependency Management
+
+`collect-stable.sh` automatically handles versioned go.mod templates:
+- `go.mod.template` - Base template (go 1.23)
+- `go.mod.1.23.0` - x/crypto v0.27.0 (Go 1.23 compatible)
+- `go.mod.1.24.0` - x/crypto v0.47.0 (latest for Go 1.24+)
+- `go.mod.1.25.0` - x/crypto v0.47.0 (latest for Go 1.25+)
+
+Template is automatically selected based on Go version being tested.
 
 ## Development
-
-**Linting:**
-```bash
-cd benchmarks && ./lint.sh
-```
 
 **Manual testing:**
 ```bash
 cd benchmarks
-go test -bench=. -benchmem ./core/
+
+# Copy appropriate go.mod for your Go version
+cp go.mod.1.23.0 go.mod
+
+# Run specific category
+go test -bench=. -benchmem ./runtime/
+go test -bench=. -benchmem ./stdlib/
+go test -bench=. -benchmem ./networking/
+```
+
+**Linting:**
+```bash
+cd benchmarks
+staticcheck ./...
 ```
 
 ## Web Visualization
@@ -106,7 +147,7 @@ cd tools/benchexport && go build
 
 **View locally:**
 ```bash
-cd ../docs/03-version-tracking
+cd docs/03-version-tracking
 python3 -m http.server 8000
 # Open http://localhost:8000/interactive.html
 ```
@@ -126,6 +167,7 @@ python3 -m http.server 8000
 - Use `performance` CPU governor: `echo performance | sudo tee /sys/devices/system/cpu/cpu*/cpufreq/scaling_governor`
 - Check system load is low
 - Avoid thermal throttling
+- Accept 10% CV for CPU-bound, 15% CV for networking benchmarks
 
 **High variance (>10%)?**
 - Increase iterations: `--count 30`
