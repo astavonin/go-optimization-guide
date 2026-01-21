@@ -39,6 +39,12 @@ fi
 GO_VERSION=$1
 shift
 
+# Normalize version: if only major.minor (e.g., 1.23), append .0 for dependency files
+GO_VERSION_FULL="$GO_VERSION"
+if [[ "$GO_VERSION_FULL" =~ ^[0-9]+\.[0-9]+$ ]]; then
+    GO_VERSION_FULL="${GO_VERSION_FULL}.0"
+fi
+
 # Parse options
 SKIP_WARMUP=false
 SKIP_CHECKS=false
@@ -115,7 +121,7 @@ if [ "$SKIP_WARMUP" = false ]; then
     cd "${SCRIPT_DIR}/../benchmarks"
 
     echo "  → Warming up CPU caches and branch predictors..."
-    GOTOOLCHAIN=local "$GO_BIN" test -bench=. -benchmem -count=$WARMUP_COUNT -benchtime=1s ./core/ > /dev/null 2>&1
+    GOTOOLCHAIN=local "$GO_BIN" test -bench=. -benchmem -count=$WARMUP_COUNT -benchtime=1s ./runtime/ ./stdlib/ > /dev/null 2>&1
 
     echo -e "${GREEN}✓ System warmed up${NC}"
     echo
@@ -123,7 +129,47 @@ if [ "$SKIP_WARMUP" = false ]; then
     cd "${SCRIPT_DIR}/.."
 fi
 
-# Step 3: Collect benchmarks
+# Function to prepare version-specific dependencies
+prepare_dependencies() {
+    local GO_VERSION=$1
+    local GO_BIN=$2
+    local CACHED_GOMOD="go.mod.${GO_VERSION}"
+    local CACHED_GOSUM="go.sum.${GO_VERSION}"
+
+    if [ -f "$CACHED_GOMOD" ] && [ -f "$CACHED_GOSUM" ]; then
+        echo "  → Using cached dependencies for Go ${GO_VERSION}"
+        cp "$CACHED_GOMOD" go.mod
+        cp "$CACHED_GOSUM" go.sum
+    else
+        echo "  → Resolving latest dependencies for Go ${GO_VERSION}..."
+        if [ ! -f "go.mod.template" ]; then
+            echo "  ✗ go.mod.template not found"
+            return 1
+        fi
+
+        cp go.mod.template go.mod
+
+        # Resolve latest compatible dependencies
+        echo "  → Running 'go get -u ./...'"
+        if ! GOTOOLCHAIN=local "$GO_BIN" get -u ./...; then
+            echo "  ✗ Failed to resolve dependencies"
+            return 1
+        fi
+
+        echo "  → Running 'go mod tidy'"
+        if ! GOTOOLCHAIN=local "$GO_BIN" mod tidy; then
+            echo "  ✗ Failed to tidy dependencies"
+            return 1
+        fi
+
+        # Cache for future runs
+        cp go.mod "$CACHED_GOMOD"
+        cp go.sum "$CACHED_GOSUM"
+        echo -e "  ${GREEN}✓ Cached dependencies to $CACHED_GOMOD and $CACHED_GOSUM${NC}"
+    fi
+}
+
+# Step 3: Prepare go.mod for this Go version
 STEP_NUM=3
 if [ "$SKIP_CHECKS" = true ]; then
     STEP_NUM=$((STEP_NUM - 1))
@@ -132,12 +178,36 @@ if [ "$SKIP_WARMUP" = true ]; then
     STEP_NUM=$((STEP_NUM - 1))
 fi
 
-echo "Step ${STEP_NUM}: Collecting benchmarks (${BENCH_COUNT} runs)"
+echo "Step ${STEP_NUM}: Preparing dependencies for Go ${GO_VERSION}"
 cd "${SCRIPT_DIR}/../benchmarks"
 
+# Backup current go.mod
+if [ -f "go.mod" ]; then
+    cp go.mod go.mod.backup
+fi
+
+# Prepare version-specific dependencies
+if ! prepare_dependencies "$GO_VERSION_FULL" "$GO_BIN"; then
+    echo -e "${YELLOW}⚠ Failed to prepare dependencies, using existing go.mod${NC}"
+    if [ -f "go.mod.backup" ]; then
+        mv go.mod.backup go.mod
+    fi
+fi
+echo
+
+# Step 4: Collect benchmarks
+STEP_NUM=$((STEP_NUM + 1))
+
+echo "Step ${STEP_NUM}: Collecting benchmarks (${BENCH_COUNT} runs)"
+
 # Disable automatic toolchain switching - use exact specified version
-GOTOOLCHAIN=local "$GO_BIN" test -bench=. -benchmem -count=$BENCH_COUNT -benchtime=$BENCH_TIME ./core/ \
-    | tee "$OUTPUT_FILE"
+GOTOOLCHAIN=local "$GO_BIN" test -bench=. -benchmem -count=$BENCH_COUNT -benchtime=$BENCH_TIME \
+    ./runtime/ ./stdlib/ 2>&1 | tee "$OUTPUT_FILE"
+
+# Restore original go.mod
+if [ -f "go.mod.backup" ]; then
+    mv go.mod.backup go.mod
+fi
 
 echo
 echo -e "${GREEN}✓ Collection complete${NC}"

@@ -20,6 +20,13 @@ esac
 
 download_and_install() {
     local VERSION=$1
+
+    # Normalize version: if only major.minor (e.g., 1.23), append .0
+    if [[ "$VERSION" =~ ^[0-9]+\.[0-9]+$ ]]; then
+        VERSION="${VERSION}.0"
+        echo "→ Normalized version to ${VERSION}"
+    fi
+
     local INSTALL_PATH="${INSTALL_DIR}/go${VERSION}"
 
     if [ -d "$INSTALL_PATH" ]; then
@@ -28,13 +35,23 @@ download_and_install() {
     fi
 
     echo "→ Downloading Go ${VERSION}..."
-    local DOWNLOAD_URL="https://go.dev/dl/go${VERSION}.${OS}-${ARCH}.tar.gz"
+    local DOWNLOAD_URL="https://dl.google.com/go/go${VERSION}.${OS}-${ARCH}.tar.gz"
     local TEMP_FILE="/tmp/go${VERSION}.tar.gz"
 
-    if ! curl -fsSL "$DOWNLOAD_URL" -o "$TEMP_FILE"; then
-        echo "✗ Failed to download Go ${VERSION}"
-        echo "  URL: $DOWNLOAD_URL"
-        return 1
+    # Try wget first (usually faster with better defaults), fallback to curl
+    if command -v wget &> /dev/null; then
+        if ! wget --show-progress -O "$TEMP_FILE" "$DOWNLOAD_URL"; then
+            echo "✗ Failed to download Go ${VERSION}"
+            echo "  URL: $DOWNLOAD_URL"
+            return 1
+        fi
+    else
+        # Use curl with progress bar and connection limits
+        if ! curl -L --progress-bar --connect-timeout 30 --max-time 600 "$DOWNLOAD_URL" -o "$TEMP_FILE"; then
+            echo "✗ Failed to download Go ${VERSION}"
+            echo "  URL: $DOWNLOAD_URL"
+            return 1
+        fi
     fi
 
     echo "→ Installing Go ${VERSION} to ${INSTALL_PATH}..."
