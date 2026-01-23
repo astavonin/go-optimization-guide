@@ -127,6 +127,92 @@
             border-color: var(--accent-hover);
         }
 
+        .category-filter {
+            background: var(--bg-card);
+            padding: 25px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            margin-bottom: 30px;
+            border: 1px solid var(--border-color);
+        }
+
+        .category-filter label {
+            display: block;
+            font-weight: 600;
+            margin-bottom: 12px;
+            color: var(--text-primary);
+        }
+
+        .category-tabs {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        .category-tab {
+            flex: 1;
+            min-width: 120px;
+            padding: 12px 20px;
+            border: 2px solid var(--border-color);
+            border-radius: 6px;
+            background: var(--bg-card);
+            color: var(--text-primary);
+            font-size: 15px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            min-height: 44px;
+        }
+
+        .category-tab:hover {
+            border-color: var(--accent-color);
+            background: var(--bg-hover);
+        }
+
+        .category-tab.active {
+            background: var(--accent-color);
+            color: #ffffff;
+            border-color: var(--accent-color);
+        }
+
+        .category-tab:focus {
+            outline: 2px solid var(--accent-hover);
+            outline-offset: 2px;
+        }
+
+        .category-badge {
+            display: inline-block;
+            padding: 2px 8px;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: 700;
+            min-width: 24px;
+            text-align: center;
+        }
+
+        .category-tab.active .category-badge {
+            background: rgba(255, 255, 255, 0.3);
+            color: #ffffff;
+        }
+
+        .category-tab:not(.active) .category-badge {
+            background: var(--bg-hover);
+            color: var(--text-secondary);
+        }
+
+        .category-group-header {
+            background: var(--bg-hover);
+            padding: 10px 12px;
+            font-weight: 600;
+            color: var(--text-primary);
+            border-top: 2px solid var(--accent-color);
+            border-bottom: 1px solid var(--border-color);
+        }
+
         .metadata {
             background: var(--bg-card);
             padding: 25px;
@@ -324,6 +410,27 @@
                 min-width: 100%;
             }
 
+            .category-filter {
+                padding: 15px;
+            }
+
+            .category-tabs {
+                gap: 8px;
+            }
+
+            .category-tab {
+                flex: 1 1 calc(50% - 4px);
+                min-width: 0;
+                padding: 10px 12px;
+                font-size: 14px;
+            }
+
+            .category-badge {
+                font-size: 11px;
+                padding: 2px 6px;
+                min-width: 20px;
+            }
+
             .metadata {
                 padding: 15px;
             }
@@ -461,6 +568,24 @@
             </div>
         </div>
 
+        <div class="category-filter">
+            <label>Filter by Category</label>
+            <div class="category-tabs">
+                <button class="category-tab active" data-category="all">
+                    All <span class="category-badge" id="badge-all">0</span>
+                </button>
+                <button class="category-tab" data-category="runtime">
+                    Runtime <span class="category-badge" id="badge-runtime">0</span>
+                </button>
+                <button class="category-tab" data-category="stdlib">
+                    Stdlib <span class="category-badge" id="badge-stdlib">0</span>
+                </button>
+                <button class="category-tab" data-category="networking">
+                    Networking <span class="category-badge" id="badge-networking">0</span>
+                </button>
+            </div>
+        </div>
+
         <div id="error-container"></div>
         <div id="metadata-container"></div>
         <div id="summary-container"></div>
@@ -472,6 +597,7 @@
         let baselineData = null;
         let targetData = null;
         let benchmarkMetadata = {}; // Map of benchmark name to metadata
+        let activeCategory = 'all'; // Current active category filter
 
         // Theme detection and synchronization
         function detectAndApplyTheme() {
@@ -578,6 +704,16 @@
             }
         });
 
+        // Sanitize HTML to prevent XSS attacks
+        function sanitizeHTML(str) {
+            if (typeof str !== 'string') {
+                return '';
+            }
+            const div = document.createElement('div');
+            div.textContent = str;
+            return div.innerHTML;
+        }
+
         // Apply theme on load
         detectAndApplyTheme();
 
@@ -597,6 +733,81 @@
                 detectAndApplyTheme();
             }
         });
+
+        // Get category for a benchmark (with fallback for old data)
+        function getBenchmarkCategory(benchmarkName) {
+            const metadata = benchmarkMetadata[benchmarkName];
+            if (metadata && metadata.category) {
+                return metadata.category;
+            }
+            // Fallback to uncategorized if no category metadata
+            return 'uncategorized';
+        }
+
+        // Filter benchmarks by category
+        function filterBenchmarksByCategory(benchmarks, category) {
+            if (category === 'all') {
+                return benchmarks;
+            }
+            return benchmarks.filter(name => {
+                const cat = getBenchmarkCategory(name);
+                return cat === category;
+            });
+        }
+
+        // Get category counts
+        function getCategoryCounts() {
+            if (!baselineData || !targetData) {
+                return { all: 0, runtime: 0, stdlib: 0, networking: 0, uncategorized: 0 };
+            }
+
+            const benchmarks = Object.keys(baselineData.benchmarks);
+            const counts = {
+                all: benchmarks.length,
+                runtime: 0,
+                stdlib: 0,
+                networking: 0,
+                uncategorized: 0
+            };
+
+            benchmarks.forEach(name => {
+                const category = getBenchmarkCategory(name);
+                if (counts.hasOwnProperty(category)) {
+                    counts[category]++;
+                }
+            });
+
+            return counts;
+        }
+
+        // Update category badge counts
+        function updateCategoryBadges() {
+            const counts = getCategoryCounts();
+            document.getElementById('badge-all').textContent = counts.all;
+            document.getElementById('badge-runtime').textContent = counts.runtime;
+            document.getElementById('badge-stdlib').textContent = counts.stdlib;
+            document.getElementById('badge-networking').textContent = counts.networking;
+        }
+
+        // Set active category
+        function setActiveCategory(category) {
+            activeCategory = category;
+
+            // Update tab active states
+            document.querySelectorAll('.category-tab').forEach(tab => {
+                if (tab.dataset.category === category) {
+                    tab.classList.add('active');
+                } else {
+                    tab.classList.remove('active');
+                }
+            });
+
+            // Re-render if data is loaded
+            if (baselineData && targetData) {
+                renderSummary();
+                renderCharts();
+            }
+        }
 
         // Load index.json to get available versions
         async function loadIndex() {
@@ -664,6 +875,7 @@
                 baselineData = await loadVersionData(baselineFile);
                 targetData = await loadVersionData(targetFile);
 
+                updateCategoryBadges();
                 renderMetadata();
                 renderSummary();
                 renderCharts();
@@ -682,23 +894,23 @@
                     <div class="metadata-grid">
                         <div class="metadata-item">
                             <div class="metadata-label">Baseline Version</div>
-                            <div class="metadata-value">${baselineData.metadata.go_version_full}</div>
+                            <div class="metadata-value">${sanitizeHTML(baselineData.metadata.go_version_full)}</div>
                         </div>
                         <div class="metadata-item">
                             <div class="metadata-label">Target Version</div>
-                            <div class="metadata-value">${targetData.metadata.go_version_full}</div>
+                            <div class="metadata-value">${sanitizeHTML(targetData.metadata.go_version_full)}</div>
                         </div>
                         <div class="metadata-item">
                             <div class="metadata-label">CPU</div>
-                            <div class="metadata-value">${baselineData.metadata.system.cpu}</div>
+                            <div class="metadata-value">${sanitizeHTML(baselineData.metadata.system.cpu)}</div>
                         </div>
                         <div class="metadata-item">
                             <div class="metadata-label">Platform</div>
-                            <div class="metadata-value">${baselineData.metadata.system.os}/${baselineData.metadata.system.arch}</div>
+                            <div class="metadata-value">${sanitizeHTML(baselineData.metadata.system.os)}/${sanitizeHTML(baselineData.metadata.system.arch)}</div>
                         </div>
                         <div class="metadata-item">
                             <div class="metadata-label">Benchmark Config</div>
-                            <div class="metadata-value">${baselineData.metadata.benchmark_config.iterations} iterations × ${baselineData.metadata.benchmark_config.benchtime}</div>
+                            <div class="metadata-value">${sanitizeHTML(String(baselineData.metadata.benchmark_config.iterations))} iterations × ${sanitizeHTML(baselineData.metadata.benchmark_config.benchtime)}</div>
                         </div>
                     </div>
                 </div>
@@ -709,6 +921,9 @@
 
         // Calculate percentage change
         function percentChange(baseline, target) {
+            if (baseline === 0) {
+                return target === 0 ? 0 : Infinity;
+            }
             return ((target - baseline) / baseline) * 100;
         }
 
@@ -730,6 +945,11 @@
         // Format delta with clear color coding
         // Negative % = improvement (green), Positive % = regression (red)
         function formatDelta(value) {
+            if (!Number.isFinite(value)) {
+                const symbol = value > 0 ? '+∞' : '-∞';
+                const className = value > 0 ? 'delta-negative' : 'delta-positive';
+                return `<span class="${className}">${symbol}</span>`;
+            }
             if (Math.abs(value) < 0.5) {
                 return '<span class="delta-neutral">~0%</span>';
             }
@@ -750,42 +970,78 @@
             }
         }
 
+        // Render a single benchmark row
+        function renderBenchmarkRow(name) {
+            const baseline = baselineData.benchmarks[name];
+            const target = targetData.benchmarks[name];
+
+            if (!target) return '';
+
+            const timeDelta = percentChange(baseline.ns_per_op, target.ns_per_op);
+            const allocDelta = percentChange(baseline.allocs_per_op, target.allocs_per_op);
+
+            // Create clickable benchmark name with link to source
+            const sourceURL = getBenchmarkSourceURL(name);
+            const displayName = name.replace('Benchmark', '');
+            const benchmarkCell = sourceURL
+                ? `<a href="${sanitizeHTML(sourceURL)}" class="benchmark-link" target="_blank" rel="noopener">${sanitizeHTML(displayName)}</a>`
+                : `<strong>${sanitizeHTML(displayName)}</strong>`;
+
+            return `
+                <tr>
+                    <td>${benchmarkCell}</td>
+                    <td>${formatDelta(timeDelta)}</td>
+                    <td>${baseline.ns_per_op.toFixed(2)} ns/op</td>
+                    <td>${target.ns_per_op.toFixed(2)} ns/op</td>
+                    <td>${formatDelta(allocDelta)}</td>
+                    <td>${baseline.allocs_per_op}</td>
+                    <td>${target.allocs_per_op}</td>
+                    <td>${getVarianceBadge(target.ns_per_op_variance)}</td>
+                </tr>
+            `;
+        }
+
         // Render summary table
         function renderSummary() {
             const container = document.getElementById('summary-container');
 
             let tableRows = '';
-            const benchmarks = Object.keys(baselineData.benchmarks);
+            const allBenchmarks = Object.keys(baselineData.benchmarks);
+            const filteredBenchmarks = filterBenchmarksByCategory(allBenchmarks, activeCategory);
 
-            benchmarks.forEach(name => {
-                const baseline = baselineData.benchmarks[name];
-                const target = targetData.benchmarks[name];
+            // Group benchmarks by category when showing "all"
+            if (activeCategory === 'all') {
+                const categories = [
+                    { name: 'runtime', label: 'Runtime & GC' },
+                    { name: 'stdlib', label: 'Standard Library' },
+                    { name: 'networking', label: 'Networking' },
+                    { name: 'uncategorized', label: 'Other' }
+                ];
 
-                if (!target) return;
+                categories.forEach(({ name: categoryName, label }) => {
+                    const categoryBenchmarks = filteredBenchmarks.filter(name =>
+                        getBenchmarkCategory(name) === categoryName
+                    );
 
-                const timeDelta = percentChange(baseline.ns_per_op, target.ns_per_op);
-                const allocDelta = percentChange(baseline.allocs_per_op, target.allocs_per_op);
+                    if (categoryBenchmarks.length === 0) return;
 
-                // Create clickable benchmark name with link to source
-                const sourceURL = getBenchmarkSourceURL(name);
-                const displayName = name.replace('Benchmark', '');
-                const benchmarkCell = sourceURL
-                    ? `<a href="${sourceURL}" class="benchmark-link" target="_blank" rel="noopener">${displayName}</a>`
-                    : `<strong>${displayName}</strong>`;
+                    // Add category group header
+                    tableRows += `
+                        <tr class="category-group-header">
+                            <td colspan="8">${sanitizeHTML(label)} (${sanitizeHTML(String(categoryBenchmarks.length))})</td>
+                        </tr>
+                    `;
 
-                tableRows += `
-                    <tr>
-                        <td>${benchmarkCell}</td>
-                        <td>${formatDelta(timeDelta)}</td>
-                        <td>${baseline.ns_per_op.toFixed(2)} ns/op</td>
-                        <td>${target.ns_per_op.toFixed(2)} ns/op</td>
-                        <td>${formatDelta(allocDelta)}</td>
-                        <td>${baseline.allocs_per_op}</td>
-                        <td>${target.allocs_per_op}</td>
-                        <td>${getVarianceBadge(target.ns_per_op_variance)}</td>
-                    </tr>
-                `;
-            });
+                    categoryBenchmarks.forEach(name => {
+                        tableRows += renderBenchmarkRow(name);
+                    });
+                });
+            } else {
+                // Render filtered benchmarks without grouping
+                filteredBenchmarks.forEach(name => {
+                    tableRows += renderBenchmarkRow(name);
+                });
+            }
 
             const html = `
                 <div class="summary">
@@ -898,7 +1154,8 @@
 
         // Render time comparison chart
         function renderTimeChart() {
-            const benchmarks = Object.keys(baselineData.benchmarks);
+            const allBenchmarks = Object.keys(baselineData.benchmarks);
+            const benchmarks = filterBenchmarksByCategory(allBenchmarks, activeCategory);
             const labels = benchmarks.map(name => name.replace('Benchmark', ''));
 
             const baselineValues = benchmarks.map(name => baselineData.benchmarks[name].ns_per_op);
@@ -933,7 +1190,8 @@
 
         // Render allocations chart
         function renderAllocsChart() {
-            const benchmarks = Object.keys(baselineData.benchmarks);
+            const allBenchmarks = Object.keys(baselineData.benchmarks);
+            const benchmarks = filterBenchmarksByCategory(allBenchmarks, activeCategory);
             const labels = benchmarks.map(name => name.replace('Benchmark', ''));
 
             const baselineAllocs = benchmarks.map(name => baselineData.benchmarks[name].allocs_per_op);
@@ -968,7 +1226,8 @@
 
         // Render delta chart
         function renderDeltaChart() {
-            const benchmarks = Object.keys(baselineData.benchmarks);
+            const allBenchmarks = Object.keys(baselineData.benchmarks);
+            const benchmarks = filterBenchmarksByCategory(allBenchmarks, activeCategory);
             const labels = benchmarks.map(name => name.replace('Benchmark', ''));
 
             const deltas = benchmarks.map(name => {
@@ -1018,12 +1277,20 @@
         // Show error message
         function showError(message) {
             const container = document.getElementById('error-container');
-            container.innerHTML = `<div class="error">${message}</div>`;
+            container.innerHTML = `<div class="error">${sanitizeHTML(message)}</div>`;
         }
 
         // Event listeners
         document.getElementById('baseline-version').addEventListener('change', compareVersions);
         document.getElementById('target-version').addEventListener('change', compareVersions);
+
+        // Category filter event listeners
+        document.querySelectorAll('.category-tab').forEach(tab => {
+            tab.addEventListener('click', function() {
+                const category = this.dataset.category;
+                setActiveCategory(category);
+            });
+        });
 
         // Initialize
         loadIndex();

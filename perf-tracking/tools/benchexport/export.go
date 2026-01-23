@@ -14,15 +14,15 @@ import (
 
 // VersionData represents all benchmarks for a single Go version
 type VersionData struct {
-	Version   string               `json:"version"`
-	Metadata  VersionMetadata      `json:"metadata"`
+	Version    string               `json:"version"`
+	Metadata   VersionMetadata      `json:"metadata"`
 	Benchmarks map[string]Benchmark `json:"benchmarks"`
 }
 
 type VersionMetadata struct {
-	GoVersionFull  string         `json:"go_version_full"`
-	CollectedAt    string         `json:"collected_at"`
-	System         SystemInfo     `json:"system"`
+	GoVersionFull   string          `json:"go_version_full"`
+	CollectedAt     string          `json:"collected_at"`
+	System          SystemInfo      `json:"system"`
 	BenchmarkConfig BenchmarkConfig `json:"benchmark_config"`
 }
 
@@ -47,6 +47,7 @@ type Benchmark struct {
 	Iterations      int64   `json:"iterations"`
 	Samples         int     `json:"samples"`
 	Description     string  `json:"description,omitempty"`
+	Category        string  `json:"category,omitempty"`
 }
 
 // BenchmarkSample represents a single benchmark run
@@ -147,6 +148,7 @@ func parseBenchmarkFile(filename, version string) (*VersionData, error) {
 			AllocsPerOp:     lastSample.AllocsPerOp,
 			Samples:         len(sampleList),
 			Description:     getBenchmarkDescription(name),
+			Category:        getBenchmarkCategory(name),
 		}
 	}
 
@@ -178,14 +180,288 @@ func parseBenchmarkFile(filename, version string) (*VersionData, error) {
 
 // getBenchmarkDescription returns a human-readable description
 func getBenchmarkDescription(name string) string {
+	// Extract base benchmark name (remove sub-benchmark path and CPU suffix)
+	// e.g., "BenchmarkAESCTR/Size1KB-16" -> "BenchmarkAESCTR"
+	baseName := name
+	if idx := strings.Index(name, "/"); idx != -1 {
+		baseName = name[:idx]
+	}
+	if idx := strings.LastIndex(baseName, "-"); idx != -1 {
+		// Check if the suffix after '-' is a number (CPU count)
+		if idx+1 < len(baseName) {
+			isNumeric := true
+			for i := idx + 1; i < len(baseName); i++ {
+				if baseName[i] < '0' || baseName[i] > '9' {
+					isNumeric = false
+					break
+				}
+			}
+			if isNumeric {
+				baseName = baseName[:idx]
+			}
+		}
+	}
+
 	descriptions := map[string]string{
-		"BenchmarkSmallAllocation": "64-byte allocation performance",
+		// Runtime/GC benchmarks
+		"BenchmarkSmallAllocation":       "64-byte allocation performance",
+		"BenchmarkMapCreation":           "Map creation with initial capacity",
+		"BenchmarkSwissMapCreation":      "Swiss map creation (Go 1.24+)",
+		"BenchmarkSwissMapLarge":         "Large Swiss map operations (Go 1.24+)",
+		"BenchmarkSwissMapPresized":      "Swiss map with presizing comparison (Go 1.24+)",
+		"BenchmarkSwissMapIteration":     "Swiss map iteration performance (Go 1.24+)",
+		"BenchmarkSmallAllocSpecialized": "Specialized small allocations (32-512 bytes)",
+		"BenchmarkSyncMap":               "sync.Map concurrent access patterns",
+		"BenchmarkGCThroughput":          "GC throughput with mixed allocation patterns",
+		"BenchmarkGCLatency":             "Average GC pause latency",
+		"BenchmarkGCLatencyP99":          "99th percentile GC pause latency",
+		"BenchmarkSmallObjectScanning":   "GC scanning of small object graphs",
+		"BenchmarkMediumObjectScanning":  "GC scanning of medium object graphs",
+		"BenchmarkLargeObjectScanning":   "GC scanning of large object graphs",
+		"BenchmarkAtomicIncrement":       "Atomic counter increment operations",
+		"BenchmarkMutexContention":       "Mutex contention under concurrent load",
+		"BenchmarkChannelThroughput":     "Channel send/receive throughput",
+		"BenchmarkGCMixedWorkload":       "GC performance with mixed allocation patterns",
+		"BenchmarkGCSmallObjects":        "GC performance with many small objects",
+		"BenchmarkGoroutineCreate":       "Goroutine creation and initialization",
+		"BenchmarkStackGrowth":           "Stack growth and shrinking performance",
+
+		// Standard library benchmarks
+		"BenchmarkJSONEncode":       "JSON encoding of structured data",
+		"BenchmarkJSONDecode":       "JSON decoding into Go structs",
+		"BenchmarkJSONDecodeStream": "Streaming JSON decoder performance",
+		"BenchmarkIOReadAll":        "io.ReadAll buffer reading performance",
+		"BenchmarkAESCTR":           "AES-CTR mode encryption throughput",
+		"BenchmarkAESGCM":           "AES-GCM authenticated encryption throughput",
+		"BenchmarkSHA":              "SHA hashing throughput (SHA-1, SHA-256, SHA-512, SHA3)",
+		"BenchmarkRSAKeyGen":        "RSA key generation performance",
+		"BenchmarkRegexp":           "Regular expression matching and compilation",
+		"BenchmarkBufferedIO":       "Buffered I/O reader/writer performance",
+		"BenchmarkCRC32":            "CRC32 checksum calculation (IEEE, Castagnoli)",
+		"BenchmarkFNVHash":          "FNV-1a hash function performance",
+		"BenchmarkBinaryEncode":     "Binary encoding methods (encoding/binary)",
+		"BenchmarkStringsJoin":      "strings.Join with multiple strings",
+
+		// Legacy names for backwards compatibility
+		"BenchmarkReadAll":          "io.ReadAll with small buffers",
+		"BenchmarkReadAllLarge":     "io.ReadAll with large buffers (1MB+)",
+		"BenchmarkAESCTREncrypt":    "AES-CTR encryption throughput",
+		"BenchmarkSHA1Hash":         "SHA-1 hashing throughput",
+		"BenchmarkSHA3Hash":         "SHA-3 hashing throughput",
+		"BenchmarkRSAKeyGeneration": "RSA 2048-bit key generation",
+		"BenchmarkRegexpMatch":      "Regular expression matching",
+		"BenchmarkRegexpCompile":    "Regular expression compilation",
+
+		// Networking benchmarks
+		"BenchmarkTCPConnect":     "TCP connection establishment time",
+		"BenchmarkTCPKeepAlive":   "TCP keep-alive behavior and configuration",
+		"BenchmarkTCPThroughput":  "TCP data transfer throughput",
+		"BenchmarkTLSHandshake":   "TLS 1.3 handshake performance",
+		"BenchmarkTLSResume":      "TLS session resumption",
+		"BenchmarkTLSThroughput":  "TLS encrypted data transfer throughput",
+		"BenchmarkHTTP2":          "HTTP/2 request handling (sequential/parallel)",
+		"BenchmarkHTTPRequest":    "HTTP/1.1 request latency (GET/POST)",
+		"BenchmarkConnectionPool": "Connection pool lifecycle and reuse",
+
+		// Legacy runtime benchmarks for backwards compatibility
 		"BenchmarkLargeAllocation": "1MB allocation performance",
 		"BenchmarkMapAllocation":   "Map with 100 entries",
 		"BenchmarkSliceAppend":     "Slice growth with 1000 appends",
 		"BenchmarkGCPressure":      "GC behavior under allocation pressure",
 	}
+
+	// Try base name first, then fall back to full name for backwards compatibility
+	if desc, ok := descriptions[baseName]; ok {
+		return desc
+	}
 	return descriptions[name]
+}
+
+// getBenchmarkCategory maps benchmark names to their category
+func getBenchmarkCategory(name string) string {
+	// Extract base benchmark name (remove sub-benchmark path and CPU suffix)
+	// e.g., "BenchmarkAESCTR/Size1KB-16" -> "BenchmarkAESCTR"
+	baseName := name
+	if idx := strings.Index(name, "/"); idx != -1 {
+		baseName = name[:idx]
+	}
+	if idx := strings.LastIndex(baseName, "-"); idx != -1 {
+		// Check if the suffix after '-' is a number (CPU count)
+		if idx+1 < len(baseName) {
+			isNumeric := true
+			for i := idx + 1; i < len(baseName); i++ {
+				if baseName[i] < '0' || baseName[i] > '9' {
+					isNumeric = false
+					break
+				}
+			}
+			if isNumeric {
+				baseName = baseName[:idx]
+			}
+		}
+	}
+
+	// Runtime/GC benchmarks
+	runtimeBenchmarks := map[string]bool{
+		"BenchmarkSmallAllocation":       true,
+		"BenchmarkMapCreation":           true,
+		"BenchmarkSwissMapCreation":      true,
+		"BenchmarkSwissMapLarge":         true,
+		"BenchmarkSwissMapPresized":      true,
+		"BenchmarkSwissMapIteration":     true,
+		"BenchmarkSmallAllocSpecialized": true,
+		"BenchmarkSyncMap":               true,
+		"BenchmarkGCThroughput":          true,
+		"BenchmarkGCLatency":             true,
+		"BenchmarkGCLatencyP99":          true,
+		"BenchmarkGCSmallObjects":        true,
+		"BenchmarkGCMixedWorkload":       true,
+		"BenchmarkSmallObjectScanning":   true,
+		"BenchmarkMediumObjectScanning":  true,
+		"BenchmarkLargeObjectScanning":   true,
+		"BenchmarkAtomicIncrement":       true,
+		"BenchmarkMutexContention":       true,
+		"BenchmarkChannelThroughput":     true,
+		"BenchmarkStackGrowth":           true,
+		"BenchmarkGoroutineCreate":       true,
+		// Legacy benchmarks (backwards compatibility)
+		"BenchmarkLargeAllocation": true,
+		"BenchmarkMapAllocation":   true,
+		"BenchmarkSliceAppend":     true,
+		"BenchmarkGCPressure":      true,
+	}
+
+	// Standard library benchmarks
+	stdlibBenchmarks := map[string]bool{
+		"BenchmarkJSONEncode":       true,
+		"BenchmarkJSONDecode":       true,
+		"BenchmarkJSONDecodeStream": true,
+		"BenchmarkIOReadAll":        true,
+		"BenchmarkAESCTR":           true,
+		"BenchmarkAESGCM":           true,
+		"BenchmarkSHA":              true,
+		"BenchmarkRSAKeyGen":        true,
+		"BenchmarkRegexp":           true,
+		"BenchmarkBufferedIO":       true,
+		"BenchmarkCRC32":            true,
+		"BenchmarkFNVHash":          true,
+		"BenchmarkBinaryEncode":     true,
+		"BenchmarkStringsJoin":      true,
+		// Legacy names for backwards compatibility
+		"BenchmarkReadAll":          true,
+		"BenchmarkReadAllLarge":     true,
+		"BenchmarkAESCTREncrypt":    true,
+		"BenchmarkSHA1Hash":         true,
+		"BenchmarkSHA3Hash":         true,
+		"BenchmarkRSAKeyGeneration": true,
+		"BenchmarkRegexpMatch":      true,
+		"BenchmarkRegexpCompile":    true,
+	}
+
+	// Networking benchmarks
+	networkingBenchmarks := map[string]bool{
+		"BenchmarkTCPConnect":    true, // TCP connection benchmarks
+		"BenchmarkTCPKeepAlive":  true, // TCP keep-alive benchmarks
+		"BenchmarkTCPThroughput": true, // TCP throughput benchmarks
+		"BenchmarkTLSHandshake":  true, // TLS handshake benchmarks
+		"BenchmarkTLSResume":     true, // TLS session resumption
+		"BenchmarkTLSThroughput": true, // TLS throughput benchmarks
+		"BenchmarkHTTP2":         true, // HTTP/2 benchmarks
+		"BenchmarkHTTPRequest":   true, // HTTP request benchmarks
+		"BenchmarkConnectionPool": true, // Connection pool benchmarks
+	}
+
+	// Try base name first
+	if runtimeBenchmarks[baseName] {
+		return "runtime"
+	}
+	if stdlibBenchmarks[baseName] {
+		return "stdlib"
+	}
+	if networkingBenchmarks[baseName] {
+		return "networking"
+	}
+
+	// Fall back to full name for backwards compatibility
+	if runtimeBenchmarks[name] {
+		return "runtime"
+	}
+	if stdlibBenchmarks[name] {
+		return "stdlib"
+	}
+	if networkingBenchmarks[name] {
+		return "networking"
+	}
+
+	// Default to uncategorized for backwards compatibility
+	return "uncategorized"
+}
+
+// getBenchmarkSourceFile maps benchmark names to their source file paths
+func getBenchmarkSourceFile(name string) string {
+	// Extract base benchmark name (remove sub-benchmark path and CPU suffix)
+	baseName := name
+	if idx := strings.Index(name, "/"); idx != -1 {
+		baseName = name[:idx]
+	}
+	if idx := strings.LastIndex(baseName, "-"); idx != -1 {
+		if idx+1 < len(baseName) {
+			isNumeric := true
+			for i := idx + 1; i < len(baseName); i++ {
+				if baseName[i] < '0' || baseName[i] > '9' {
+					isNumeric = false
+					break
+				}
+			}
+			if isNumeric {
+				baseName = baseName[:idx]
+			}
+		}
+	}
+
+	// Runtime/GC benchmarks
+	if strings.HasPrefix(baseName, "BenchmarkGC") ||
+		strings.HasPrefix(baseName, "BenchmarkMap") ||
+		strings.HasPrefix(baseName, "BenchmarkSwiss") ||
+		strings.HasPrefix(baseName, "BenchmarkSmallAlloc") ||
+		strings.HasPrefix(baseName, "BenchmarkSync") ||
+		strings.HasPrefix(baseName, "BenchmarkMutex") ||
+		strings.HasPrefix(baseName, "BenchmarkAtomic") ||
+		strings.HasPrefix(baseName, "BenchmarkChannel") ||
+		strings.HasPrefix(baseName, "BenchmarkGoroutine") ||
+		strings.HasPrefix(baseName, "BenchmarkStack") ||
+		strings.HasPrefix(baseName, "BenchmarkSmallObject") ||
+		strings.HasPrefix(baseName, "BenchmarkMediumObject") ||
+		strings.HasPrefix(baseName, "BenchmarkLargeObject") {
+		return "perf-tracking/benchmarks/runtime/gc_test.go"
+	}
+
+	// Standard library benchmarks
+	if strings.HasPrefix(baseName, "BenchmarkJSON") ||
+		strings.HasPrefix(baseName, "BenchmarkIO") ||
+		strings.HasPrefix(baseName, "BenchmarkReadAll") ||
+		strings.HasPrefix(baseName, "BenchmarkAES") ||
+		strings.HasPrefix(baseName, "BenchmarkSHA") ||
+		strings.HasPrefix(baseName, "BenchmarkRSA") ||
+		strings.HasPrefix(baseName, "BenchmarkRegexp") ||
+		strings.HasPrefix(baseName, "BenchmarkBuffered") ||
+		strings.HasPrefix(baseName, "BenchmarkCRC") ||
+		strings.HasPrefix(baseName, "BenchmarkFNV") ||
+		strings.HasPrefix(baseName, "BenchmarkBinary") ||
+		strings.HasPrefix(baseName, "BenchmarkStrings") {
+		return "perf-tracking/benchmarks/stdlib/stdlib_test.go"
+	}
+
+	// Networking benchmarks
+	if strings.HasPrefix(baseName, "BenchmarkTCP") ||
+		strings.HasPrefix(baseName, "BenchmarkTLS") ||
+		strings.HasPrefix(baseName, "BenchmarkHTTP") ||
+		strings.HasPrefix(baseName, "BenchmarkConnection") {
+		return "perf-tracking/benchmarks/networking/networking_test.go"
+	}
+
+	// Legacy/unknown
+	return "perf-tracking/benchmarks/core/allocation_test.go"
 }
 
 // exportVersion exports a single version's benchmarks to JSON
@@ -220,10 +496,10 @@ func exportVersion(inputFile, version, outputFile string) error {
 
 // IndexData represents the index.json file
 type IndexData struct {
-	Versions    []VersionInfo    `json:"versions"`
-	Benchmarks  []BenchmarkInfo  `json:"benchmarks"`
-	Repository  RepositoryInfo   `json:"repository"`
-	LastUpdated string           `json:"last_updated"`
+	Versions    []VersionInfo   `json:"versions"`
+	Benchmarks  []BenchmarkInfo `json:"benchmarks"`
+	Repository  RepositoryInfo  `json:"repository"`
+	LastUpdated string          `json:"last_updated"`
 }
 
 type RepositoryInfo struct {
@@ -241,11 +517,12 @@ type BenchmarkInfo struct {
 	Name        string `json:"name"`
 	Description string `json:"description"`
 	SourceFile  string `json:"source_file"`
+	Category    string `json:"category"`
 }
 
 // exportAll exports all versions found in the results directory
 func exportAll(resultsDir, outputDir string) error {
-	fmt.Println("=== Exporting All Versions ===\n")
+	fmt.Println("=== Exporting All Versions ===")
 
 	// Find all version directories
 	entries, err := os.ReadDir(resultsDir)
@@ -309,7 +586,8 @@ func exportAll(resultsDir, outputDir string) error {
 		benchmarks = append(benchmarks, BenchmarkInfo{
 			Name:        name,
 			Description: getBenchmarkDescription(name),
-			SourceFile:  "perf-tracking/benchmarks/core/allocation_test.go",
+			SourceFile:  getBenchmarkSourceFile(name),
+			Category:    getBenchmarkCategory(name),
 		})
 	}
 	sort.Slice(benchmarks, func(i, j int) bool {
@@ -317,7 +595,7 @@ func exportAll(resultsDir, outputDir string) error {
 	})
 
 	indexData := IndexData{
-		Versions: versions,
+		Versions:   versions,
 		Benchmarks: benchmarks,
 		Repository: RepositoryInfo{
 			URL:        "https://github.com/astavonin/go-optimization-guide",

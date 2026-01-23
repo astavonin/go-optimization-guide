@@ -46,11 +46,13 @@ type Comparison struct {
 
 // Parse benchmark line like:
 // BenchmarkSmallAllocation-16    	1000000000	         3.000 ns/op	       0 B/op	       0 allocs/op
+// BenchmarkAESCTR/Size1KB-16     	 2705214	      1330 ns/op	 770.04 MB/s	     608 B/op	       3 allocs/op
 func parseBenchmarkLine(line string) (*BenchmarkStats, error) {
 	line = strings.TrimSpace(line)
 
-	// Match benchmark result line
-	re := regexp.MustCompile(`^(Benchmark\w+)(?:-\d+)?\s+\d+\s+([\d.]+)\s+ns/op(?:\s+([\d]+)\s+B/op)?(?:\s+([\d]+)\s+allocs/op)?`)
+	// Match benchmark result line (supports sub-benchmarks with / and optional MB/s field)
+	// Matches: BenchmarkName or BenchmarkName/SubName-CPUs iterations ns/op [MB/s] [B/op] [allocs/op]
+	re := regexp.MustCompile(`^(Benchmark[^\s\-]+(?:/[^\s\-]+)*)(?:-\d+)?\s+\d+\s+([\d.]+)\s+ns/op(?:\s+[\d.]+\s+MB/s)?(?:\s+([\d]+)\s+B/op)?(?:\s+([\d]+)\s+allocs/op)?`)
 	matches := re.FindStringSubmatch(line)
 
 	if len(matches) < 3 {
