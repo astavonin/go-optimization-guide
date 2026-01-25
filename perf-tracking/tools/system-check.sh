@@ -37,7 +37,7 @@ check_system_load() {
     LOAD=$(uptime | awk -F'load average:' '{print $2}' | awk '{print $1}' | sed 's/,//')
 
     # Compare load (bash doesn't do floating point, use awk)
-    IS_HIGH=$(awk -v load="$LOAD" -v max="$MAX_LOAD" 'BEGIN {print (load > max)}')
+    IS_HIGH=$(awk -v sys_load="$LOAD" -v max="$MAX_LOAD" 'BEGIN {print (sys_load > max)}')
 
     if [ "$IS_HIGH" = "1" ]; then
         echo -e "  ${RED}✗${NC} System load: $LOAD (high, max recommended: $MAX_LOAD)"

@@ -87,3 +87,9 @@ tags
 
 /site/
 /venv/
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
