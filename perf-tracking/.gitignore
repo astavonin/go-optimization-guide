@@ -10,6 +10,7 @@ tools/benchexport/benchexport
 
 # Benchmark results (generated)
 results/stable/
+results/collection_progress.json
 
 # Temporary files
 *.tmp

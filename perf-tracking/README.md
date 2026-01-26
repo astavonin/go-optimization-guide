@@ -17,15 +17,15 @@ cd perf-tracking
 ./tools/setup-go-versions.sh install 1.24.0
 ./tools/setup-go-versions.sh install 1.25.0
 
-# 3. Collect benchmarks
-./tools/collect_benchmarks.py 1.23 1.24 1.25 --sequential
+# 3. Collect benchmarks (runs versions sequentially by default)
+./tools/collect_benchmarks.py 1.23 1.24 1.25 --progress
 
 # 4. Export to JSON for web UI
 cd tools/benchexport
 go run . \
-  --go1.23 ../../results/stable/go1.23/latest.txt \
-  --go1.24 ../../results/stable/go1.24/latest.txt \
-  --go1.25 ../../results/stable/go1.25/latest.txt \
+  --go1.23 ../../results/stable/go1.23/2026-01-27_15-11-53.txt \
+  --go1.24 ../../results/stable/go1.24/2026-01-27_15-35-22.txt \
+  --go1.25 ../../results/stable/go1.25/2026-01-27_15-55-19.txt \
   --output ../../../docs/03-version-tracking/data
 ```
 
@@ -36,29 +36,33 @@ go run . \
 **`collect_benchmarks.py`** - Intelligent benchmark runner
 ```bash
 # Basic collection with quality control
-./tools/collect_benchmarks.py 1.24
+./tools/collect_benchmarks.py 1.24 --progress
 
-# Multiple versions sequentially (prevents system contention)
-./tools/collect_benchmarks.py 1.23 1.24 1.25 --sequential
+# Multiple versions (runs sequentially by default)
+./tools/collect_benchmarks.py 1.23 1.24 1.25 --progress
 
-# Re-run ONLY failed benchmarks (10-20x faster than full re-run)
+# Re-run ONLY failed benchmarks from a previous run
 ./tools/collect_benchmarks.py 1.24 \
-  --rerun-failed results/stable/go1.24/2026-01-25_10-00-00.txt \
-  --rerun-count 50
+  --rerun-failed results/stable/go1.24/2026-01-25_10-00-00_failed_benchmarks.txt \
+  --rerun-count 50 \
+  --max-reruns 3
 
 # Production quality: strict threshold + auto-retry
 ./tools/collect_benchmarks.py 1.24 \
-  --variance-threshold 12 \
-  --max-reruns 2 \
-  --rerun-count 30
+  --variance-threshold 10 \
+  --max-reruns 5 \
+  --rerun-count 30 \
+  --progress
 ```
 
 **Features:**
-- Automatic variance checking (CV calculation)
-- Selective re-run of only high-variance benchmarks
-- Automatic retry logic with configurable attempts
-- Intelligent result merging (preserves good data)
-- Sequential multi-version collection
+- Real-time streaming variance detection (CV calculation during run)
+- Post-run variance analysis for quality assurance
+- Automatic retry loop for high-variance benchmarks
+- Creates `_failed_benchmarks.txt` for manual re-runs with different parameters
+- Atomic retry result merging (successful retries update original file)
+- Sequential multi-version collection (prevents system contention)
+- Progress tracking with JSON status file
 
 **`setup-go-versions.sh`** - Manage Go installations
 ```bash
@@ -73,11 +77,13 @@ go run . \
 ```bash
 cd tools/benchexport
 go run . \
-  --go1.23 ../../results/stable/go1.23/2026-01-25_merged.txt \
-  --go1.24 ../../results/stable/go1.24/2026-01-25_merged.txt \
-  --go1.25 ../../results/stable/go1.25/2026-01-25_merged.txt \
+  --go1.23 ../../results/stable/go1.23/2026-01-27_15-11-53.txt \
+  --go1.24 ../../results/stable/go1.24/2026-01-27_15-35-22.txt \
+  --go1.25 ../../results/stable/go1.25/2026-01-27_15-55-19.txt \
   --output ../../../docs/03-version-tracking/data
 ```
+
+Note: Use the original `.txt` files from collection. Retry files (`_retry1.txt`, etc.) are intermediate results - successful retries are automatically merged back into the original file.
 
 **`benchstat`** - Command-line comparison
 ```bash
@@ -117,11 +123,13 @@ perf-tracking/
 │   └── go1.25.0/                  # Isolated Go 1.25.0 installation
 └── results/stable/                # Collected benchmark results
     ├── go1.23/
-    │   ├── YYYY-MM-DD_HH-MM-SS.txt           # Initial collection
-    │   ├── YYYY-MM-DD_HH-MM-SS_rerun.txt     # Re-run of failures
-    │   └── YYYY-MM-DD_HH-MM-SS_merged.txt    # Final merged result
+    │   ├── YYYY-MM-DD_HH-MM-SS.txt                  # Main result file (auto-updated with successful retries)
+    │   ├── YYYY-MM-DD_HH-MM-SS_retry1.txt           # Retry attempt 1 results
+    │   ├── YYYY-MM-DD_HH-MM-SS_retry2.txt           # Retry attempt 2 results
+    │   └── YYYY-MM-DD_HH-MM-SS_failed_benchmarks.txt # List of benchmarks that still failed after retries
     ├── go1.24/
-    └── go1.25/
+    ├── go1.25/
+    └── collection_progress.json               # Real-time progress tracking
 ```
 
 ## Benchmarks
@@ -171,19 +179,30 @@ For high-quality, reliable data:
 ./tools/system-check.sh
 
 # 2. Collect all versions with strict quality control
+#    - Runs sequentially by default (prevents system contention)
+#    - Progress tracking enabled
+#    - Automatic retry up to 5 times for high-variance benchmarks
+#    - Creates _failed_benchmarks.txt if issues persist after retries
 ./tools/collect_benchmarks.py 1.23 1.24 1.25 \
-  --sequential \
-  --variance-threshold 12 \
-  --max-reruns 2 \
+  --progress \
+  --variance-threshold 10 \
+  --max-reruns 5 \
   --count 25 \
-  --rerun-count 40
+  --rerun-count 30
 
-# 3. Export to JSON
+# 3. If any benchmarks failed variance checks after retries:
+#    Re-run with higher iteration count
+./tools/collect_benchmarks.py 1.23 \
+  --rerun-failed results/stable/go1.23/YYYY-MM-DD_failed_benchmarks.txt \
+  --rerun-count 100 \
+  --max-reruns 3
+
+# 4. Export to JSON
 cd tools/benchexport
 go run . \
-  --go1.23 ../../results/stable/go1.23/YYYY-MM-DD_merged.txt \
-  --go1.24 ../../results/stable/go1.24/YYYY-MM-DD_merged.txt \
-  --go1.25 ../../results/stable/go1.25/YYYY-MM-DD_merged.txt \
+  --go1.23 ../../results/stable/go1.23/YYYY-MM-DD_HH-MM-SS.txt \
+  --go1.24 ../../results/stable/go1.24/YYYY-MM-DD_HH-MM-SS.txt \
+  --go1.25 ../../results/stable/go1.25/YYYY-MM-DD_HH-MM-SS.txt \
   --output ../../docs/03-version-tracking/data
 ```
 
@@ -194,27 +213,27 @@ For fast feedback during development:
 ```bash
 # Quick collection with relaxed quality
 ./tools/collect_benchmarks.py 1.24 \
-  --count 10 \
-  --skip-warmup \
-  --skip-checks \
+  --count 3 \
+  --benchtime 1s \
+  --skip-system-check \
   --variance-threshold 20
 ```
 
 ### Handling High Variance
 
-If initial collection shows high variance:
+If collection completes with high-variance benchmarks (creates `_failed_benchmarks.txt`):
 
 ```bash
-# Option 1: Re-run only failures (fastest)
+# Re-run ONLY failed benchmarks with more iterations
+# This is 10-100x faster than re-running entire collection
 ./tools/collect_benchmarks.py 1.24 \
-  --rerun-failed results/stable/go1.24/2026-01-25_10-00-00.txt \
-  --rerun-count 60
-
-# Option 2: Automatic retry with even more iterations
-./tools/collect_benchmarks.py 1.24 \
-  --rerun-failed results/stable/go1.24/2026-01-25_10-00-00.txt \
+  --rerun-failed results/stable/go1.24/2026-01-25_10-00-00_failed_benchmarks.txt \
   --rerun-count 100 \
+  --max-reruns 5 \
   --variance-threshold 10
+
+# Note: Successful results are automatically merged back into the original file
+# No manual merging needed!
 ```
 
 ### CI/CD Integration
@@ -222,11 +241,13 @@ If initial collection shows high variance:
 For continuous benchmarking in CI:
 
 ```bash
-# Fast collection, accept higher variance
+# Fast collection with relaxed quality requirements
 ./tools/collect_benchmarks.py 1.24 \
-  --count 10 \
+  --count 5 \
   --benchtime 1s \
-  --skip-variance-check \
+  --variance-threshold 25 \
+  --max-reruns 1 \
+  --skip-system-check \
   --verbose
 ```
 
@@ -269,9 +290,9 @@ Interactive UI for comparing Go versions with category filtering, charts, and va
 ```bash
 cd tools/benchexport
 go run . \
-  --go1.23 ../../results/stable/go1.23/2026-01-25_merged.txt \
-  --go1.24 ../../results/stable/go1.24/2026-01-25_merged.txt \
-  --go1.25 ../../results/stable/go1.25/2026-01-25_merged.txt \
+  --go1.23 ../../results/stable/go1.23/2026-01-27_15-11-53.txt \
+  --go1.24 ../../results/stable/go1.24/2026-01-27_15-35-22.txt \
+  --go1.25 ../../results/stable/go1.25/2026-01-27_15-55-19.txt \
   --output ../../docs/03-version-tracking/data
 ```
 
@@ -314,6 +335,45 @@ CV = (stddev / mean) × 100%
 - Runtime/stdlib: Aim for < 5% (CPU-bound, very stable)
 - Networking: Accept 10-15% (I/O-bound, inherently variable)
 
+## Collection Workflow
+
+**Automated retry and variance checking:**
+
+1. **Initial collection**: Runs all 76 benchmarks with `--count` iterations
+2. **Streaming variance detection**: Real-time CV calculation during benchmark execution
+3. **Post-run variance analysis**: Comprehensive CV analysis of all results
+4. **Automatic retry loop** (if `--max-reruns > 0`):
+   - Re-runs ONLY high-variance benchmarks with `--rerun-count` iterations
+   - Creates separate retry files: `_retry1.txt`, `_retry2.txt`, etc.
+   - Repeats up to `--max-reruns` times
+   - Stops early if variance improves
+5. **Result handling**:
+   - **Success case**: All benchmarks pass variance threshold → Original `.txt` file is final result
+   - **Partial success**: Some benchmarks improved → Successful retries automatically merged into original `.txt` file
+   - **Failure case**: Some benchmarks still fail after all retries → Creates `_failed_benchmarks.txt`
+
+**File outputs:**
+- `YYYY-MM-DD_HH-MM-SS.txt` - Main result file (updated with successful retries)
+- `YYYY-MM-DD_HH-MM-SS_retry1.txt` - First retry attempt results
+- `YYYY-MM-DD_HH-MM-SS_retry2.txt` - Second retry attempt results
+- `YYYY-MM-DD_HH-MM-SS_failed_benchmarks.txt` - List of benchmarks that need manual attention (only created if failures persist)
+- `collection_progress.json` - Real-time progress tracking with package statistics
+
+**Using --rerun-failed:**
+
+If a `_failed_benchmarks.txt` file is created, re-run with different parameters:
+
+```bash
+# Re-run with much higher iteration count
+./tools/collect_benchmarks.py 1.24 \
+  --rerun-failed results/stable/go1.24/YYYY-MM-DD_failed_benchmarks.txt \
+  --rerun-count 100 \
+  --max-reruns 3
+
+# Success → Results merged back into original YYYY-MM-DD_HH-MM-SS.txt
+# Backup created: YYYY-MM-DD_HH-MM-SS.txt.backup
+```
+
 ## Tips for Stable Results
 
 **System preparation:**
@@ -330,20 +390,22 @@ sudo cpupower frequency-set -g performance
 
 **If high variance detected:**
 
-**Option 1: Use Python tool's automatic retry** (easiest)
+**Option 1: Use automatic retry during collection** (recommended)
 ```bash
 ./tools/collect_benchmarks.py 1.24 \
-  --variance-threshold 15 \
-  --max-reruns 2 \
-  --rerun-count 30
+  --variance-threshold 10 \
+  --max-reruns 5 \
+  --rerun-count 30 \
+  --progress
 ```
 
-**Option 2: Selective re-run** (fastest for few failures)
+**Option 2: Re-run failed benchmarks after collection** (fastest for persistent failures)
 ```bash
-# Re-run ONLY failed benchmarks with more iterations
+# If collection creates _failed_benchmarks.txt, re-run with higher iteration count
 ./tools/collect_benchmarks.py 1.24 \
-  --rerun-failed results/stable/go1.24/2026-01-25_10-00-00.txt \
-  --rerun-count 50
+  --rerun-failed results/stable/go1.24/2026-01-27_15-35-22_failed_benchmarks.txt \
+  --rerun-count 100 \
+  --max-reruns 3
 ```
 
 **Common causes:**

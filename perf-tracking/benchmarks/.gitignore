@@ -1,0 +1,4 @@
+# Generated files - collect_benchmarks.py copies version-specific
+# go.mod.X.Y.Z to go.mod before running tests
+go.mod
+go.mod.backup
