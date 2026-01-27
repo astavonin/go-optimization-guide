@@ -22,11 +22,9 @@ cd perf-tracking
 
 # 4. Export to JSON for web UI
 cd tools/benchexport
-go run . \
-  --go1.23 ../../results/stable/go1.23/2026-01-27_15-11-53.txt \
-  --go1.24 ../../results/stable/go1.24/2026-01-27_15-35-22.txt \
-  --go1.25 ../../results/stable/go1.25/2026-01-27_15-55-19.txt \
-  --output ../../../docs/03-version-tracking/data
+go run . --export-all \
+  --results-dir ../../results/stable \
+  --output-dir ../../../docs/03-version-tracking/data
 ```
 
 ## Tools
@@ -76,14 +74,12 @@ go run . \
 **`benchexport`** - Export results to JSON for web UI
 ```bash
 cd tools/benchexport
-go run . \
-  --go1.23 ../../results/stable/go1.23/2026-01-27_15-11-53.txt \
-  --go1.24 ../../results/stable/go1.24/2026-01-27_15-35-22.txt \
-  --go1.25 ../../results/stable/go1.25/2026-01-27_15-55-19.txt \
-  --output ../../../docs/03-version-tracking/data
+go run . --export-all \
+  --results-dir ../../results/stable \
+  --output-dir ../../../docs/03-version-tracking/data
 ```
 
-Note: Use the original `.txt` files from collection. Retry files (`_retry1.txt`, etc.) are intermediate results - successful retries are automatically merged back into the original file.
+This automatically finds the latest main result file for each Go version (skips retry and failed_benchmarks files) and exports to JSON.
 
 **`benchstat`** - Command-line comparison
 ```bash
@@ -199,11 +195,9 @@ For high-quality, reliable data:
 
 # 4. Export to JSON
 cd tools/benchexport
-go run . \
-  --go1.23 ../../results/stable/go1.23/YYYY-MM-DD_HH-MM-SS.txt \
-  --go1.24 ../../results/stable/go1.24/YYYY-MM-DD_HH-MM-SS.txt \
-  --go1.25 ../../results/stable/go1.25/YYYY-MM-DD_HH-MM-SS.txt \
-  --output ../../docs/03-version-tracking/data
+go run . --export-all \
+  --results-dir ../../results/stable \
+  --output-dir ../../../docs/03-version-tracking/data
 ```
 
 ### Quick Development Iteration
@@ -289,11 +283,9 @@ Interactive UI for comparing Go versions with category filtering, charts, and va
 **Export data:**
 ```bash
 cd tools/benchexport
-go run . \
-  --go1.23 ../../results/stable/go1.23/2026-01-27_15-11-53.txt \
-  --go1.24 ../../results/stable/go1.24/2026-01-27_15-35-22.txt \
-  --go1.25 ../../results/stable/go1.25/2026-01-27_15-55-19.txt \
-  --output ../../docs/03-version-tracking/data
+go run . --export-all \
+  --results-dir ../../results/stable \
+  --output-dir ../../../docs/03-version-tracking/data
 ```
 
 **View locally:**

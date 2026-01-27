@@ -541,20 +541,33 @@ func exportAll(resultsDir, outputDir string) error {
 		version := strings.TrimPrefix(entry.Name(), "go")
 		versionDir := filepath.Join(resultsDir, entry.Name())
 
-		// Find latest benchmark file
+		// Find latest benchmark file (excluding retry and failed_benchmarks files)
 		files, err := filepath.Glob(filepath.Join(versionDir, "*.txt"))
 		if err != nil || len(files) == 0 {
 			continue
 		}
 
+		// Filter out retry files and failed_benchmarks files
+		var mainFiles []string
+		for _, f := range files {
+			base := filepath.Base(f)
+			if !strings.Contains(base, "_retry") && !strings.Contains(base, "_failed_benchmarks") {
+				mainFiles = append(mainFiles, f)
+			}
+		}
+
+		if len(mainFiles) == 0 {
+			continue
+		}
+
 		// Sort by modification time, newest first
-		sort.Slice(files, func(i, j int) bool {
-			iInfo, _ := os.Stat(files[i])
-			jInfo, _ := os.Stat(files[j])
+		sort.Slice(mainFiles, func(i, j int) bool {
+			iInfo, _ := os.Stat(mainFiles[i])
+			jInfo, _ := os.Stat(mainFiles[j])
 			return iInfo.ModTime().After(jInfo.ModTime())
 		})
 
-		latestFile := files[0]
+		latestFile := mainFiles[0]
 		outputFile := filepath.Join(outputDir, fmt.Sprintf("go%s.json", version))
 
 		// Export this version
