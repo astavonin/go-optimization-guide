@@ -547,11 +547,15 @@ func exportAll(resultsDir, outputDir string) error {
 			continue
 		}
 
-		// Filter out retry files and failed_benchmarks files
+		// Filter out retry, rerun, failed_benchmarks, and failed_packages files
 		var mainFiles []string
 		for _, f := range files {
 			base := filepath.Base(f)
-			if !strings.Contains(base, "_retry") && !strings.Contains(base, "_failed_benchmarks") {
+			if !strings.Contains(base, "_retry") &&
+			   !strings.Contains(base, "_rerun") &&
+			   !strings.Contains(base, "_failed_benchmarks") &&
+			   !strings.Contains(base, "_failed_packages") &&
+			   !strings.HasSuffix(base, ".backup") {
 				mainFiles = append(mainFiles, f)
 			}
 		}

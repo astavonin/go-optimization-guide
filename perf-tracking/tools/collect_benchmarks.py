@@ -164,12 +164,6 @@ class ProgressTracker:
             package_info['needed_retry'] = needed_retry
 
         self.state['versions'][version]['packages'][package] = package_info
-
-        # Update version-level cumulative count as packages complete
-        if status in ('done', 'failed') and benchmarks > 0:
-            current_total = self.state['versions'][version].get('benchmarks', 0)
-            self.state['versions'][version]['benchmarks'] = current_total + benchmarks
-
         self._save()
 
     def complete_version(self, version: str, benchmarks: int, success: bool = True):
@@ -177,6 +171,9 @@ class ProgressTracker:
         self.state['versions'][version]['status'] = 'complete' if success else 'failed'
         self.state['versions'][version]['benchmarks'] = benchmarks
         self.state['versions'][version]['completed'] = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        # Clear transient fields
+        self.state['current_version'] = None
+        self.state['current_phase'] = None
         self._save()
 
         status = "✓ Complete" if success else "✗ Failed"
@@ -404,11 +401,10 @@ class StreamingBenchmarkRunner:
         # Determine status indicator
         if self.current_benchmark_status == 'crashed':
             status = '✗ CRASH'
-        elif self.current_benchmark_status == 'high_variance':
-            cv = self._calculate_cv(self.current_benchmark_runs)
-            status = f'⚠ CV={cv:.1f}%'
         else:
-            status = f'[{self.current_run_count}]'
+            cv = self._calculate_cv(self.current_benchmark_runs)
+            cv_str = f' CV={cv:.1f}%' if cv > 0 else ''
+            status = f'[{self.current_run_count}]{cv_str}'
 
         if self.progress:
             # With progress tracker, only update on first run
@@ -587,6 +583,7 @@ class BenchmarkRunner:
         count: int = 20,
         benchtime: str = "3s",
         benchmark_filter: Optional[str] = None,
+        benchmark_filters: Optional[List[str]] = None,
         test_packages: Optional[List[str]] = None,
         version: str = None,
         is_retry: bool = False
@@ -594,6 +591,10 @@ class BenchmarkRunner:
         """Run benchmark suite.
 
         Args:
+            benchmark_filter: Single filter string (legacy, converted to list internally)
+            benchmark_filters: List of filter strings. When multiple filters are
+                provided, each is run as a separate go test invocation per package
+                to avoid Go's -bench regex limitations with mixed subtest patterns.
             is_retry: If True, skip updating package-level progress (retries don't change totals)
 
         Returns dict with:
@@ -606,6 +607,10 @@ class BenchmarkRunner:
         if test_packages is None:
             test_packages = ["runtime", "stdlib", "networking"]
 
+        # Normalize to list of filters
+        if benchmark_filters is None:
+            benchmark_filters = [benchmark_filter] if benchmark_filter else None
+
         env = os.environ.copy()
         env["GOTOOLCHAIN"] = "local"
 
@@ -613,8 +618,9 @@ class BenchmarkRunner:
             self.progress.set_phase(version, "Collecting benchmarks")
         else:
             print(f"Running benchmarks ({count} iterations, {benchtime} each)...")
-            if benchmark_filter:
-                print(f"  Filter: {benchmark_filter}")
+            if benchmark_filters:
+                for f in benchmark_filters:
+                    print(f"  Filter: {f}")
 
         results = {}
         all_output = []
@@ -633,26 +639,45 @@ class BenchmarkRunner:
             # Reset benchmark count for this package
             self.streaming_runner.reset_for_package()
 
-            # Build benchmark command
-            bench_arg = f"-bench={benchmark_filter}" if benchmark_filter else "-bench=."
+            # Determine filter list: run each filter as a separate invocation
+            filters_to_run = benchmark_filters if benchmark_filters else [None]
 
-            cmd = [
-                str(go_bin), "test",
-                bench_arg, "-benchmem",
-                f"-count={count}",
-                f"-benchtime={benchtime}",
-                "-timeout=1800s",
-                pkg_path
-            ]
+            pkg_output_parts = []
+            pkg_failed_benches = []
+            pkg_returncode = 0
+            pkg_bench_count = 0
 
-            # Run test package with streaming
-            returncode, output, failed_benches = self.streaming_runner.run_with_streaming(cmd, env, pkg)
+            for i, bench_filter in enumerate(filters_to_run):
+                # Reset streaming state between filter invocations
+                if i > 0:
+                    self.streaming_runner.reset_for_package()
 
-            # Create compatible result object
-            result = SubprocessResult(returncode=returncode, stdout=output)
+                bench_arg = f"-bench={bench_filter}" if bench_filter else "-bench=."
+
+                cmd = [
+                    str(go_bin), "test",
+                    bench_arg, "-benchmem",
+                    f"-count={count}",
+                    f"-benchtime={benchtime}",
+                    "-timeout=1800s",
+                    pkg_path
+                ]
+
+                # Run test package with streaming
+                returncode, output, failed_benches = self.streaming_runner.run_with_streaming(cmd, env, pkg)
+
+                pkg_output_parts.append(output)
+                pkg_failed_benches.extend(failed_benches)
+                pkg_bench_count += self.streaming_runner.benchmark_count
+                if returncode != 0:
+                    pkg_returncode = returncode
+
+            # Combine output from all filter invocations for this package
+            output = '\n'.join(pkg_output_parts)
+            result = SubprocessResult(returncode=pkg_returncode, stdout=output)
 
             all_output.append(output)
-            all_failed_benchmarks.extend(failed_benches)
+            all_failed_benchmarks.extend(pkg_failed_benches)
 
             # Clear the "Running:" line in compact mode
             if not self.progress and not self.verbose:
@@ -660,13 +685,12 @@ class BenchmarkRunner:
 
             # Parse results
             if result.returncode == 0:
-                # Count benchmarks
-                bench_count = self.streaming_runner.benchmark_count
+                bench_count = pkg_bench_count
                 results[pkg] = {
                     'success': True,
                     'error': None,
                     'benchmarks': bench_count,
-                    'failed_benchmarks': failed_benches
+                    'failed_benchmarks': pkg_failed_benches
                 }
 
                 if self.progress and version:
@@ -694,13 +718,13 @@ class BenchmarkRunner:
                 results[pkg] = {
                     'success': False,
                     'error': error_msg,
-                    'benchmarks': self.streaming_runner.benchmark_count,
-                    'failed_benchmarks': failed_benches
+                    'benchmarks': pkg_bench_count,
+                    'failed_benchmarks': pkg_failed_benches
                 }
 
                 if self.progress and version:
-                    bench_count = self.streaming_runner.benchmark_count
-                    needed_retry = len(failed_benches)
+                    bench_count = pkg_bench_count
+                    needed_retry = len(pkg_failed_benches)
                     passed = bench_count - needed_retry
                     if not is_retry:
                         self.progress.update_package(version, pkg, 'failed', bench_count, passed, needed_retry)
@@ -797,17 +821,42 @@ class BenchmarkRunner:
 
 
 
-def create_benchmark_filter(benchmark_names: List[str]) -> str:
-    """Create Go benchmark filter regex from list of benchmark names."""
-    # Extract base names (remove -N suffix if present)
-    base_names = []
-    for name in benchmark_names:
-        # Remove CPU suffix like -16
-        base = re.sub(r'-\d+$', '', name)
-        base_names.append(base)
+def create_benchmark_filters(benchmark_names: List[str]) -> List[str]:
+    """Create Go benchmark filter regexes from list of benchmark names.
 
-    # Create regex: ^(Name1|Name2|Name3)$
-    return "^(" + "|".join(base_names) + ")$"
+    Returns a list of filter strings. When benchmarks are a mix of top-level
+    and subtests, splits into two filters so that Go's -bench doesn't skip
+    top-level benchmarks (which have no subtests to match a second-level regex).
+
+    Examples:
+        ['BenchmarkGCLatency']                    → ['^(BenchmarkGCLatency)$']
+        ['BenchmarkRSAKeyGen/Bits4096']           → ['^(BenchmarkRSAKeyGen)$/^(Bits4096)$']
+        ['BenchmarkGCLatency',
+         'BenchmarkRSAKeyGen/Bits4096']           → ['^(BenchmarkGCLatency)$',
+                                                     '^(BenchmarkRSAKeyGen)$/^(Bits4096)$']
+    """
+    parsed = []
+    for name in benchmark_names:
+        base = re.sub(r'-\d+$', '', name)  # Remove CPU suffix like -16
+        parsed.append(base)
+
+    top_levels = set()
+    parents = set()
+    subtests = set()
+    for name in parsed:
+        if '/' in name:
+            parent, sub = name.split('/', 1)
+            parents.add(parent)
+            subtests.add(sub)
+        else:
+            top_levels.add(name)
+
+    filters = []
+    if top_levels:
+        filters.append("^(" + "|".join(sorted(top_levels)) + ")$")
+    if parents:
+        filters.append("^(" + "|".join(sorted(parents)) + ")$/^(" + "|".join(sorted(subtests)) + ")$")
+    return filters
 
 
 def derive_original_output_file(failed_benchmarks_file: Path) -> Path:
@@ -1011,7 +1060,7 @@ def run_variance_aware_benchmarks(
     go_bin: Path,
     output_dir: Path,
     timestamp: str,
-    benchmark_filter: Optional[str],
+    benchmark_filters: Optional[List[str]],
     initial_count: int,
     benchtime: str,
     variance_threshold: float,
@@ -1051,7 +1100,7 @@ def run_variance_aware_benchmarks(
         output_file,
         count=initial_count,
         benchtime=benchtime,
-        benchmark_filter=benchmark_filter,
+        benchmark_filters=benchmark_filters,
         version=version
     )
 
@@ -1078,7 +1127,7 @@ def run_variance_aware_benchmarks(
         print(f"\n--- Retry {retry_count}/{max_reruns} ---")
         print(f"Re-running {len(failed)} high-variance benchmark(s) with {rerun_count} iterations...")
 
-        bench_filter = create_benchmark_filter(failed)
+        bench_filters = create_benchmark_filters(failed)
         rerun_file = output_dir / f"{timestamp}_retry{retry_count}.txt"
 
         retry_result = runner.run_benchmarks(
@@ -1086,7 +1135,7 @@ def run_variance_aware_benchmarks(
             rerun_file,
             count=rerun_count,
             benchtime=benchtime,
-            benchmark_filter=bench_filter,
+            benchmark_filters=bench_filters,
             version=version,
             is_retry=True  # Don't overwrite package stats during retries
         )
@@ -1270,6 +1319,7 @@ Examples:
 
             # Derive original output file and convert to absolute path
             # (needed because we change directories during benchmark execution)
+            failed_file = Path(args.rerun_failed).resolve()
             try:
                 original_file = derive_original_output_file(args.rerun_failed).resolve()
                 print(f"Original file: {original_file}")
@@ -1281,15 +1331,16 @@ Examples:
                 print(f"✗ {e}", file=sys.stderr)
                 continue
 
-            # Create benchmark filter
-            bench_filter = create_benchmark_filter(failed_benchmarks)
+            # Create benchmark filters (may return multiple for mixed subtest lists)
+            bench_filters = create_benchmark_filters(failed_benchmarks)
 
-            # Use same workflow as main collection
-            timestamp = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
+            # Use same workflow as main collection with _rerun suffix
+            # This prevents benchexport from picking up these partial result files
+            timestamp = datetime.now().strftime("%Y-%m-%d_%H-%M-%S") + "_rerun"
 
             result = run_variance_aware_benchmarks(
                 runner, go_bin, output_dir, timestamp,
-                benchmark_filter=bench_filter,
+                benchmark_filters=bench_filters,
                 initial_count=args.rerun_count,  # Use higher count for reruns
                 benchtime=args.benchtime,
                 variance_threshold=args.variance_threshold,
@@ -1299,13 +1350,17 @@ Examples:
                 progress=progress
             )
 
-            if not result['success']:
-                print(f"\n✗ Re-run failed", file=sys.stderr)
-                continue
-
-            # Determine which benchmarks succeeded (passed variance)
+            # Determine which benchmarks succeeded:
+            # Must be both collected (present in stats) AND passed variance
             successful = [b for b in failed_benchmarks
-                          if b not in result['failed_benchmarks']]
+                          if b in result['stats'] and b not in result['failed_benchmarks']]
+
+            # Warn about benchmarks that weren't collected at all
+            not_found = [b for b in failed_benchmarks if b not in result['stats']]
+            if not_found:
+                print(f"\n⚠ {len(not_found)} benchmark(s) not collected (check filter):")
+                for b in not_found:
+                    print(f"  - {b}")
 
             # Merge successful results into original file
             if successful:
@@ -1320,13 +1375,25 @@ Examples:
                     print("✗ Merge failed, original preserved")
                     shutil.copy(backup_file, original_file)
 
-            # Report any still-failing benchmarks
-            if result['failed_benchmarks']:
-                print(f"\n⚠ {len(result['failed_benchmarks'])} still failing after {result['retry_count']} retries:")
-                for bench in result['failed_benchmarks']:
+            # Report any still-failing benchmarks and update the failed file
+            still_failing = [b for b in failed_benchmarks if b in result['failed_benchmarks']]
+            with open(failed_file, 'w') as f:
+                for b in still_failing:
+                    f.write(f"{b}\n")
+
+            if still_failing:
+                print(f"\n⚠ {len(still_failing)} still failing after {result['retry_count']} retries:")
+                for bench in still_failing:
                     print(f"  - {bench}")
+                print(f"  Updated: {failed_file}")
             else:
                 print(f"\n✓ All benchmarks passed variance threshold (<{args.variance_threshold}%)")
+                print(f"  Cleared: {failed_file}")
+
+            # Update progress with final state
+            if progress:
+                total = len(result['stats']) if result['stats'] else 0
+                progress.complete_version(version, total, success=len(still_failing) == 0)
 
             continue
 
@@ -1351,7 +1418,7 @@ Examples:
 
             result = run_variance_aware_benchmarks(
                 runner, go_bin, output_dir, timestamp,
-                benchmark_filter=None,  # No filter for main collection
+                benchmark_filters=None,  # No filter for main collection
                 initial_count=args.count,
                 benchtime=args.benchtime,
                 variance_threshold=args.variance_threshold,
@@ -1385,8 +1452,8 @@ Examples:
 
                 # Mark version as complete with failure
                 if progress:
-                    current_count = progress.state['versions'][version].get('benchmarks', 0)
-                    progress.complete_version(version, current_count, success=False)
+                    total = len(result['stats']) if result.get('stats') else 0
+                    progress.complete_version(version, total, success=False)
 
                 continue
 
@@ -1405,16 +1472,18 @@ Examples:
         except KeyboardInterrupt:
             # User interrupted
             if progress:
-                current_count = progress.state['versions'][version].get('benchmarks', 0)
-                progress.complete_version(version, current_count, success=False)
+                pkgs = progress.state['versions'][version].get('packages', {})
+                total = sum(p.get('benchmarks', 0) for p in pkgs.values())
+                progress.complete_version(version, total, success=False)
             print(f"\n✗ Collection interrupted for Go {version}", file=sys.stderr)
             raise  # Re-raise to exit
 
         except Exception as e:
             # Error occurred
             if progress:
-                current_count = progress.state['versions'][version].get('benchmarks', 0)
-                progress.complete_version(version, current_count, success=False)
+                pkgs = progress.state['versions'][version].get('packages', {})
+                total = sum(p.get('benchmarks', 0) for p in pkgs.values())
+                progress.complete_version(version, total, success=False)
             print(f"\n✗ Error during collection for Go {version}: {e}", file=sys.stderr)
             continue  # Continue to next version
 

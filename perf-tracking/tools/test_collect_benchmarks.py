@@ -122,18 +122,30 @@ BenchmarkUnstable-16    1000000    200.0 ns/op
 
 
 def test_benchmark_filter_creation():
-    """Test creation of Go benchmark filter regex."""
-    from collect_benchmarks import create_benchmark_filter
+    """Test creation of Go benchmark filter regexes."""
+    from collect_benchmarks import create_benchmark_filters
 
-    # Test with simple names
+    # All top-level: single filter
     names = ["BenchmarkGCThroughput", "BenchmarkMapAccess"]
-    filter_regex = create_benchmark_filter(names)
-    assert filter_regex == "^(BenchmarkGCThroughput|BenchmarkMapAccess)$"
+    filters = create_benchmark_filters(names)
+    assert filters == ["^(BenchmarkGCThroughput|BenchmarkMapAccess)$"]
 
-    # Test with CPU suffix
+    # CPU suffix stripped
     names_with_cpu = ["BenchmarkGCThroughput-16", "BenchmarkMapAccess-16"]
-    filter_regex = create_benchmark_filter(names_with_cpu)
-    assert filter_regex == "^(BenchmarkGCThroughput|BenchmarkMapAccess)$"
+    filters = create_benchmark_filters(names_with_cpu)
+    assert filters == ["^(BenchmarkGCThroughput|BenchmarkMapAccess)$"]
+
+    # All subtests: single slash-separated filter
+    subtests = ["BenchmarkRSAKeyGen/Bits4096", "BenchmarkRSAKeyGen/Bits2048"]
+    filters = create_benchmark_filters(subtests)
+    assert filters == ["^(BenchmarkRSAKeyGen)$/^(Bits2048|Bits4096)$"]
+
+    # Mixed: two filters (top-level first, then subtests)
+    mixed = ["BenchmarkGCLatency", "BenchmarkRSAKeyGen/Bits4096"]
+    filters = create_benchmark_filters(mixed)
+    assert len(filters) == 2
+    assert filters[0] == "^(BenchmarkGCLatency)$"
+    assert filters[1] == "^(BenchmarkRSAKeyGen)$/^(Bits4096)$"
 
     print("✓ Benchmark filter creation test passed")
 
