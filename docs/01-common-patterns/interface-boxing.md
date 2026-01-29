@@ -135,13 +135,18 @@ type Storage interface {
 func Process(s Storage) { /* ... */ }
 ```
 
-### When values are small and boxing is allocation-free
-Boxing small, copyable values like `int`, `float64`, or small structs typically causes no allocations.
+### When values are small
+Boxing small values like `int`, `float64`, or small structs still causes heap allocations in modern Go (since Go 1.4), but the overhead is significantly lower than boxing large structs.
 
 ```go
 var i interface{}
-i = 123 // safe and cheap
+i = 123 // allocates, but small overhead
 ```
+
+!!! note "Historical Context"
+    Prior to Go 1.4, the runtime could inline small values directly into the interface structure, avoiding allocations. This optimization was removed in Go 1.4 and has not been restored. Modern Go always allocates when boxing values to interfaces, regardless of size. See [golang/go#12128](https://github.com/golang/go/issues/12128) for details.
+
+While each boxing operation allocates, the cost for small values remains minimal. The real concern arises when boxing occurs in tight loops or high-frequency code paths, where even small allocations can accumulate.
 
 ### When values are short-lived
 If the boxed value is used briefly (e.g. for logging or interface-based sorting), the overhead is minimal.
