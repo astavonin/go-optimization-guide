@@ -2,14 +2,27 @@ package runtime
 
 import (
 	"testing"
+	"unsafe"
+)
+
+var (
+	sinkBytes []byte
+	sinkInt   int
 )
 
 // BenchmarkStackGrowth measures stack allocation and growth patterns.
 // Go 1.23+ includes stack frame slot overlap optimization.
+// Note: Uses a fresh goroutine per iteration to force stack growth.
 func BenchmarkStackGrowth(b *testing.B) {
+	b.ReportAllocs()
+	resultCh := make(chan int, 1)
 	for i := 0; i < b.N; i++ {
-		_ = recursive(100)
+		go func() {
+			resultCh <- recursive(100)
+		}()
+		sinkInt = <-resultCh
 	}
+	_ = unsafe.Pointer(&sinkInt)
 }
 
 // recursive forces stack expansion for testing stack growth.
@@ -28,9 +41,12 @@ func BenchmarkSmallAllocSpecialized(b *testing.B) {
 
 	for _, size := range sizes {
 		b.Run(allocSizeToString(size), func(b *testing.B) {
+			b.ReportAllocs()
+			b.SetBytes(int64(size))
 			for i := 0; i < b.N; i++ {
-				_ = make([]byte, size)
+				sinkBytes = make([]byte, size)
 			}
+			_ = unsafe.Pointer(&sinkBytes)
 		})
 	}
 }

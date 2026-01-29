@@ -360,14 +360,14 @@ func getBenchmarkCategory(name string) string {
 
 	// Networking benchmarks
 	networkingBenchmarks := map[string]bool{
-		"BenchmarkTCPConnect":    true, // TCP connection benchmarks
-		"BenchmarkTCPKeepAlive":  true, // TCP keep-alive benchmarks
-		"BenchmarkTCPThroughput": true, // TCP throughput benchmarks
-		"BenchmarkTLSHandshake":  true, // TLS handshake benchmarks
-		"BenchmarkTLSResume":     true, // TLS session resumption
-		"BenchmarkTLSThroughput": true, // TLS throughput benchmarks
-		"BenchmarkHTTP2":         true, // HTTP/2 benchmarks
-		"BenchmarkHTTPRequest":   true, // HTTP request benchmarks
+		"BenchmarkTCPConnect":     true, // TCP connection benchmarks
+		"BenchmarkTCPKeepAlive":   true, // TCP keep-alive benchmarks
+		"BenchmarkTCPThroughput":  true, // TCP throughput benchmarks
+		"BenchmarkTLSHandshake":   true, // TLS handshake benchmarks
+		"BenchmarkTLSResume":      true, // TLS session resumption
+		"BenchmarkTLSThroughput":  true, // TLS throughput benchmarks
+		"BenchmarkHTTP2":          true, // HTTP/2 benchmarks
+		"BenchmarkHTTPRequest":    true, // HTTP request benchmarks
 		"BenchmarkConnectionPool": true, // Connection pool benchmarks
 	}
 

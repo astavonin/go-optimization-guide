@@ -150,7 +150,7 @@ func BenchmarkTCPThroughput(b *testing.B) {
 			}
 			buf := make([]byte, s.size)
 
-			b.SetBytes(int64(s.size))
+			b.SetBytes(int64(2 * s.size))
 			b.ResetTimer()
 
 			for i := 0; i < b.N; i++ {

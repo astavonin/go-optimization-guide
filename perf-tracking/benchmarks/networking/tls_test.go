@@ -177,12 +177,12 @@ func BenchmarkTLSResume(b *testing.B) {
 	addr := ln.Addr().String()
 
 	b.Run("FullHandshake", func(b *testing.B) {
+		clientConfig := &tls.Config{
+			InsecureSkipVerify: true,
+			MinVersion:         tls.VersionTLS13,
+		}
 		b.ResetTimer()
 		for i := 0; i < b.N; i++ {
-			clientConfig := &tls.Config{
-				InsecureSkipVerify: true,
-				MinVersion:         tls.VersionTLS13,
-			}
 			conn, err := tls.Dial("tcp", addr, clientConfig)
 			if err != nil {
 				b.Fatal(err)
@@ -231,14 +231,19 @@ func BenchmarkTLSResume(b *testing.B) {
 			b.Skip("session resumption not working, skipping resumed benchmark")
 		}
 
+		resumedCount := 0
 		b.ResetTimer()
 		for i := 0; i < b.N; i++ {
 			conn, err := tls.Dial("tcp", addr, clientConfig)
 			if err != nil {
 				b.Fatal(err)
 			}
+			if conn.ConnectionState().DidResume {
+				resumedCount++
+			}
 			conn.Close()
 		}
+		b.ReportMetric(100.0*float64(resumedCount)/float64(b.N), "resumed-%")
 	})
 }
 
@@ -294,7 +299,7 @@ func BenchmarkTLSThroughput(b *testing.B) {
 			data := make([]byte, s.size)
 			buf := make([]byte, s.size)
 
-			b.SetBytes(int64(s.size))
+			b.SetBytes(int64(2 * s.size))
 			b.ResetTimer()
 
 			for i := 0; i < b.N; i++ {

@@ -5,6 +5,8 @@ import (
 	"testing"
 )
 
+var sinkData []*Data
+
 // Data represents a test allocation with payload.
 type Data struct {
 	payload []byte
@@ -18,6 +20,8 @@ type SmallData struct {
 // BenchmarkGCThroughput measures allocation throughput under GC pressure.
 // Green Tea GC shows 10-40% improvement in Go 1.25/1.26.
 func BenchmarkGCThroughput(b *testing.B) {
+	b.ReportAllocs()
+	b.SetBytes(128 * 1000)
 	var sink []*Data // Live heap across iterations
 
 	for i := 0; i < b.N; i++ {
@@ -32,12 +36,13 @@ func BenchmarkGCThroughput(b *testing.B) {
 		}
 	}
 
-	_ = sink // Prevent DCE
+	sinkData = sink // Prevent DCE
 }
 
 // BenchmarkGCLatency measures garbage collection pause times.
 // Green Tea GC reduces pause times in Go 1.25/1.26.
 func BenchmarkGCLatency(b *testing.B) {
+	b.ReportAllocs()
 	var ms runtime.MemStats
 	var sink [][]byte // Retain live heap
 
@@ -46,6 +51,8 @@ func BenchmarkGCLatency(b *testing.B) {
 	for i := 0; i < 100; i++ {
 		sink = append(sink, make([]byte, 1024))
 	}
+	runtime.ReadMemStats(&ms)
+	basePauseNs := ms.PauseTotalNs
 	b.StartTimer()
 
 	for i := 0; i < b.N; i++ {
@@ -59,22 +66,27 @@ func BenchmarkGCLatency(b *testing.B) {
 			sink = sink[100:] // Keep heap live but bounded
 		}
 
-		// Force GC and measure
+		// Force GC and measure pause
 		runtime.GC()
-		runtime.ReadMemStats(&ms)
-		_ = ms.PauseTotalNs // Track pause time metric
 	}
 
+	b.StopTimer()
+	runtime.ReadMemStats(&ms)
+	pauseNs := ms.PauseTotalNs - basePauseNs
+	if b.N > 0 {
+		b.ReportMetric(float64(pauseNs)/float64(b.N), "pause-ns/gc")
+	}
 	_ = sink // Prevent DCE
 }
 
 // BenchmarkGCSmallObjects measures GC performance scanning small objects.
 // Go 1.26 uses vector instructions for improved scanning on modern CPUs.
 func BenchmarkGCSmallObjects(b *testing.B) {
-	var sink []any // Retain live heap
+	b.ReportAllocs()
+	var sink []*SmallData // Retain live heap, use concrete type to avoid interface boxing
 
 	for i := 0; i < b.N; i++ {
-		objects := make([]any, 10000)
+		objects := make([]*SmallData, 10000)
 		for j := range 10000 {
 			objects[j] = &SmallData{value: int64(j)}
 		}
@@ -93,6 +105,7 @@ func BenchmarkGCSmallObjects(b *testing.B) {
 // BenchmarkGCMixedWorkload measures realistic mixed allocation patterns.
 // Tests overall GC behavior with small, medium, and large objects.
 func BenchmarkGCMixedWorkload(b *testing.B) {
+	b.ReportAllocs()
 	var sink [][]byte // Retain live heap
 
 	for i := 0; i < b.N; i++ {
@@ -100,11 +113,11 @@ func BenchmarkGCMixedWorkload(b *testing.B) {
 		medium := make([]byte, 4096)
 		large := make([]byte, 1<<20)
 
-		// Retain some allocations
+		// Retain some allocations including large to create realistic GC pressure
 		if i%100 == 0 {
-			sink = append(sink, small, medium)
-			if len(sink) > 200 {
-				sink = sink[20:]
+			sink = append(sink, small, medium, large)
+			if len(sink) > 300 {
+				sink = sink[30:]
 			}
 		}
 

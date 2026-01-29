@@ -1,53 +1,88 @@
 package core
 
-import "testing"
+import (
+	"runtime"
+	"testing"
+	"unsafe"
+)
+
+var (
+	sinkBytes []byte
+	sinkMap   map[int]int
+	sinkInts  []int
+)
 
 // BenchmarkSmallAllocation tracks small object allocation performance.
 // Go 1.26 shows ~30% improvement for small allocations.
 func BenchmarkSmallAllocation(b *testing.B) {
+	b.ReportAllocs()
+	b.SetBytes(64)
 	for i := 0; i < b.N; i++ {
-		_ = make([]byte, 64)
+		sinkBytes = make([]byte, 64)
 	}
+	_ = unsafe.Pointer(&sinkBytes)
 }
 
 // BenchmarkLargeAllocation tests allocation at scale.
 func BenchmarkLargeAllocation(b *testing.B) {
+	b.ReportAllocs()
+	b.SetBytes(1 << 20)
 	for i := 0; i < b.N; i++ {
-		_ = make([]byte, 1<<20) // 1MB
+		sinkBytes = make([]byte, 1<<20) // 1MB
 	}
+	_ = unsafe.Pointer(&sinkBytes)
 }
 
 // BenchmarkMapAllocation measures map allocation patterns.
 // Maps are sensitive to GC changes.
 func BenchmarkMapAllocation(b *testing.B) {
+	b.ReportAllocs()
 	for i := 0; i < b.N; i++ {
 		m := make(map[int]int, 100)
 		for j := range 100 {
 			m[j] = j
 		}
+		sinkMap = m
 	}
+	_ = unsafe.Pointer(&sinkMap)
 }
 
 // BenchmarkSliceAppend tracks slice growth patterns.
 // Go 1.25 improved slice backing store allocation.
 func BenchmarkSliceAppend(b *testing.B) {
+	b.ReportAllocs()
 	for i := 0; i < b.N; i++ {
 		s := make([]int, 0)
 		for j := range 1000 {
 			s = append(s, j)
 		}
-		_ = s // Prevent optimization
+		sinkInts = s
 	}
+	_ = unsafe.Pointer(&sinkInts)
 }
 
 // BenchmarkGCPressure measures GC behavior under allocation pressure.
 // Sensitive to Green Tea GC improvements in Go 1.25/1.26.
 func BenchmarkGCPressure(b *testing.B) {
+	b.ReportAllocs()
+	b.SetBytes(1024)
+	var ms runtime.MemStats
 	var sink [][]byte
+	b.StopTimer()
+	runtime.ReadMemStats(&ms)
+	basePauseNs := ms.PauseTotalNs
+	b.StartTimer()
 	for i := 0; i < b.N; i++ {
 		sink = append(sink, make([]byte, 1024))
 		if len(sink) > 100 {
 			sink = sink[:0]
 		}
 	}
+	b.StopTimer()
+	runtime.ReadMemStats(&ms)
+	pauseNs := ms.PauseTotalNs - basePauseNs
+	if b.N > 0 {
+		b.ReportMetric(float64(pauseNs)/float64(b.N), "pause-ns/op")
+	}
+	_ = unsafe.Pointer(&sink)
 }

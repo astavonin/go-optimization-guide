@@ -280,8 +280,18 @@ func TestGetBenchmarkCategory(t *testing.T) {
 
 		// Networking benchmarks
 		{
-			name:          "TCP echo benchmark",
-			benchmarkName: "BenchmarkTCPEcho",
+			name:          "TCP connect benchmark",
+			benchmarkName: "BenchmarkTCPConnect",
+			wantCategory:  "networking",
+		},
+		{
+			name:          "TCP keep-alive benchmark",
+			benchmarkName: "BenchmarkTCPKeepAlive",
+			wantCategory:  "networking",
+		},
+		{
+			name:          "TCP throughput benchmark",
+			benchmarkName: "BenchmarkTCPThroughput",
 			wantCategory:  "networking",
 		},
 		{
@@ -290,38 +300,28 @@ func TestGetBenchmarkCategory(t *testing.T) {
 			wantCategory:  "networking",
 		},
 		{
-			name:          "TLS handshake PQ benchmark",
-			benchmarkName: "BenchmarkTLSHandshakePQ",
+			name:          "TLS resume benchmark",
+			benchmarkName: "BenchmarkTLSResume",
 			wantCategory:  "networking",
 		},
 		{
-			name:          "TLS session resumption benchmark",
-			benchmarkName: "BenchmarkTLSSessionResumption",
+			name:          "TLS throughput benchmark",
+			benchmarkName: "BenchmarkTLSThroughput",
 			wantCategory:  "networking",
 		},
 		{
-			name:          "HTTP/2 parallel requests benchmark",
-			benchmarkName: "BenchmarkHTTP2ParallelRequests",
+			name:          "HTTP/2 benchmark",
+			benchmarkName: "BenchmarkHTTP2",
 			wantCategory:  "networking",
 		},
 		{
-			name:          "HTTP/2 multiplexing benchmark",
-			benchmarkName: "BenchmarkHTTP2Multiplexing",
+			name:          "HTTP request benchmark",
+			benchmarkName: "BenchmarkHTTPRequest",
 			wantCategory:  "networking",
 		},
 		{
-			name:          "HTTP/2 header compression benchmark",
-			benchmarkName: "BenchmarkHTTP2HeaderCompression",
-			wantCategory:  "networking",
-		},
-		{
-			name:          "Connection pool cold benchmark",
-			benchmarkName: "BenchmarkConnectionPoolCold",
-			wantCategory:  "networking",
-		},
-		{
-			name:          "Connection pool warm benchmark",
-			benchmarkName: "BenchmarkConnectionPoolWarm",
+			name:          "Connection pool benchmark",
+			benchmarkName: "BenchmarkConnectionPool",
 			wantCategory:  "networking",
 		},
 
@@ -524,16 +524,28 @@ func TestGetBenchmarkDescription(t *testing.T) {
 
 		// Known networking benchmarks with descriptions
 		{
-			name:          "TCP echo has description",
-			benchmarkName: "BenchmarkTCPEcho",
+			name:          "TCP connect has description",
+			benchmarkName: "BenchmarkTCPConnect",
 			wantEmpty:     false,
-			contains:      "TCP echo",
+			contains:      "TCP",
+		},
+		{
+			name:          "TCP throughput has description",
+			benchmarkName: "BenchmarkTCPThroughput",
+			wantEmpty:     false,
+			contains:      "throughput",
 		},
 		{
 			name:          "TLS handshake has description",
 			benchmarkName: "BenchmarkTLSHandshake",
 			wantEmpty:     false,
 			contains:      "TLS",
+		},
+		{
+			name:          "HTTP request has description",
+			benchmarkName: "BenchmarkHTTPRequest",
+			wantEmpty:     false,
+			contains:      "HTTP",
 		},
 
 		// Unknown benchmarks return empty string
@@ -653,15 +665,15 @@ func TestAllBenchmarksWithDescriptionsHaveCategories(t *testing.T) {
 		"BenchmarkRegexpCompile",
 
 		// Networking benchmarks
-		"BenchmarkTCPEcho",
+		"BenchmarkTCPConnect",
+		"BenchmarkTCPKeepAlive",
+		"BenchmarkTCPThroughput",
 		"BenchmarkTLSHandshake",
-		"BenchmarkTLSHandshakePQ",
-		"BenchmarkTLSSessionResumption",
-		"BenchmarkHTTP2ParallelRequests",
-		"BenchmarkHTTP2Multiplexing",
-		"BenchmarkHTTP2HeaderCompression",
-		"BenchmarkConnectionPoolCold",
-		"BenchmarkConnectionPoolWarm",
+		"BenchmarkTLSResume",
+		"BenchmarkTLSThroughput",
+		"BenchmarkHTTP2",
+		"BenchmarkHTTPRequest",
+		"BenchmarkConnectionPool",
 
 		// Legacy runtime benchmarks
 		"BenchmarkLargeAllocation",

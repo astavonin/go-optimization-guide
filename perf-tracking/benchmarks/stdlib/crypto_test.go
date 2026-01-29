@@ -189,6 +189,7 @@ func BenchmarkAESGCM(b *testing.B) {
 
 	for _, tc := range sizes {
 		b.Run(tc.name, func(b *testing.B) {
+			b.ReportAllocs()
 			ciphertext := make([]byte, 0, len(tc.data)+aead.Overhead())
 			b.SetBytes(int64(len(tc.data)))
 

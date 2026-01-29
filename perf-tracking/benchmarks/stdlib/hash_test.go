@@ -29,6 +29,7 @@ func init() {
 // CRC32 uses platform-specific optimizations - Castagnoli uses SSE4.2 on x86.
 func BenchmarkCRC32(b *testing.B) {
 	b.Run("IEEE", func(b *testing.B) {
+		b.ReportAllocs()
 		table := crc32.MakeTable(crc32.IEEE)
 		b.SetBytes(int64(len(hashData64KB)))
 
@@ -39,6 +40,7 @@ func BenchmarkCRC32(b *testing.B) {
 	})
 
 	b.Run("Castagnoli", func(b *testing.B) {
+		b.ReportAllocs()
 		table := crc32.MakeTable(crc32.Castagnoli)
 		b.SetBytes(int64(len(hashData64KB)))
 
@@ -53,6 +55,7 @@ func BenchmarkCRC32(b *testing.B) {
 // FNV-1a hash is commonly used for hash tables - baseline for internal hash performance.
 func BenchmarkFNVHash(b *testing.B) {
 	b.Run("FNV1a_64", func(b *testing.B) {
+		b.ReportAllocs()
 		b.SetBytes(int64(len(hashData1KB)))
 
 		for i := 0; i < b.N; i++ {
@@ -64,6 +67,7 @@ func BenchmarkFNVHash(b *testing.B) {
 	})
 
 	b.Run("FNV1a_128", func(b *testing.B) {
+		b.ReportAllocs()
 		b.SetBytes(int64(len(hashData1KB)))
 
 		for i := 0; i < b.N; i++ {

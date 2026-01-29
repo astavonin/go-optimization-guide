@@ -33,6 +33,7 @@ func BenchmarkSyncMap(b *testing.B) {
 // BenchmarkSwissMapLarge measures large map access with Swiss Tables.
 // Go 1.24+ shows ~30% faster access for large maps.
 func BenchmarkSwissMapLarge(b *testing.B) {
+	b.ReportAllocs()
 	// Pre-populate map with 10,000 entries
 	m := make(map[int]int)
 	for i := range 10000 {
@@ -60,6 +61,7 @@ func BenchmarkSwissMapLarge(b *testing.B) {
 // Swiss Tables benefit more from pre-sizing in Go 1.24+.
 func BenchmarkSwissMapPresized(b *testing.B) {
 	b.Run("Presized", func(b *testing.B) {
+		b.ReportAllocs()
 		for i := 0; i < b.N; i++ {
 			m := make(map[int]int, 1000) // Pre-sized
 			for j := range 1000 {
@@ -70,6 +72,7 @@ func BenchmarkSwissMapPresized(b *testing.B) {
 	})
 
 	b.Run("GrowAsNeeded", func(b *testing.B) {
+		b.ReportAllocs()
 		for i := 0; i < b.N; i++ {
 			m := make(map[int]int) // No pre-sizing
 			for j := range 1000 {
@@ -87,6 +90,7 @@ func BenchmarkSwissMapIteration(b *testing.B) {
 
 	for _, size := range sizes {
 		b.Run(sizeToString(size), func(b *testing.B) {
+			b.ReportAllocs()
 			m := make(map[int]int)
 			for i := range size {
 				m[i] = i

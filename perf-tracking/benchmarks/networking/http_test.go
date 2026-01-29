@@ -25,6 +25,16 @@ func BenchmarkHTTPRequest(b *testing.B) {
 	client := server.Client()
 
 	b.Run("GET_Small", func(b *testing.B) {
+		// Warm-up requests to establish connection pool
+		for i := 0; i < 3; i++ {
+			resp, err := client.Get(server.URL)
+			if err != nil {
+				b.Fatal(err)
+			}
+			io.Copy(io.Discard, resp.Body)
+			resp.Body.Close()
+		}
+
 		b.ResetTimer()
 		for i := 0; i < b.N; i++ {
 			resp, err := client.Get(server.URL)
@@ -41,6 +51,23 @@ func BenchmarkHTTPRequest(b *testing.B) {
 
 	b.Run("POST_1KB", func(b *testing.B) {
 		data := bytes.NewReader(make([]byte, 1024))
+		// Warm-up requests to establish connection pool
+		for i := 0; i < 3; i++ {
+			_, err := data.Seek(0, io.SeekStart)
+			if err != nil {
+				b.Fatal(err)
+			}
+			resp, err := client.Post(server.URL, "application/octet-stream", data)
+			if err != nil {
+				b.Fatal(err)
+			}
+			_, err = io.Copy(io.Discard, resp.Body)
+			if err != nil {
+				b.Fatal(err)
+			}
+			resp.Body.Close()
+		}
+
 		b.ResetTimer()
 		for i := 0; i < b.N; i++ {
 			_, err := data.Seek(0, io.SeekStart)
@@ -84,6 +111,16 @@ func BenchmarkHTTP2(b *testing.B) {
 	}
 
 	b.Run("Sequential", func(b *testing.B) {
+		// Warm-up requests to establish HTTP/2 connection
+		for i := 0; i < 3; i++ {
+			resp, err := client.Get(server.URL)
+			if err != nil {
+				b.Fatal(err)
+			}
+			io.Copy(io.Discard, resp.Body)
+			resp.Body.Close()
+		}
+
 		b.ResetTimer()
 		for i := 0; i < b.N; i++ {
 			resp, err := client.Get(server.URL)
@@ -103,6 +140,16 @@ func BenchmarkHTTP2(b *testing.B) {
 	})
 
 	b.Run("Parallel_10", func(b *testing.B) {
+		// Warm-up requests to establish HTTP/2 connection
+		for i := 0; i < 3; i++ {
+			resp, err := client.Get(server.URL)
+			if err != nil {
+				b.Fatal(err)
+			}
+			io.Copy(io.Discard, resp.Body)
+			resp.Body.Close()
+		}
+
 		b.SetParallelism(10)
 		b.RunParallel(func(pb *testing.PB) {
 			for pb.Next() {
@@ -124,6 +171,16 @@ func BenchmarkHTTP2(b *testing.B) {
 	})
 
 	b.Run("Parallel_30", func(b *testing.B) {
+		// Warm-up requests to establish HTTP/2 connection
+		for i := 0; i < 3; i++ {
+			resp, err := client.Get(server.URL)
+			if err != nil {
+				b.Fatal(err)
+			}
+			io.Copy(io.Discard, resp.Body)
+			resp.Body.Close()
+		}
+
 		b.SetParallelism(30)
 		b.RunParallel(func(pb *testing.PB) {
 			for pb.Next() {

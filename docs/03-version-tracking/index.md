@@ -4,6 +4,13 @@ title: Go Version Performance Tracking
 
 # Go Version Performance Tracking
 
+!!! warning "Work in Progress"
+    **This page and its benchmarks are currently under active development.**
+
+    Recent quality improvements have been made to fix measurement accuracy issues (dead code elimination, interface boxing, throughput accounting). All benchmarks are being re-collected across Go versions to establish a new baseline.
+
+    **Do not use this data for production decisions yet.** The interactive tool and results will be updated once the re-collection is complete.
+
 Interactive tool to compare benchmark performance across Go releases.
 
 ## Interactive Comparison Tool

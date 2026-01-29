@@ -60,6 +60,7 @@ var (
 func BenchmarkJSONDecode(b *testing.B) {
 	b.Run("Small", func(b *testing.B) {
 		b.ReportAllocs()
+		b.SetBytes(int64(len(jsonSmall)))
 		for i := 0; i < b.N; i++ {
 			var resp APIResponse
 			err := json.Unmarshal(jsonSmall, &resp)
@@ -72,6 +73,7 @@ func BenchmarkJSONDecode(b *testing.B) {
 
 	b.Run("Medium", func(b *testing.B) {
 		b.ReportAllocs()
+		b.SetBytes(int64(len(jsonMedium)))
 		for i := 0; i < b.N; i++ {
 			var resp APIResponse
 			err := json.Unmarshal(jsonMedium, &resp)
@@ -84,6 +86,7 @@ func BenchmarkJSONDecode(b *testing.B) {
 
 	b.Run("Large", func(b *testing.B) {
 		b.ReportAllocs()
+		b.SetBytes(int64(len(jsonLarge)))
 		for i := 0; i < b.N; i++ {
 			var resp APIResponse
 			err := json.Unmarshal(jsonLarge, &resp)
@@ -100,6 +103,12 @@ func BenchmarkJSONDecode(b *testing.B) {
 func BenchmarkJSONEncode(b *testing.B) {
 	b.Run("Small", func(b *testing.B) {
 		b.ReportAllocs()
+		warm, err := json.Marshal(encodeSmall)
+		if err != nil {
+			b.Fatal(err)
+		}
+		b.SetBytes(int64(len(warm)))
+		b.ResetTimer()
 		for i := 0; i < b.N; i++ {
 			data, err := json.Marshal(encodeSmall)
 			if err != nil {
@@ -111,6 +120,12 @@ func BenchmarkJSONEncode(b *testing.B) {
 
 	b.Run("WithEscaping", func(b *testing.B) {
 		b.ReportAllocs()
+		warm, err := json.Marshal(encodeWithEscaping)
+		if err != nil {
+			b.Fatal(err)
+		}
+		b.SetBytes(int64(len(warm)))
+		b.ResetTimer()
 		for i := 0; i < b.N; i++ {
 			data, err := json.Marshal(encodeWithEscaping)
 			if err != nil {
@@ -133,6 +148,7 @@ func BenchmarkBinaryEncode(b *testing.B) {
 
 	b.Run("Encode", func(b *testing.B) {
 		buf := make([]byte, binary.Size(data))
+		b.SetBytes(int64(binary.Size(data)))
 
 		for i := 0; i < b.N; i++ {
 			_, err := binary.Encode(buf, binary.LittleEndian, data)
@@ -144,6 +160,7 @@ func BenchmarkBinaryEncode(b *testing.B) {
 
 	b.Run("Append", func(b *testing.B) {
 		buf := make([]byte, 0, binary.Size(data))
+		b.SetBytes(int64(binary.Size(data)))
 
 		for i := 0; i < b.N; i++ {
 			result, err := binary.Append(buf[:0], binary.LittleEndian, data)
@@ -155,7 +172,8 @@ func BenchmarkBinaryEncode(b *testing.B) {
 	})
 
 	b.Run("LegacyWrite", func(b *testing.B) {
-		buf := make([]byte, binary.Size(data))
+		buf := make([]byte, 0, binary.Size(data))
+		b.SetBytes(int64(binary.Size(data)))
 
 		for i := 0; i < b.N; i++ {
 			w := &bytesWriter{buf: buf[:0]}
