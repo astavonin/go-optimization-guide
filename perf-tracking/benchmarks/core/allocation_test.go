@@ -17,6 +17,8 @@ var (
 func BenchmarkSmallAllocation(b *testing.B) {
 	b.ReportAllocs()
 	b.SetBytes(64)
+	runtime.GC()
+	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
 		sinkBytes = make([]byte, 64)
 	}
@@ -27,6 +29,8 @@ func BenchmarkSmallAllocation(b *testing.B) {
 func BenchmarkLargeAllocation(b *testing.B) {
 	b.ReportAllocs()
 	b.SetBytes(1 << 20)
+	runtime.GC()
+	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
 		sinkBytes = make([]byte, 1<<20) // 1MB
 	}
@@ -37,6 +41,8 @@ func BenchmarkLargeAllocation(b *testing.B) {
 // Maps are sensitive to GC changes.
 func BenchmarkMapAllocation(b *testing.B) {
 	b.ReportAllocs()
+	runtime.GC()
+	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
 		m := make(map[int]int, 100)
 		for j := range 100 {
@@ -51,6 +57,8 @@ func BenchmarkMapAllocation(b *testing.B) {
 // Go 1.25 improved slice backing store allocation.
 func BenchmarkSliceAppend(b *testing.B) {
 	b.ReportAllocs()
+	runtime.GC()
+	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
 		s := make([]int, 0)
 		for j := range 1000 {

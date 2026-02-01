@@ -1,6 +1,7 @@
 package runtime
 
 import (
+	"runtime"
 	"testing"
 	"unsafe"
 )
@@ -37,6 +38,8 @@ func recursive(n int) int {
 // BenchmarkSmallAllocSpecialized measures sub-512 byte allocation performance.
 // Go 1.26 shows up to 30% improvement for allocations under 512 bytes.
 func BenchmarkSmallAllocSpecialized(b *testing.B) {
+	runtime.GC()
+	b.ResetTimer()
 	sizes := []int{32, 64, 128, 256, 512}
 
 	for _, size := range sizes {

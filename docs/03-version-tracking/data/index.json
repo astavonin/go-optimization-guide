@@ -3,17 +3,17 @@
     {
       "version": "1.23",
       "file": "go1.23.json",
-      "collected_at": "2026-01-28T23:21:58+06:00"
+      "collected_at": "2026-02-01T14:58:22+06:00"
     },
     {
       "version": "1.24",
       "file": "go1.24.json",
-      "collected_at": "2026-01-29T01:00:20+06:00"
+      "collected_at": "2026-01-31T00:28:55+06:00"
     },
     {
       "version": "1.25",
       "file": "go1.25.json",
-      "collected_at": "2026-01-29T02:57:09+06:00"
+      "collected_at": "2026-02-01T12:57:58+06:00"
     }
   ],
   "benchmarks": [
@@ -478,5 +478,5 @@
     "url": "https://github.com/astavonin/go-optimization-guide",
     "source_path": "blob/main"
   },
-  "last_updated": "2026-01-29T10:51:25+06:00"
+  "last_updated": "2026-02-01T15:11:06+06:00"
 }

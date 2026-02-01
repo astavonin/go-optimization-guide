@@ -4,6 +4,7 @@ import (
 	"bufio"
 	"bytes"
 	"io"
+	"runtime"
 	"testing"
 )
 
@@ -60,6 +61,8 @@ func BenchmarkIOReadAll(b *testing.B) {
 		b.Run(tc.name, func(b *testing.B) {
 			b.SetBytes(int64(len(tc.data)))
 			b.ReportAllocs()
+			runtime.GC()
+			b.ResetTimer()
 
 			for i := 0; i < b.N; i++ {
 				reader := bytes.NewReader(tc.data)
