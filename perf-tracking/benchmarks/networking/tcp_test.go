@@ -35,6 +35,9 @@ func BenchmarkTCPConnect(b *testing.B) {
 			if err != nil {
 				b.Fatal(err)
 			}
+			// SetLinger(0) sends RST on close, avoiding TIME_WAIT buildup
+			// that exhausts ephemeral ports on macOS during high-iteration runs.
+			conn.(*net.TCPConn).SetLinger(0)
 			conn.Close()
 		}
 	})
@@ -46,6 +49,7 @@ func BenchmarkTCPConnect(b *testing.B) {
 				if err != nil {
 					b.Fatal(err)
 				}
+				conn.(*net.TCPConn).SetLinger(0)
 				conn.Close()
 			}
 		})
@@ -82,6 +86,7 @@ func BenchmarkTCPKeepAlive(b *testing.B) {
 			if err != nil {
 				b.Fatal(err)
 			}
+			conn.(*net.TCPConn).SetLinger(0)
 			conn.Close()
 		}
 	})
@@ -96,6 +101,7 @@ func BenchmarkTCPKeepAlive(b *testing.B) {
 			if err != nil {
 				b.Fatal(err)
 			}
+			conn.(*net.TCPConn).SetLinger(0)
 			conn.Close()
 		}
 	})

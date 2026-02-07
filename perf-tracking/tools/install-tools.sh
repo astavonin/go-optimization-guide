@@ -15,16 +15,18 @@ fi
 echo "Go version: $(go version)"
 echo
 
-# Tools to install
-declare -A TOOLS=(
-    ["benchstat"]="golang.org/x/perf/cmd/benchstat@latest"
-    ["staticcheck"]="honnef.co/go/tools/cmd/staticcheck@latest"
-    ["gopls"]="golang.org/x/tools/gopls@latest"
+# Tools to install (parallel arrays for Bash 3.2 compatibility on macOS)
+TOOL_NAMES=(benchstat staticcheck gopls)
+TOOL_PACKAGES=(
+    "golang.org/x/perf/cmd/benchstat@latest"
+    "honnef.co/go/tools/cmd/staticcheck@latest"
+    "golang.org/x/tools/gopls@latest"
 )
 
 # Install each tool
-for tool in "${!TOOLS[@]}"; do
-    package="${TOOLS[$tool]}"
+for i in "${!TOOL_NAMES[@]}"; do
+    tool="${TOOL_NAMES[$i]}"
+    package="${TOOL_PACKAGES[$i]}"
 
     echo "→ Installing $tool..."
     if go install "$package"; then
@@ -40,7 +42,7 @@ echo "=== Verifying Installations ==="
 echo
 
 # Verify installations
-for tool in "${!TOOLS[@]}"; do
+for tool in "${TOOL_NAMES[@]}"; do
     if command -v "$tool" &> /dev/null; then
         version=$("$tool" --version 2>&1 | head -1 || echo "installed")
         echo "✓ $tool: $version"
