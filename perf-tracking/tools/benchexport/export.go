@@ -520,6 +520,41 @@ type BenchmarkInfo struct {
 	Category    string `json:"category"`
 }
 
+// PlatformsData represents the top-level platforms.json file
+type PlatformsData struct {
+	Platforms   []PlatformInfo `json:"platforms"`
+	LastUpdated string         `json:"last_updated"`
+}
+
+// PlatformInfo describes a single platform entry
+type PlatformInfo struct {
+	Name    string `json:"name"`
+	Display string `json:"display"`
+	Index   string `json:"index"`
+}
+
+// platformDisplayName returns a human-readable name for a platform string.
+func platformDisplayName(platform string) string {
+	displayNames := map[string]string{
+		"darwin":  "macOS",
+		"linux":   "Linux",
+		"windows": "Windows",
+		"freebsd": "FreeBSD",
+	}
+
+	parts := strings.SplitN(platform, "-", 2)
+	if len(parts) != 2 {
+		return platform
+	}
+
+	osName := parts[0]
+	arch := parts[1]
+	if display, ok := displayNames[osName]; ok {
+		osName = display
+	}
+	return osName + " " + arch
+}
+
 // exportAll exports all versions found in the results directory
 func exportAll(resultsDir, outputDir string) error {
 	fmt.Println("=== Exporting All Versions ===")
@@ -532,6 +567,7 @@ func exportAll(resultsDir, outputDir string) error {
 
 	var versions []VersionInfo
 	benchmarkNames := make(map[string]bool)
+	var platform string
 
 	for _, entry := range entries {
 		if !entry.IsDir() || !strings.HasPrefix(entry.Name(), "go") {
@@ -572,7 +608,18 @@ func exportAll(resultsDir, outputDir string) error {
 		})
 
 		latestFile := mainFiles[0]
-		outputFile := filepath.Join(outputDir, fmt.Sprintf("go%s.json", version))
+
+		// Detect platform from the first version file if not yet determined
+		if platform == "" {
+			probeData, probeErr := parseBenchmarkFile(latestFile, version)
+			if probeErr == nil && probeData.Metadata.System.OS != "" && probeData.Metadata.System.Arch != "" {
+				platform = probeData.Metadata.System.OS + "-" + probeData.Metadata.System.Arch
+			}
+		}
+
+		// Write version JSON into platform subdirectory
+		platformDir := filepath.Join(outputDir, platform)
+		outputFile := filepath.Join(platformDir, fmt.Sprintf("go%s.json", version))
 
 		// Export this version
 		if err := exportVersion(latestFile, version, outputFile); err != nil {
@@ -597,7 +644,11 @@ func exportAll(resultsDir, outputDir string) error {
 		}
 	}
 
-	// Generate index.json
+	if platform == "" {
+		return fmt.Errorf("could not detect platform from benchmark files")
+	}
+
+	// Generate index.json inside platform subdirectory
 	var benchmarks []BenchmarkInfo
 	for name := range benchmarkNames {
 		benchmarks = append(benchmarks, BenchmarkInfo{
@@ -626,16 +677,73 @@ func exportAll(resultsDir, outputDir string) error {
 		return fmt.Errorf("failed to marshal index JSON: %w", err)
 	}
 
-	indexFile := filepath.Join(outputDir, "index.json")
+	platformDir := filepath.Join(outputDir, platform)
+	indexFile := filepath.Join(platformDir, "index.json")
 	if err := os.WriteFile(indexFile, indexJSON, 0644); err != nil {
 		return fmt.Errorf("failed to write index file: %w", err)
 	}
 
+	// Generate/update top-level platforms.json
+	if err := updatePlatformsJSON(outputDir, platform); err != nil {
+		return fmt.Errorf("failed to update platforms.json: %w", err)
+	}
+
 	fmt.Println("=== Export Summary ===")
+	fmt.Printf("Platform:          %s\n", platform)
 	fmt.Printf("Versions exported: %d\n", len(versions))
 	fmt.Printf("Benchmarks found:  %d\n", len(benchmarks))
-	fmt.Printf("Output directory:  %s\n", outputDir)
+	fmt.Printf("Output directory:  %s/%s\n", outputDir, platform)
 	fmt.Printf("✓ Export complete!\n")
+
+	return nil
+}
+
+// updatePlatformsJSON reads an existing platforms.json (if present), merges/updates
+// the current platform entry, and writes back the updated file.
+func updatePlatformsJSON(outputDir, platform string) error {
+	platformsFile := filepath.Join(outputDir, "platforms.json")
+
+	var platformsData PlatformsData
+
+	// Read existing platforms.json if present
+	if data, err := os.ReadFile(platformsFile); err == nil {
+		_ = json.Unmarshal(data, &platformsData)
+	}
+
+	// Update or add the current platform entry
+	newEntry := PlatformInfo{
+		Name:    platform,
+		Display: platformDisplayName(platform),
+		Index:   platform + "/index.json",
+	}
+
+	found := false
+	for i, p := range platformsData.Platforms {
+		if p.Name == platform {
+			platformsData.Platforms[i] = newEntry
+			found = true
+			break
+		}
+	}
+	if !found {
+		platformsData.Platforms = append(platformsData.Platforms, newEntry)
+	}
+
+	// Sort platforms by name for stable output
+	sort.Slice(platformsData.Platforms, func(i, j int) bool {
+		return platformsData.Platforms[i].Name < platformsData.Platforms[j].Name
+	})
+
+	platformsData.LastUpdated = time.Now().Format(time.RFC3339)
+
+	jsonData, err := json.MarshalIndent(platformsData, "", "  ")
+	if err != nil {
+		return fmt.Errorf("failed to marshal platforms JSON: %w", err)
+	}
+
+	if err := os.WriteFile(platformsFile, jsonData, 0644); err != nil {
+		return fmt.Errorf("failed to write platforms.json: %w", err)
+	}
 
 	return nil
 }

@@ -451,7 +451,8 @@ class BenchmarkRunner:
                  variance_threshold: float = 15.0):
         self.script_dir = script_dir
         self.benchmarks_dir = script_dir.parent / "benchmarks"
-        self.results_dir = script_dir.parent / "results" / "stable"
+        self.results_base_dir = script_dir.parent / "results" / "stable"
+        self.results_dir = None  # Set by detect_platform()
         self.parser = BenchmarkParser()
         self.verbose = verbose
         self.progress = progress
@@ -478,6 +479,29 @@ class BenchmarkRunner:
             print(f"Error finding Go binary: {e}", file=sys.stderr)
 
         return None
+
+    def detect_platform(self, go_bin: Path) -> str:
+        """Detect GOOS-GOARCH from Go binary and set results_dir accordingly.
+
+        Returns the platform string (e.g. 'darwin-arm64').
+        """
+        env = os.environ.copy()
+        env["GOTOOLCHAIN"] = "local"
+
+        result = subprocess.run(
+            [str(go_bin), "env", "GOOS", "GOARCH"],
+            capture_output=True, text=True, check=False, env=env
+        )
+        if result.returncode != 0:
+            raise RuntimeError(f"Failed to detect platform: {result.stderr.strip()}")
+
+        lines = result.stdout.strip().splitlines()
+        if len(lines) != 2:
+            raise RuntimeError(f"Unexpected go env output: {result.stdout.strip()}")
+
+        platform = f"{lines[0]}-{lines[1]}"
+        self.results_dir = self.results_base_dir / platform
+        return platform
 
     def prepare_dependencies(self, version: str) -> bool:
         """Prepare version-specific go.mod dependencies."""
@@ -1286,6 +1310,11 @@ Examples:
             print(f"✗ Error: Go {version} not found", file=sys.stderr)
             print(f"  Install with: ./tools/setup-go-versions.sh install <version>")
             continue
+
+        # Detect platform on first binary found
+        if runner.results_dir is None:
+            platform = runner.detect_platform(go_bin)
+            print(f"Platform: {platform}")
 
         print(f"Go binary: {go_bin}")
 

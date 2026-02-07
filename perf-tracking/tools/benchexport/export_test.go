@@ -1,6 +1,10 @@
 package main
 
-import "testing"
+import (
+	"encoding/json"
+	"os"
+	"testing"
+)
 
 func TestGetBenchmarkCategory(t *testing.T) {
 	tests := []struct {
@@ -609,6 +613,107 @@ func indexOfSubstring(s, substr string) int {
 		}
 	}
 	return -1
+}
+
+func TestPlatformDisplayName(t *testing.T) {
+	tests := []struct {
+		platform string
+		want     string
+	}{
+		{"darwin-arm64", "macOS arm64"},
+		{"darwin-amd64", "macOS amd64"},
+		{"linux-amd64", "Linux amd64"},
+		{"linux-arm64", "Linux arm64"},
+		{"windows-amd64", "Windows amd64"},
+		{"freebsd-amd64", "FreeBSD amd64"},
+		{"openbsd-amd64", "openbsd amd64"},
+		{"unknown", "unknown"},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.platform, func(t *testing.T) {
+			got := platformDisplayName(tt.platform)
+			if got != tt.want {
+				t.Errorf("platformDisplayName(%q) = %q, want %q", tt.platform, got, tt.want)
+			}
+		})
+	}
+}
+
+func TestUpdatePlatformsJSON(t *testing.T) {
+	tmpDir := t.TempDir()
+
+	// First run: create platforms.json with darwin-arm64
+	if err := updatePlatformsJSON(tmpDir, "darwin-arm64"); err != nil {
+		t.Fatalf("updatePlatformsJSON (first) failed: %v", err)
+	}
+
+	data, err := os.ReadFile(tmpDir + "/platforms.json")
+	if err != nil {
+		t.Fatalf("failed to read platforms.json: %v", err)
+	}
+
+	var pd PlatformsData
+	if err := json.Unmarshal(data, &pd); err != nil {
+		t.Fatalf("failed to unmarshal: %v", err)
+	}
+
+	if len(pd.Platforms) != 1 {
+		t.Fatalf("expected 1 platform, got %d", len(pd.Platforms))
+	}
+	if pd.Platforms[0].Name != "darwin-arm64" {
+		t.Errorf("expected darwin-arm64, got %s", pd.Platforms[0].Name)
+	}
+	if pd.Platforms[0].Display != "macOS arm64" {
+		t.Errorf("expected 'macOS arm64', got %s", pd.Platforms[0].Display)
+	}
+	if pd.Platforms[0].Index != "darwin-arm64/index.json" {
+		t.Errorf("expected 'darwin-arm64/index.json', got %s", pd.Platforms[0].Index)
+	}
+
+	// Second run: add linux-amd64
+	if err := updatePlatformsJSON(tmpDir, "linux-amd64"); err != nil {
+		t.Fatalf("updatePlatformsJSON (second) failed: %v", err)
+	}
+
+	data, err = os.ReadFile(tmpDir + "/platforms.json")
+	if err != nil {
+		t.Fatalf("failed to read platforms.json: %v", err)
+	}
+
+	if err := json.Unmarshal(data, &pd); err != nil {
+		t.Fatalf("failed to unmarshal: %v", err)
+	}
+
+	if len(pd.Platforms) != 2 {
+		t.Fatalf("expected 2 platforms, got %d", len(pd.Platforms))
+	}
+
+	// Should be sorted alphabetically
+	if pd.Platforms[0].Name != "darwin-arm64" {
+		t.Errorf("expected first platform darwin-arm64, got %s", pd.Platforms[0].Name)
+	}
+	if pd.Platforms[1].Name != "linux-amd64" {
+		t.Errorf("expected second platform linux-amd64, got %s", pd.Platforms[1].Name)
+	}
+
+	// Third run: update existing platform (should not duplicate)
+	if err := updatePlatformsJSON(tmpDir, "darwin-arm64"); err != nil {
+		t.Fatalf("updatePlatformsJSON (third) failed: %v", err)
+	}
+
+	data, err = os.ReadFile(tmpDir + "/platforms.json")
+	if err != nil {
+		t.Fatalf("failed to read platforms.json: %v", err)
+	}
+
+	if err := json.Unmarshal(data, &pd); err != nil {
+		t.Fatalf("failed to unmarshal: %v", err)
+	}
+
+	if len(pd.Platforms) != 2 {
+		t.Fatalf("expected 2 platforms after update, got %d", len(pd.Platforms))
+	}
 }
 
 // TestAllBenchmarksWithDescriptionsHaveCategories ensures that every benchmark

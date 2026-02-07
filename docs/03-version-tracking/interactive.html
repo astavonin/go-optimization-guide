@@ -554,15 +554,21 @@
         <div class="controls">
             <div class="control-group">
                 <div class="version-selector">
+                    <label for="platform-selector">Platform</label>
+                    <select id="platform-selector">
+                        <option value="">Loading...</option>
+                    </select>
+                </div>
+                <div class="version-selector">
                     <label for="baseline-version">Baseline Version</label>
                     <select id="baseline-version">
-                        <option value="">Loading...</option>
+                        <option value="">Select platform first...</option>
                     </select>
                 </div>
                 <div class="version-selector">
                     <label for="target-version">Target Version</label>
                     <select id="target-version">
-                        <option value="">Loading...</option>
+                        <option value="">Select platform first...</option>
                     </select>
                 </div>
             </div>
@@ -593,6 +599,8 @@
     </div>
 
     <script>
+        let platformsData = null;
+        let currentPlatform = null;
         let indexData = null;
         let baselineData = null;
         let targetData = null;
@@ -809,20 +817,49 @@
             }
         }
 
-        // Load index.json to get available versions
-        async function loadIndex() {
+        // Load platforms.json and initialize platform selector
+        async function loadPlatforms() {
             try {
-                const response = await fetch('data/index.json');
+                const response = await fetch('data/platforms.json');
+                platformsData = await response.json();
+                populatePlatformSelector();
+            } catch (error) {
+                showError('Failed to load platforms index: ' + error.message);
+            }
+        }
+
+        // Populate platform dropdown
+        function populatePlatformSelector() {
+            const select = document.getElementById('platform-selector');
+            select.innerHTML = '';
+
+            platformsData.platforms.forEach(p => {
+                const option = new Option(p.display, p.name);
+                select.add(option);
+            });
+
+            if (platformsData.platforms.length > 0) {
+                select.value = platformsData.platforms[0].name;
+                loadPlatformIndex(platformsData.platforms[0].name);
+            }
+        }
+
+        // Load index.json for a specific platform
+        async function loadPlatformIndex(platform) {
+            try {
+                currentPlatform = platform;
+                const response = await fetch(`data/${platform}/index.json`);
                 indexData = await response.json();
 
                 // Build benchmark metadata map
+                benchmarkMetadata = {};
                 indexData.benchmarks.forEach(bench => {
                     benchmarkMetadata[bench.name] = bench;
                 });
 
                 populateVersionSelectors();
             } catch (error) {
-                showError('Failed to load version index: ' + error.message);
+                showError('Failed to load version index for ' + platform + ': ' + error.message);
             }
         }
 
@@ -851,7 +888,7 @@
 
         // Load version data
         async function loadVersionData(filename) {
-            const response = await fetch(`data/${filename}`);
+            const response = await fetch(`data/${currentPlatform}/${filename}`);
             return await response.json();
         }
 
@@ -1281,6 +1318,9 @@
         }
 
         // Event listeners
+        document.getElementById('platform-selector').addEventListener('change', function() {
+            loadPlatformIndex(this.value);
+        });
         document.getElementById('baseline-version').addEventListener('change', compareVersions);
         document.getElementById('target-version').addEventListener('change', compareVersions);
 
@@ -1293,7 +1333,7 @@
         });
 
         // Initialize
-        loadIndex();
+        loadPlatforms();
     </script>
 </body>
 </html>

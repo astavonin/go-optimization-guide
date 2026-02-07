@@ -20,10 +20,10 @@ cd perf-tracking
 # 3. Collect benchmarks (runs versions sequentially by default)
 ./tools/collect_benchmarks.py 1.23 1.24 1.25 --progress
 
-# 4. Export to JSON for web UI
+# 4. Export to JSON for web UI (use your platform directory)
 cd tools/benchexport
 go run . --export-all \
-  --results-dir ../../results/stable \
+  --results-dir ../../results/stable/darwin-arm64 \
   --output-dir ../../../docs/03-version-tracking/data
 ```
 
@@ -41,7 +41,7 @@ go run . --export-all \
 
 # Re-run ONLY failed benchmarks from a previous run
 ./tools/collect_benchmarks.py 1.24 \
-  --rerun-failed results/stable/go1.24/2026-01-25_10-00-00_failed_benchmarks.txt \
+  --rerun-failed results/stable/darwin-arm64/go1.24/2026-01-25_10-00-00_failed_benchmarks.txt \
   --rerun-count 50 \
   --max-reruns 3
 
@@ -75,11 +75,26 @@ go run . --export-all \
 ```bash
 cd tools/benchexport
 go run . --export-all \
-  --results-dir ../../results/stable \
+  --results-dir ../../results/stable/darwin-arm64 \
   --output-dir ../../../docs/03-version-tracking/data
 ```
 
-This automatically finds the latest main result file for each Go version (skips retry and failed_benchmarks files) and exports to JSON.
+This automatically finds the latest main result file for each Go version (skips retry and failed_benchmarks files), detects the platform from benchmark metadata (`goos`/`goarch`), and exports to a platform-specific subdirectory:
+
+```
+data/
+├── platforms.json              # Lists all available platforms
+├── darwin-arm64/
+│   ├── index.json              # Version index for this platform
+│   ├── go1.23.json
+│   ├── go1.24.json
+│   └── go1.25.json
+└── linux-amd64/
+    ├── index.json
+    └── ...
+```
+
+Running the tool multiple times for different platforms merges entries into `platforms.json`.
 
 **`benchstat`** - Command-line comparison
 ```bash
@@ -118,13 +133,17 @@ perf-tracking/
 │   ├── go1.24.0/                  # Isolated Go 1.24.0 installation
 │   └── go1.25.0/                  # Isolated Go 1.25.0 installation
 └── results/stable/                # Collected benchmark results
-    ├── go1.23/
-    │   ├── YYYY-MM-DD_HH-MM-SS.txt                  # Main result file (auto-updated with successful retries)
-    │   ├── YYYY-MM-DD_HH-MM-SS_retry1.txt           # Retry attempt 1 results
-    │   ├── YYYY-MM-DD_HH-MM-SS_retry2.txt           # Retry attempt 2 results
-    │   └── YYYY-MM-DD_HH-MM-SS_failed_benchmarks.txt # List of benchmarks that still failed after retries
-    ├── go1.24/
-    ├── go1.25/
+    ├── darwin-arm64/              # Platform: GOOS-GOARCH (auto-detected)
+    │   ├── go1.23/
+    │   │   ├── YYYY-MM-DD_HH-MM-SS.txt                  # Main result file (auto-updated with successful retries)
+    │   │   ├── YYYY-MM-DD_HH-MM-SS_retry1.txt           # Retry attempt 1 results
+    │   │   ├── YYYY-MM-DD_HH-MM-SS_retry2.txt           # Retry attempt 2 results
+    │   │   └── YYYY-MM-DD_HH-MM-SS_failed_benchmarks.txt # List of benchmarks that still failed after retries
+    │   ├── go1.24/
+    │   └── go1.25/
+    ├── linux-amd64/               # Another platform
+    │   ├── go1.23/
+    │   └── ...
     └── collection_progress.json               # Real-time progress tracking
 ```
 
@@ -187,16 +206,16 @@ For high-quality, reliable data:
   --rerun-count 30
 
 # 3. If any benchmarks failed variance checks after retries:
-#    Re-run with higher iteration count
+#    Re-run with higher iteration count (platform dir is auto-detected)
 ./tools/collect_benchmarks.py 1.23 \
-  --rerun-failed results/stable/go1.23/YYYY-MM-DD_failed_benchmarks.txt \
+  --rerun-failed results/stable/darwin-arm64/go1.23/YYYY-MM-DD_failed_benchmarks.txt \
   --rerun-count 100 \
   --max-reruns 3
 
-# 4. Export to JSON
+# 4. Export to JSON (specify the platform directory)
 cd tools/benchexport
 go run . --export-all \
-  --results-dir ../../results/stable \
+  --results-dir ../../results/stable/darwin-arm64 \
   --output-dir ../../../docs/03-version-tracking/data
 ```
 
@@ -221,7 +240,7 @@ If collection completes with high-variance benchmarks (creates `_failed_benchmar
 # Re-run ONLY failed benchmarks with more iterations
 # This is 10-100x faster than re-running entire collection
 ./tools/collect_benchmarks.py 1.24 \
-  --rerun-failed results/stable/go1.24/2026-01-25_10-00-00_failed_benchmarks.txt \
+  --rerun-failed results/stable/darwin-arm64/go1.24/2026-01-25_10-00-00_failed_benchmarks.txt \
   --rerun-count 100 \
   --max-reruns 5 \
   --variance-threshold 10
@@ -284,7 +303,7 @@ Interactive UI for comparing Go versions with category filtering, charts, and va
 ```bash
 cd tools/benchexport
 go run . --export-all \
-  --results-dir ../../results/stable \
+  --results-dir ../../results/stable/darwin-arm64 \
   --output-dir ../../../docs/03-version-tracking/data
 ```
 
@@ -298,6 +317,7 @@ python3 -m http.server 8000
 **Published:** https://goperf.dev/03-version-tracking/interactive.html
 
 **Features:**
+- **Platform selector:** Switch between platforms (e.g., macOS arm64, Linux amd64)
 - **Category filtering:** Filter by Runtime (20), Stdlib (35), or Networking (21)
 - Compare any two Go versions
 - Interactive charts (execution time, memory allocations, performance delta)
@@ -358,7 +378,7 @@ If a `_failed_benchmarks.txt` file is created, re-run with different parameters:
 ```bash
 # Re-run with much higher iteration count
 ./tools/collect_benchmarks.py 1.24 \
-  --rerun-failed results/stable/go1.24/YYYY-MM-DD_failed_benchmarks.txt \
+  --rerun-failed results/stable/darwin-arm64/go1.24/YYYY-MM-DD_failed_benchmarks.txt \
   --rerun-count 100 \
   --max-reruns 3
 
@@ -395,7 +415,7 @@ sudo cpupower frequency-set -g performance
 ```bash
 # If collection creates _failed_benchmarks.txt, re-run with higher iteration count
 ./tools/collect_benchmarks.py 1.24 \
-  --rerun-failed results/stable/go1.24/2026-01-27_15-35-22_failed_benchmarks.txt \
+  --rerun-failed results/stable/darwin-arm64/go1.24/2026-01-27_15-35-22_failed_benchmarks.txt \
   --rerun-count 100 \
   --max-reruns 3
 ```
