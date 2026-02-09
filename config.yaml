@@ -1,0 +1,5 @@
+platform: githab
+
+planning_sync:
+  gdrive_base: ~/GoogleDrive
+
