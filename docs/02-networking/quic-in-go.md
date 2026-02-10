@@ -178,7 +178,7 @@ QUIC supports 0-RTT handshakes, allowing clients to send application data during
 ??? example "Show the complete 0-RTT Server/Client examples"
 	??? example "0-RTT Server"
 	    ```go
-	    {% include "02-networking/src/quic_client.go" %}
+	    {% include "02-networking/src/quic_server.go" %}
 	    ```
 
 	??? example "0-RTT Client"
