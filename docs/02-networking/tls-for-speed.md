@@ -161,7 +161,7 @@ The `MinVersion` setting tells the server to reject older, broken versions of TL
 
 The `CurvePreferences` field prioritizes fast and secure elliptic curves supported by most clients. P-256 and X25519 are efficient, widely-supported, and often hardware-accelerated. P-256 (also known as secp256r1) is an NIST-recommended curve with broad compatibility and native support in most CPUs for fast computation. X25519 is a modern curve designed for both speed and simplicity, offering constant-time operations to resist side-channel attacks, and performs especially well on low-power or embedded devices.
 
-Te rest parts were discussed in details above.
+The rest parts were discussed in details above.
 
 ```go
 tlsConfig := &tls.Config{
