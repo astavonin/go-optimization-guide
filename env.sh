@@ -1,6 +1,13 @@
-python3 -m venv venv
+#!/bin/bash
 
-source ./venv/bin/activate
-export PATH=`pwd`/venv/bin:$PATH
+[ -d venv ] || python3 -m venv venv
 
-pip install mkdocs mkdocs-glightbox mkdocs-material mkdocs-git-revision-date-localized-plugin mkdocs-include-markdown-plugin mkdocs-rss-plugin
+source venv/bin/activate
+
+echo "Upgrading pip:"
+pip install -U pip
+
+echo "Installing dependencies from requirements.txt:"
+pip install -r requirements.txt
+
+echo "Environment ready. You can now run 'mkdocs serve'."
