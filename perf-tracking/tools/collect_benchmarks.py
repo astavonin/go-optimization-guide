@@ -503,35 +503,80 @@ class BenchmarkRunner:
         self.results_dir = self.results_base_dir / platform
         return platform
 
-    def prepare_dependencies(self, version: str) -> bool:
-        """Prepare version-specific go.mod dependencies."""
+    def prepare_dependencies(self, version: str, go_bin: Path) -> bool:
+        """Prepare version-specific go.mod dependencies from template."""
         # Normalize version (e.g., "1.23" -> "1.23.0")
         version_full = version
         if version.count('.') == 1:
             version_full = f"{version}.0"
 
-        cached_gomod = self.benchmarks_dir / f"go.mod.{version_full}"
-        cached_gosum = self.benchmarks_dir / f"go.sum.{version_full}"
-
+        template_gomod = self.benchmarks_dir / "go.mod.template"
         target_gomod = self.benchmarks_dir / "go.mod"
         target_gosum = self.benchmarks_dir / "go.sum"
 
-        # Backup current go.mod
+        # Check if template exists
+        if not template_gomod.exists():
+            print(f"  ✗ Template not found: {template_gomod}")
+            return False
+
+        # Backup current files
         backup_gomod = self.benchmarks_dir / "go.mod.backup"
+        backup_gosum = self.benchmarks_dir / "go.sum.backup"
         if target_gomod.exists():
             shutil.copy(target_gomod, backup_gomod)
+        if target_gosum.exists():
+            shutil.copy(target_gosum, backup_gosum)
 
-        # Use cached version-specific files if available
-        if cached_gomod.exists() and cached_gosum.exists():
-            print(f"  → Using cached dependencies for Go {version_full}")
-            shutil.copy(cached_gomod, target_gomod)
-            shutil.copy(cached_gosum, target_gosum)
-            return True
-        else:
-            print(f"  ✗ Cached go.mod.{version_full} not found")
-            # Restore backup if copy failed
+        try:
+            # Create go.mod from template with correct version
+            print(f"  → Creating go.mod from template for Go {version_full}")
+            with open(template_gomod, 'r') as f:
+                template_content = f.read()
+
+            # Replace version in template (handles both "go 1.23" and "go 1.23.0" formats)
+            import re
+            updated_content = re.sub(r'go \d+\.\d+(?:\.\d+)?', f'go {version_full}', template_content)
+
+            with open(target_gomod, 'w') as f:
+                f.write(updated_content)
+
+            # Run go mod tidy to resolve dependencies
+            print(f"  → Resolving dependencies with Go {version_full}...")
+            env = os.environ.copy()
+            env["GOTOOLCHAIN"] = "local"
+
+            result = subprocess.run(
+                [str(go_bin), "mod", "tidy"],
+                cwd=self.benchmarks_dir,
+                env=env,
+                capture_output=True,
+                text=True
+            )
+
+            if result.returncode == 0:
+                print(f"  ✓ Dependencies resolved successfully")
+                # Clean up backups
+                if backup_gomod.exists():
+                    backup_gomod.unlink()
+                if backup_gosum.exists():
+                    backup_gosum.unlink()
+                return True
+            else:
+                print(f"  ✗ Failed to resolve dependencies: {result.stderr}")
+                # Restore backups
+                if backup_gomod.exists():
+                    shutil.copy(backup_gomod, target_gomod)
+                if backup_gosum.exists():
+                    shutil.copy(backup_gosum, target_gosum)
+                return False
+
+        except Exception as e:
+            print(f"  ✗ Error preparing dependencies: {e}")
+            # Restore backups on any error
             if backup_gomod.exists():
                 shutil.copy(backup_gomod, target_gomod)
+            if backup_gosum.exists():
+                shutil.copy(backup_gosum, target_gosum)
             return False
 
     def run_system_check(self, skip: bool = False) -> bool:
@@ -1343,7 +1388,7 @@ Examples:
 
             # Prepare dependencies
             print(f"\nPreparing dependencies for Go {version}...")
-            if not runner.prepare_dependencies(version):
+            if not runner.prepare_dependencies(version, go_bin):
                 print(f"⚠ Failed to prepare dependencies for Go {version}, using existing go.mod")
 
             # Derive original output file and convert to absolute path
@@ -1435,7 +1480,7 @@ Examples:
 
             # Prepare version-specific dependencies
             print(f"\nPreparing dependencies for Go {version}...")
-            if not runner.prepare_dependencies(version):
+            if not runner.prepare_dependencies(version, go_bin):
                 print(f"⚠ Failed to prepare dependencies for Go {version}, using existing go.mod")
 
             # Warmup

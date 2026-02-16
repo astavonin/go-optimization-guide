@@ -1,4 +1,4 @@
-platform: githab
+platform: github
 
 planning_sync:
   gdrive_base: ~/GoogleDrive
