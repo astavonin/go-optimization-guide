@@ -21,457 +21,533 @@
       "name": "BenchmarkAESCTR/Size1KB",
       "description": "AES-CTR mode encryption throughput",
       "source_file": "perf-tracking/benchmarks/stdlib/stdlib_test.go",
-      "category": "stdlib"
+      "category": "stdlib",
+      "reliability": "reliable"
     },
     {
       "name": "BenchmarkAESCTR/Size1MB",
       "description": "AES-CTR mode encryption throughput",
       "source_file": "perf-tracking/benchmarks/stdlib/stdlib_test.go",
-      "category": "stdlib"
+      "category": "stdlib",
+      "reliability": "reliable"
     },
     {
       "name": "BenchmarkAESCTR/Size64KB",
       "description": "AES-CTR mode encryption throughput",
       "source_file": "perf-tracking/benchmarks/stdlib/stdlib_test.go",
-      "category": "stdlib"
+      "category": "stdlib",
+      "reliability": "reliable"
     },
     {
       "name": "BenchmarkAESGCM/Size16KB",
       "description": "AES-GCM authenticated encryption throughput",
       "source_file": "perf-tracking/benchmarks/stdlib/stdlib_test.go",
-      "category": "stdlib"
+      "category": "stdlib",
+      "reliability": "reliable"
     },
     {
       "name": "BenchmarkAESGCM/Size1KB",
       "description": "AES-GCM authenticated encryption throughput",
       "source_file": "perf-tracking/benchmarks/stdlib/stdlib_test.go",
-      "category": "stdlib"
+      "category": "stdlib",
+      "reliability": "reliable"
     },
     {
       "name": "BenchmarkAESGCM/Size64",
       "description": "AES-GCM authenticated encryption throughput",
       "source_file": "perf-tracking/benchmarks/stdlib/stdlib_test.go",
-      "category": "stdlib"
+      "category": "stdlib",
+      "reliability": "reliable"
     },
     {
       "name": "BenchmarkBinaryEncode/Append",
       "description": "Binary encoding methods (encoding/binary)",
       "source_file": "perf-tracking/benchmarks/stdlib/stdlib_test.go",
-      "category": "stdlib"
+      "category": "stdlib",
+      "reliability": "reliable"
     },
     {
       "name": "BenchmarkBinaryEncode/Encode",
       "description": "Binary encoding methods (encoding/binary)",
       "source_file": "perf-tracking/benchmarks/stdlib/stdlib_test.go",
-      "category": "stdlib"
+      "category": "stdlib",
+      "reliability": "reliable"
     },
     {
       "name": "BenchmarkBinaryEncode/LegacyWrite",
       "description": "Binary encoding methods (encoding/binary)",
       "source_file": "perf-tracking/benchmarks/stdlib/stdlib_test.go",
-      "category": "stdlib"
+      "category": "stdlib",
+      "reliability": "reliable"
     },
     {
       "name": "BenchmarkBufferedIO/Reader",
       "description": "Buffered I/O reader/writer performance",
       "source_file": "perf-tracking/benchmarks/stdlib/stdlib_test.go",
-      "category": "stdlib"
+      "category": "stdlib",
+      "reliability": "reliable"
     },
     {
       "name": "BenchmarkBufferedIO/Writer",
       "description": "Buffered I/O reader/writer performance",
       "source_file": "perf-tracking/benchmarks/stdlib/stdlib_test.go",
-      "category": "stdlib"
+      "category": "stdlib",
+      "reliability": "reliable"
     },
     {
       "name": "BenchmarkCRC32/Castagnoli",
       "description": "CRC32 checksum calculation (IEEE, Castagnoli)",
       "source_file": "perf-tracking/benchmarks/stdlib/stdlib_test.go",
-      "category": "stdlib"
+      "category": "stdlib",
+      "reliability": "reliable"
     },
     {
       "name": "BenchmarkCRC32/IEEE",
       "description": "CRC32 checksum calculation (IEEE, Castagnoli)",
       "source_file": "perf-tracking/benchmarks/stdlib/stdlib_test.go",
-      "category": "stdlib"
+      "category": "stdlib",
+      "reliability": "reliable"
     },
     {
       "name": "BenchmarkConnectionPool/ColdPool",
       "description": "Connection pool lifecycle and reuse",
       "source_file": "perf-tracking/benchmarks/networking/networking_test.go",
-      "category": "networking"
+      "category": "networking",
+      "reliability": "reliable"
     },
     {
       "name": "BenchmarkConnectionPool/WarmPool",
       "description": "Connection pool lifecycle and reuse",
       "source_file": "perf-tracking/benchmarks/networking/networking_test.go",
-      "category": "networking"
+      "category": "networking",
+      "reliability": "reliable"
     },
     {
       "name": "BenchmarkConnectionPool/WarmPool_Parallel",
       "description": "Connection pool lifecycle and reuse",
       "source_file": "perf-tracking/benchmarks/networking/networking_test.go",
-      "category": "networking"
+      "category": "networking",
+      "reliability": "reliable"
     },
     {
       "name": "BenchmarkFNVHash/FNV1a_128",
       "description": "FNV-1a hash function performance",
       "source_file": "perf-tracking/benchmarks/stdlib/stdlib_test.go",
-      "category": "stdlib"
+      "category": "stdlib",
+      "reliability": "reliable"
     },
     {
       "name": "BenchmarkFNVHash/FNV1a_64",
       "description": "FNV-1a hash function performance",
       "source_file": "perf-tracking/benchmarks/stdlib/stdlib_test.go",
-      "category": "stdlib"
+      "category": "stdlib",
+      "reliability": "reliable"
     },
     {
       "name": "BenchmarkGCLatency",
       "description": "Average GC pause latency",
       "source_file": "perf-tracking/benchmarks/runtime/gc_test.go",
-      "category": "runtime"
+      "category": "runtime",
+      "reliability": "reliable"
     },
     {
       "name": "BenchmarkGCMixedWorkload",
       "description": "GC performance with mixed allocation patterns",
       "source_file": "perf-tracking/benchmarks/runtime/gc_test.go",
-      "category": "runtime"
+      "category": "runtime",
+      "reliability": "reliable"
     },
     {
       "name": "BenchmarkGCSmallObjects",
       "description": "GC performance with many small objects",
       "source_file": "perf-tracking/benchmarks/runtime/gc_test.go",
-      "category": "runtime"
+      "category": "runtime",
+      "reliability": "reliable"
     },
     {
       "name": "BenchmarkGCThroughput",
       "description": "GC throughput with mixed allocation patterns",
       "source_file": "perf-tracking/benchmarks/runtime/gc_test.go",
-      "category": "runtime"
+      "category": "runtime",
+      "reliability": "reliable"
     },
     {
       "name": "BenchmarkGoroutineCreate",
       "description": "Goroutine creation and initialization",
       "source_file": "perf-tracking/benchmarks/runtime/gc_test.go",
-      "category": "runtime"
+      "category": "runtime",
+      "reliability": "reliable"
     },
     {
       "name": "BenchmarkHTTP2/Parallel_10",
       "description": "HTTP/2 request handling (sequential/parallel)",
       "source_file": "perf-tracking/benchmarks/networking/networking_test.go",
-      "category": "networking"
+      "category": "networking",
+      "reliability": "reliable"
     },
     {
       "name": "BenchmarkHTTP2/Parallel_30",
       "description": "HTTP/2 request handling (sequential/parallel)",
       "source_file": "perf-tracking/benchmarks/networking/networking_test.go",
-      "category": "networking"
+      "category": "networking",
+      "reliability": "reliable"
     },
     {
       "name": "BenchmarkHTTP2/Sequential",
       "description": "HTTP/2 request handling (sequential/parallel)",
       "source_file": "perf-tracking/benchmarks/networking/networking_test.go",
-      "category": "networking"
+      "category": "networking",
+      "reliability": "reliable"
     },
     {
       "name": "BenchmarkHTTPRequest/GET_Small",
       "description": "HTTP/1.1 request latency (GET/POST)",
       "source_file": "perf-tracking/benchmarks/networking/networking_test.go",
-      "category": "networking"
+      "category": "networking",
+      "reliability": "reliable"
     },
     {
       "name": "BenchmarkHTTPRequest/POST_1KB",
       "description": "HTTP/1.1 request latency (GET/POST)",
       "source_file": "perf-tracking/benchmarks/networking/networking_test.go",
-      "category": "networking"
+      "category": "networking",
+      "reliability": "reliable"
     },
     {
       "name": "BenchmarkIOReadAll/Size1KB",
       "description": "io.ReadAll buffer reading performance",
       "source_file": "perf-tracking/benchmarks/stdlib/stdlib_test.go",
-      "category": "stdlib"
+      "category": "stdlib",
+      "reliability": "reliable"
     },
     {
       "name": "BenchmarkIOReadAll/Size1MB",
       "description": "io.ReadAll buffer reading performance",
       "source_file": "perf-tracking/benchmarks/stdlib/stdlib_test.go",
-      "category": "stdlib"
+      "category": "stdlib",
+      "reliability": "reliable"
     },
     {
       "name": "BenchmarkIOReadAll/Size64KB",
       "description": "io.ReadAll buffer reading performance",
       "source_file": "perf-tracking/benchmarks/stdlib/stdlib_test.go",
-      "category": "stdlib"
+      "category": "stdlib",
+      "reliability": "reliable"
     },
     {
       "name": "BenchmarkJSONDecode/Large",
       "description": "JSON decoding into Go structs",
       "source_file": "perf-tracking/benchmarks/stdlib/stdlib_test.go",
-      "category": "stdlib"
+      "category": "stdlib",
+      "reliability": "reliable"
     },
     {
       "name": "BenchmarkJSONDecode/Medium",
       "description": "JSON decoding into Go structs",
       "source_file": "perf-tracking/benchmarks/stdlib/stdlib_test.go",
-      "category": "stdlib"
+      "category": "stdlib",
+      "reliability": "reliable"
     },
     {
       "name": "BenchmarkJSONDecode/Small",
       "description": "JSON decoding into Go structs",
       "source_file": "perf-tracking/benchmarks/stdlib/stdlib_test.go",
-      "category": "stdlib"
+      "category": "stdlib",
+      "reliability": "reliable"
     },
     {
       "name": "BenchmarkJSONEncode/Small",
       "description": "JSON encoding of structured data",
       "source_file": "perf-tracking/benchmarks/stdlib/stdlib_test.go",
-      "category": "stdlib"
+      "category": "stdlib",
+      "reliability": "reliable"
     },
     {
       "name": "BenchmarkJSONEncode/WithEscaping",
       "description": "JSON encoding of structured data",
       "source_file": "perf-tracking/benchmarks/stdlib/stdlib_test.go",
-      "category": "stdlib"
+      "category": "stdlib",
+      "reliability": "reliable"
     },
     {
       "name": "BenchmarkMutexContention",
       "description": "Mutex contention under concurrent load",
       "source_file": "perf-tracking/benchmarks/runtime/gc_test.go",
-      "category": "runtime"
+      "category": "runtime",
+      "reliability": "reliable"
     },
     {
       "name": "BenchmarkRSAKeyGen/Bits2048",
       "description": "RSA key generation performance",
       "source_file": "perf-tracking/benchmarks/stdlib/stdlib_test.go",
-      "category": "stdlib"
+      "category": "stdlib",
+      "reliability": "noisy"
     },
     {
       "name": "BenchmarkRSAKeyGen/Bits4096",
       "description": "RSA key generation performance",
       "source_file": "perf-tracking/benchmarks/stdlib/stdlib_test.go",
-      "category": "stdlib"
+      "category": "stdlib",
+      "reliability": "unstable"
     },
     {
       "name": "BenchmarkRegexp/Compile/Email",
       "description": "Regular expression matching and compilation",
       "source_file": "perf-tracking/benchmarks/stdlib/stdlib_test.go",
-      "category": "stdlib"
+      "category": "stdlib",
+      "reliability": "reliable"
     },
     {
       "name": "BenchmarkRegexp/Compile/IPv4",
       "description": "Regular expression matching and compilation",
       "source_file": "perf-tracking/benchmarks/stdlib/stdlib_test.go",
-      "category": "stdlib"
+      "category": "stdlib",
+      "reliability": "reliable"
     },
     {
       "name": "BenchmarkRegexp/Compile/LogLine",
       "description": "Regular expression matching and compilation",
       "source_file": "perf-tracking/benchmarks/stdlib/stdlib_test.go",
-      "category": "stdlib"
+      "category": "stdlib",
+      "reliability": "reliable"
     },
     {
       "name": "BenchmarkRegexp/Match/Email",
       "description": "Regular expression matching and compilation",
       "source_file": "perf-tracking/benchmarks/stdlib/stdlib_test.go",
-      "category": "stdlib"
+      "category": "stdlib",
+      "reliability": "reliable"
     },
     {
       "name": "BenchmarkRegexp/Match/IPv4",
       "description": "Regular expression matching and compilation",
       "source_file": "perf-tracking/benchmarks/stdlib/stdlib_test.go",
-      "category": "stdlib"
+      "category": "stdlib",
+      "reliability": "reliable"
     },
     {
       "name": "BenchmarkRegexp/Match/LogLine",
       "description": "Regular expression matching and compilation",
       "source_file": "perf-tracking/benchmarks/stdlib/stdlib_test.go",
-      "category": "stdlib"
+      "category": "stdlib",
+      "reliability": "reliable"
     },
     {
       "name": "BenchmarkSHA/SHA1",
       "description": "SHA hashing throughput (SHA-1, SHA-256, SHA-512, SHA3)",
       "source_file": "perf-tracking/benchmarks/stdlib/stdlib_test.go",
-      "category": "stdlib"
+      "category": "stdlib",
+      "reliability": "reliable"
     },
     {
       "name": "BenchmarkSHA/SHA256",
       "description": "SHA hashing throughput (SHA-1, SHA-256, SHA-512, SHA3)",
       "source_file": "perf-tracking/benchmarks/stdlib/stdlib_test.go",
-      "category": "stdlib"
+      "category": "stdlib",
+      "reliability": "reliable"
     },
     {
       "name": "BenchmarkSHA/SHA3_256",
       "description": "SHA hashing throughput (SHA-1, SHA-256, SHA-512, SHA3)",
       "source_file": "perf-tracking/benchmarks/stdlib/stdlib_test.go",
-      "category": "stdlib"
+      "category": "stdlib",
+      "reliability": "reliable"
     },
     {
       "name": "BenchmarkSHA/SHA512",
       "description": "SHA hashing throughput (SHA-1, SHA-256, SHA-512, SHA3)",
       "source_file": "perf-tracking/benchmarks/stdlib/stdlib_test.go",
-      "category": "stdlib"
+      "category": "stdlib",
+      "reliability": "reliable"
     },
     {
       "name": "BenchmarkSmallAllocSpecialized/Size128",
       "description": "Specialized small allocations (32-512 bytes)",
       "source_file": "perf-tracking/benchmarks/runtime/gc_test.go",
-      "category": "runtime"
+      "category": "runtime",
+      "reliability": "reliable"
     },
     {
       "name": "BenchmarkSmallAllocSpecialized/Size256",
       "description": "Specialized small allocations (32-512 bytes)",
       "source_file": "perf-tracking/benchmarks/runtime/gc_test.go",
-      "category": "runtime"
+      "category": "runtime",
+      "reliability": "reliable"
     },
     {
       "name": "BenchmarkSmallAllocSpecialized/Size32",
       "description": "Specialized small allocations (32-512 bytes)",
       "source_file": "perf-tracking/benchmarks/runtime/gc_test.go",
-      "category": "runtime"
+      "category": "runtime",
+      "reliability": "reliable"
     },
     {
       "name": "BenchmarkSmallAllocSpecialized/Size512",
       "description": "Specialized small allocations (32-512 bytes)",
       "source_file": "perf-tracking/benchmarks/runtime/gc_test.go",
-      "category": "runtime"
+      "category": "runtime",
+      "reliability": "reliable"
     },
     {
       "name": "BenchmarkSmallAllocSpecialized/Size64",
       "description": "Specialized small allocations (32-512 bytes)",
       "source_file": "perf-tracking/benchmarks/runtime/gc_test.go",
-      "category": "runtime"
+      "category": "runtime",
+      "reliability": "reliable"
     },
     {
       "name": "BenchmarkStackGrowth",
       "description": "Stack growth and shrinking performance",
       "source_file": "perf-tracking/benchmarks/runtime/gc_test.go",
-      "category": "runtime"
+      "category": "runtime",
+      "reliability": "reliable"
     },
     {
       "name": "BenchmarkSwissMapIteration/Size100",
       "description": "Swiss map iteration performance (Go 1.24+)",
       "source_file": "perf-tracking/benchmarks/runtime/gc_test.go",
-      "category": "runtime"
+      "category": "runtime",
+      "reliability": "reliable"
     },
     {
       "name": "BenchmarkSwissMapIteration/Size1000",
       "description": "Swiss map iteration performance (Go 1.24+)",
       "source_file": "perf-tracking/benchmarks/runtime/gc_test.go",
-      "category": "runtime"
+      "category": "runtime",
+      "reliability": "reliable"
     },
     {
       "name": "BenchmarkSwissMapIteration/Size10000",
       "description": "Swiss map iteration performance (Go 1.24+)",
       "source_file": "perf-tracking/benchmarks/runtime/gc_test.go",
-      "category": "runtime"
+      "category": "runtime",
+      "reliability": "reliable"
     },
     {
       "name": "BenchmarkSwissMapLarge",
       "description": "Large Swiss map operations (Go 1.24+)",
       "source_file": "perf-tracking/benchmarks/runtime/gc_test.go",
-      "category": "runtime"
+      "category": "runtime",
+      "reliability": "noisy"
     },
     {
       "name": "BenchmarkSwissMapPresized/GrowAsNeeded",
       "description": "Swiss map with presizing comparison (Go 1.24+)",
       "source_file": "perf-tracking/benchmarks/runtime/gc_test.go",
-      "category": "runtime"
+      "category": "runtime",
+      "reliability": "reliable"
     },
     {
       "name": "BenchmarkSwissMapPresized/Presized",
       "description": "Swiss map with presizing comparison (Go 1.24+)",
       "source_file": "perf-tracking/benchmarks/runtime/gc_test.go",
-      "category": "runtime"
+      "category": "runtime",
+      "reliability": "reliable"
     },
     {
       "name": "BenchmarkSyncMap/Parallel",
       "description": "sync.Map concurrent access patterns",
       "source_file": "perf-tracking/benchmarks/runtime/gc_test.go",
-      "category": "runtime"
+      "category": "runtime",
+      "reliability": "reliable"
     },
     {
       "name": "BenchmarkSyncMap/SingleThreaded",
       "description": "sync.Map concurrent access patterns",
       "source_file": "perf-tracking/benchmarks/runtime/gc_test.go",
-      "category": "runtime"
+      "category": "runtime",
+      "reliability": "reliable"
     },
     {
       "name": "BenchmarkTCPConnect/Parallel",
       "description": "TCP connection establishment time",
       "source_file": "perf-tracking/benchmarks/networking/networking_test.go",
-      "category": "networking"
+      "category": "networking",
+      "reliability": "reliable"
     },
     {
       "name": "BenchmarkTCPConnect/Sequential",
       "description": "TCP connection establishment time",
       "source_file": "perf-tracking/benchmarks/networking/networking_test.go",
-      "category": "networking"
+      "category": "networking",
+      "reliability": "reliable"
     },
     {
       "name": "BenchmarkTCPKeepAlive/Default",
       "description": "TCP keep-alive behavior and configuration",
       "source_file": "perf-tracking/benchmarks/networking/networking_test.go",
-      "category": "networking"
+      "category": "networking",
+      "reliability": "reliable"
     },
     {
       "name": "BenchmarkTCPKeepAlive/WithConfig",
       "description": "TCP keep-alive behavior and configuration",
       "source_file": "perf-tracking/benchmarks/networking/networking_test.go",
-      "category": "networking"
+      "category": "networking",
+      "reliability": "reliable"
     },
     {
       "name": "BenchmarkTCPThroughput/1KB",
       "description": "TCP data transfer throughput",
       "source_file": "perf-tracking/benchmarks/networking/networking_test.go",
-      "category": "networking"
+      "category": "networking",
+      "reliability": "reliable"
     },
     {
       "name": "BenchmarkTCPThroughput/1MB",
       "description": "TCP data transfer throughput",
       "source_file": "perf-tracking/benchmarks/networking/networking_test.go",
-      "category": "networking"
+      "category": "networking",
+      "reliability": "reliable"
     },
     {
       "name": "BenchmarkTCPThroughput/64KB",
       "description": "TCP data transfer throughput",
       "source_file": "perf-tracking/benchmarks/networking/networking_test.go",
-      "category": "networking"
+      "category": "networking",
+      "reliability": "reliable"
     },
     {
       "name": "BenchmarkTLSHandshake/TLS12",
       "description": "TLS 1.3 handshake performance",
       "source_file": "perf-tracking/benchmarks/networking/networking_test.go",
-      "category": "networking"
+      "category": "networking",
+      "reliability": "reliable"
     },
     {
       "name": "BenchmarkTLSHandshake/TLS13",
       "description": "TLS 1.3 handshake performance",
       "source_file": "perf-tracking/benchmarks/networking/networking_test.go",
-      "category": "networking"
+      "category": "networking",
+      "reliability": "reliable"
     },
     {
       "name": "BenchmarkTLSHandshake/TLS13_ECDHE",
       "description": "TLS 1.3 handshake performance",
       "source_file": "perf-tracking/benchmarks/networking/networking_test.go",
-      "category": "networking"
+      "category": "networking",
+      "reliability": "reliable"
     },
     {
       "name": "BenchmarkTLSResume/FullHandshake",
       "description": "TLS session resumption",
       "source_file": "perf-tracking/benchmarks/networking/networking_test.go",
-      "category": "networking"
+      "category": "networking",
+      "reliability": "reliable"
     },
     {
       "name": "BenchmarkTLSThroughput/1KB",
       "description": "TLS encrypted data transfer throughput",
       "source_file": "perf-tracking/benchmarks/networking/networking_test.go",
-      "category": "networking"
+      "category": "networking",
+      "reliability": "reliable"
     },
     {
       "name": "BenchmarkTLSThroughput/64KB",
       "description": "TLS encrypted data transfer throughput",
       "source_file": "perf-tracking/benchmarks/networking/networking_test.go",
-      "category": "networking"
+      "category": "networking",
+      "reliability": "reliable"
     }
   ],
   "repository": {

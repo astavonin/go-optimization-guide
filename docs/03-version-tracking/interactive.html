@@ -378,6 +378,38 @@
             color: #721c24;
         }
 
+        .reliability-badge {
+            display: inline-block;
+            padding: 2px 6px;
+            border-radius: 3px;
+            font-size: 0.7em;
+            font-weight: 600;
+            margin-left: 6px;
+            vertical-align: middle;
+            cursor: help;
+        }
+        .reliability-noisy {
+            background: #fff3cd;
+            color: #856404;
+            border: 1px solid #ffc107;
+        }
+        .reliability-unstable {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #dc3545;
+        }
+
+        [data-md-color-scheme="slate"] .reliability-noisy {
+            background: #3d2f00;
+            color: #ffd96e;
+            border-color: #ffc107;
+        }
+        [data-md-color-scheme="slate"] .reliability-unstable {
+            background: #3d0009;
+            color: #ff8a94;
+            border-color: #dc3545;
+        }
+
         /* Mobile Responsiveness */
         @media (max-width: 768px) {
             .container {
@@ -1007,6 +1039,17 @@
             }
         }
 
+        // Get reliability badge for a benchmark based on its max CV across versions.
+        // Returns empty string for reliable benchmarks (no badge shown).
+        function getReliabilityBadge(benchmarkName) {
+            const metadata = benchmarkMetadata[benchmarkName];
+            if (!metadata || !metadata.reliability || metadata.reliability === 'reliable') return '';
+            if (metadata.reliability === 'unstable') {
+                return `<span class="reliability-badge reliability-unstable" title="Unstable: CV ≥ 15% — high variance, not suitable for direct comparison">⚠ Unstable</span>`;
+            }
+            return `<span class="reliability-badge reliability-noisy" title="Noisy: CV 5–15% — environment-sensitive, results may vary with system state">~ Noisy</span>`;
+        }
+
         // Render a single benchmark row
         function renderBenchmarkRow(name) {
             const baseline = baselineData.benchmarks[name];
@@ -1026,7 +1069,7 @@
 
             return `
                 <tr>
-                    <td>${benchmarkCell}</td>
+                    <td>${benchmarkCell}${getReliabilityBadge(name)}</td>
                     <td>${formatDelta(timeDelta)}</td>
                     <td>${baseline.ns_per_op.toFixed(2)} ns/op</td>
                     <td>${target.ns_per_op.toFixed(2)} ns/op</td>

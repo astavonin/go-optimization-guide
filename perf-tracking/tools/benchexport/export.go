@@ -518,6 +518,7 @@ type BenchmarkInfo struct {
 	Description string `json:"description"`
 	SourceFile  string `json:"source_file"`
 	Category    string `json:"category"`
+	Reliability string `json:"reliability"` // "reliable", "noisy", or "unstable"
 }
 
 // PlatformsData represents the top-level platforms.json file
@@ -555,6 +556,23 @@ func platformDisplayName(platform string) string {
 	return osName + " " + arch
 }
 
+// getReliability classifies a benchmark based on its max coefficient of variation
+// observed across all exported versions.
+//
+//	reliable: CV < 5%   — trustworthy for comparison
+//	noisy:    5% ≤ CV < 15% — environment-sensitive
+//	unstable: CV ≥ 15%  — high variance, not suitable for direct comparison
+func getReliability(maxCV float64) string {
+	switch {
+	case maxCV >= 0.15:
+		return "unstable"
+	case maxCV >= 0.05:
+		return "noisy"
+	default:
+		return "reliable"
+	}
+}
+
 // exportAll exports all versions found in the results directory
 func exportAll(resultsDir, outputDir string) error {
 	fmt.Println("=== Exporting All Versions ===")
@@ -567,6 +585,7 @@ func exportAll(resultsDir, outputDir string) error {
 
 	var versions []VersionInfo
 	benchmarkNames := make(map[string]bool)
+	benchmarkMaxCV := map[string]float64{}
 	var platform string
 
 	for _, entry := range entries {
@@ -609,6 +628,40 @@ func exportAll(resultsDir, outputDir string) error {
 
 		latestFile := mainFiles[0]
 
+		// Compute inter-run CV across all main files for this version.
+		// This catches benchmarks that appear stable within a single run
+		// (low within-run CV) but differ significantly between runs.
+		if len(mainFiles) > 1 {
+			interRunMeans := map[string][]float64{}
+			for _, f := range mainFiles {
+				fd, err := parseBenchmarkFile(f, version)
+				if err != nil {
+					continue
+				}
+				for name, bench := range fd.Benchmarks {
+					interRunMeans[name] = append(interRunMeans[name], bench.NsPerOp)
+				}
+			}
+			for name, means := range interRunMeans {
+				if len(means) < 2 {
+					continue
+				}
+				mean := 0.0
+				for _, m := range means {
+					mean += m
+				}
+				mean /= float64(len(means))
+				variance := 0.0
+				for _, m := range means {
+					variance += (m - mean) * (m - mean)
+				}
+				cv := math.Sqrt(variance/float64(len(means)-1)) / mean
+				if cv > benchmarkMaxCV[name] {
+					benchmarkMaxCV[name] = cv
+				}
+			}
+		}
+
 		// Detect platform from the first version file if not yet determined
 		if platform == "" {
 			probeData, probeErr := parseBenchmarkFile(latestFile, version)
@@ -637,9 +690,12 @@ func exportAll(resultsDir, outputDir string) error {
 				CollectedAt: versionData.Metadata.CollectedAt,
 			})
 
-			// Collect benchmark names
-			for name := range versionData.Benchmarks {
+			// Collect benchmark names and track max CV across versions
+			for name, bench := range versionData.Benchmarks {
 				benchmarkNames[name] = true
+				if bench.NsPerOpVariance > benchmarkMaxCV[name] {
+					benchmarkMaxCV[name] = bench.NsPerOpVariance
+				}
 			}
 		}
 	}
@@ -656,6 +712,7 @@ func exportAll(resultsDir, outputDir string) error {
 			Description: getBenchmarkDescription(name),
 			SourceFile:  getBenchmarkSourceFile(name),
 			Category:    getBenchmarkCategory(name),
+			Reliability: getReliability(benchmarkMaxCV[name]),
 		})
 	}
 	sort.Slice(benchmarks, func(i, j int) bool {
