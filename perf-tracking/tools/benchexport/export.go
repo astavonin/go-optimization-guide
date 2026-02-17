@@ -515,11 +515,12 @@ type VersionInfo struct {
 }
 
 type BenchmarkInfo struct {
-	Name        string `json:"name"`
-	Description string `json:"description"`
-	SourceFile  string `json:"source_file"`
-	Category    string `json:"category"`
-	Reliability string `json:"reliability"` // "reliable", "noisy", or "unstable"
+	Name        string  `json:"name"`
+	Description string  `json:"description"`
+	SourceFile  string  `json:"source_file"`
+	Category    string  `json:"category"`
+	Reliability string  `json:"reliability"` // "reliable", "noisy", or "unstable"
+	MaxCV       float64 `json:"max_cv"`       // maximum coefficient of variation observed across all exported versions
 }
 
 // PlatformsData represents the top-level platforms.json file
@@ -577,7 +578,9 @@ func getReliability(maxCV float64) string {
 // exportAll exports all versions found in the results directory, then rebuilds
 // the index from all go*.json files present in the output platform directory.
 // This makes every export additive: pre-existing version files are never dropped.
-func exportAll(resultsDir, outputDir string) error {
+// defaultPlatform is used when the platform cannot be auto-detected from the
+// benchmark files (e.g. files lack OS/arch metadata).
+func exportAll(resultsDir, outputDir, defaultPlatform string) error {
 	fmt.Println("=== Exporting All Versions ===")
 
 	entries, err := os.ReadDir(resultsDir)
@@ -697,7 +700,8 @@ func exportAll(resultsDir, outputDir string) error {
 	}
 
 	if platform == "" {
-		return fmt.Errorf("could not detect platform from benchmark files")
+		platform = defaultPlatform
+		fmt.Printf("  Platform not detected from files; using default: %s\n", platform)
 	}
 
 	// Phase 2: rebuild index from ALL go*.json files in the platform output
@@ -855,6 +859,7 @@ func rebuildIndex(platformDir, outputDir, platform string) error {
 			SourceFile:  getBenchmarkSourceFile(name),
 			Category:    getBenchmarkCategory(name),
 			Reliability: getReliability(benchmarkMaxCV[name]),
+			MaxCV:       benchmarkMaxCV[name],
 		})
 	}
 	sort.Slice(benchmarks, func(i, j int) bool {

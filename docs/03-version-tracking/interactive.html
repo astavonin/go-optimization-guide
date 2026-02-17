@@ -1011,9 +1011,11 @@
             return `${url}/${source_path}/${sourceFile}#:~:text=${searchText}`;
         }
 
-        // Format delta with clear color coding
-        // Negative % = improvement (green), Positive % = regression (red)
-        function formatDelta(value) {
+        // Format delta with clear color coding.
+        // Negative % = improvement (green), Positive % = regression (red).
+        // maxCV (optional): the benchmark's max historical coefficient of variation (0–1).
+        // When provided, a tooltip clarifies whether the delta is likely real or within noise.
+        function formatDelta(value, maxCV) {
             if (!Number.isFinite(value)) {
                 const symbol = value > 0 ? '+∞' : '-∞';
                 const className = value > 0 ? 'delta-negative' : 'delta-positive';
@@ -1024,30 +1026,65 @@
             }
             const sign = value > 0 ? '+' : '';
             const className = value < 0 ? 'delta-positive' : 'delta-negative';
-            return `<span class="${className}">${sign}${value.toFixed(2)}%</span>`;
+
+            let title = '';
+            if (maxCV != null && maxCV > 0) {
+                const noiseFloorPct = (maxCV * 100).toFixed(1);
+                if (Math.abs(value) < maxCV * 100) {
+                    title = ` title="Within historical noise margin (max CV ±${noiseFloorPct}%) — may not be a real change"`;
+                } else {
+                    title = ` title="Exceeds noise floor of ±${noiseFloorPct}% — likely a real change"`;
+                }
+            }
+
+            return `<span class="${className}"${title}>${sign}${value.toFixed(2)}%</span>`;
         }
 
-        // Get variance badge
-        function getVarianceBadge(variance) {
-            const percent = variance * 100;
-            if (percent < 5) {
-                return `<span class="variance-badge variance-low">±${percent.toFixed(1)}%</span>`;
-            } else if (percent < 10) {
-                return `<span class="variance-badge variance-medium">±${percent.toFixed(1)}%</span>`;
+        // Get variance badge showing within-run CV for both versions in the comparison.
+        // When baseline and target CV differ by more than 0.5%, both are shown as
+        // "±base% → ±target%" so the source of any Noisy/Unstable badge is obvious.
+        // Badge color is driven by the higher of the two values.
+        function getVarianceBadge(baselineVariance, targetVariance) {
+            const basePct  = (baselineVariance || 0) * 100;
+            const targPct  = (targetVariance  || 0) * 100;
+            const maxPct   = Math.max(basePct, targPct);
+            const title    = `title="Within-run CV — baseline: ±${basePct.toFixed(1)}%, target: ±${targPct.toFixed(1)}%"`;
+
+            const label = (Math.abs(basePct - targPct) >= 0.5)
+                ? `±${basePct.toFixed(1)}% → ±${targPct.toFixed(1)}%`
+                : `±${targPct.toFixed(1)}%`;
+
+            if (maxPct >= 10) {
+                return `<span class="variance-badge variance-high" ${title}>${label}</span>`;
+            } else if (maxPct >= 5) {
+                return `<span class="variance-badge variance-medium" ${title}>${label}</span>`;
             } else {
-                return `<span class="variance-badge variance-high">±${percent.toFixed(1)}%</span>`;
+                return `<span class="variance-badge variance-low" ${title}>${label}</span>`;
             }
         }
 
-        // Get reliability badge for a benchmark based on its max CV across versions.
-        // Returns empty string for reliable benchmarks (no badge shown).
-        function getReliabilityBadge(benchmarkName) {
+        // Get reliability badge based on the variance of the two versions being compared.
+        // baselineVariance and targetVariance are the ns_per_op_variance values (0–1) for
+        // each version; the badge reflects max(baseline, target) so it is specific to this
+        // comparison pair rather than a static global label.
+        // Returns empty string when both versions are reliable for this comparison.
+        function getReliabilityBadge(benchmarkName, baselineVariance, targetVariance) {
+            const compCV = Math.max(baselineVariance || 0, targetVariance || 0);
             const metadata = benchmarkMetadata[benchmarkName];
-            if (!metadata || !metadata.reliability || metadata.reliability === 'reliable') return '';
-            if (metadata.reliability === 'unstable') {
-                return `<span class="reliability-badge reliability-unstable" title="Unstable: CV ≥ 15% — high variance, not suitable for direct comparison">⚠ Unstable</span>`;
+            const historicalMax = metadata?.max_cv ?? 0;
+
+            // Note historical noisiness in the tooltip when older versions were worse.
+            const historicalNote = (historicalMax > compCV + 0.01)
+                ? ` Historically worse: up to ±${(historicalMax * 100).toFixed(1)}% across all versions.`
+                : '';
+
+            if (compCV >= 0.15) {
+                return `<span class="reliability-badge reliability-unstable" title="Unstable for this comparison: CV ±${(compCV * 100).toFixed(1)}% — high variance, not suitable for direct comparison.${historicalNote}">⚠ Unstable</span>`;
             }
-            return `<span class="reliability-badge reliability-noisy" title="Noisy: CV 5–15% — environment-sensitive, results may vary with system state">~ Noisy</span>`;
+            if (compCV >= 0.05) {
+                return `<span class="reliability-badge reliability-noisy" title="Noisy for this comparison: CV ±${(compCV * 100).toFixed(1)}% — small deltas may be noise; deltas larger than ±${(compCV * 100).toFixed(1)}% are likely real.${historicalNote}">~ Noisy</span>`;
+            }
+            return '';
         }
 
         // Render a single benchmark row
@@ -1067,16 +1104,21 @@
                 ? `<a href="${sanitizeHTML(sourceURL)}" class="benchmark-link" target="_blank" rel="noopener">${sanitizeHTML(displayName)}</a>`
                 : `<strong>${sanitizeHTML(displayName)}</strong>`;
 
+            // Use the variance of this specific comparison pair as the noise floor.
+            const baselineVariance = baseline?.ns_per_op_variance ?? 0;
+            const targetVariance = target?.ns_per_op_variance ?? 0;
+            const comparisonMaxCV = Math.max(baselineVariance, targetVariance);
+
             return `
                 <tr>
-                    <td>${benchmarkCell}${getReliabilityBadge(name)}</td>
-                    <td>${formatDelta(timeDelta)}</td>
+                    <td>${benchmarkCell}${getReliabilityBadge(name, baselineVariance, targetVariance)}</td>
+                    <td>${formatDelta(timeDelta, comparisonMaxCV)}</td>
                     <td>${baseline.ns_per_op.toFixed(2)} ns/op</td>
                     <td>${target.ns_per_op.toFixed(2)} ns/op</td>
                     <td>${formatDelta(allocDelta)}</td>
                     <td>${baseline.allocs_per_op}</td>
                     <td>${target.allocs_per_op}</td>
-                    <td>${getVarianceBadge(target.ns_per_op_variance)}</td>
+                    <td>${getVarianceBadge(baselineVariance, targetVariance)}</td>
                 </tr>
             `;
         }

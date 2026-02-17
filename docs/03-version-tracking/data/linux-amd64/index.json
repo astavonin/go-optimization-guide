@@ -27,537 +27,613 @@
       "description": "AES-CTR mode encryption throughput",
       "source_file": "perf-tracking/benchmarks/stdlib/stdlib_test.go",
       "category": "stdlib",
-      "reliability": "unstable"
+      "reliability": "unstable",
+      "max_cv": 0.27166605726015663
     },
     {
       "name": "BenchmarkAESCTR/Size1MB",
       "description": "AES-CTR mode encryption throughput",
       "source_file": "perf-tracking/benchmarks/stdlib/stdlib_test.go",
       "category": "stdlib",
-      "reliability": "reliable"
+      "reliability": "reliable",
+      "max_cv": 0.003657628150529234
     },
     {
       "name": "BenchmarkAESCTR/Size64KB",
       "description": "AES-CTR mode encryption throughput",
       "source_file": "perf-tracking/benchmarks/stdlib/stdlib_test.go",
       "category": "stdlib",
-      "reliability": "reliable"
+      "reliability": "reliable",
+      "max_cv": 0.003286355572202702
     },
     {
       "name": "BenchmarkAESGCM/Size16KB",
       "description": "AES-GCM authenticated encryption throughput",
       "source_file": "perf-tracking/benchmarks/stdlib/stdlib_test.go",
       "category": "stdlib",
-      "reliability": "reliable"
+      "reliability": "reliable",
+      "max_cv": 0.0015603083419785389
     },
     {
       "name": "BenchmarkAESGCM/Size1KB",
       "description": "AES-GCM authenticated encryption throughput",
       "source_file": "perf-tracking/benchmarks/stdlib/stdlib_test.go",
       "category": "stdlib",
-      "reliability": "reliable"
+      "reliability": "reliable",
+      "max_cv": 0.001259317508791762
     },
     {
       "name": "BenchmarkAESGCM/Size64",
       "description": "AES-GCM authenticated encryption throughput",
       "source_file": "perf-tracking/benchmarks/stdlib/stdlib_test.go",
       "category": "stdlib",
-      "reliability": "reliable"
+      "reliability": "reliable",
+      "max_cv": 0.001030986168963225
     },
     {
       "name": "BenchmarkBinaryEncode/Append",
       "description": "Binary encoding methods (encoding/binary)",
       "source_file": "perf-tracking/benchmarks/stdlib/stdlib_test.go",
       "category": "stdlib",
-      "reliability": "reliable"
+      "reliability": "reliable",
+      "max_cv": 0.008512154472940995
     },
     {
       "name": "BenchmarkBinaryEncode/Encode",
       "description": "Binary encoding methods (encoding/binary)",
       "source_file": "perf-tracking/benchmarks/stdlib/stdlib_test.go",
       "category": "stdlib",
-      "reliability": "reliable"
+      "reliability": "reliable",
+      "max_cv": 0.005810636214989965
     },
     {
       "name": "BenchmarkBinaryEncode/LegacyWrite",
       "description": "Binary encoding methods (encoding/binary)",
       "source_file": "perf-tracking/benchmarks/stdlib/stdlib_test.go",
       "category": "stdlib",
-      "reliability": "reliable"
+      "reliability": "reliable",
+      "max_cv": 0.009851759074199192
     },
     {
       "name": "BenchmarkBufferedIO/Reader",
       "description": "Buffered I/O reader/writer performance",
       "source_file": "perf-tracking/benchmarks/stdlib/stdlib_test.go",
       "category": "stdlib",
-      "reliability": "reliable"
+      "reliability": "reliable",
+      "max_cv": 0.024771140345728755
     },
     {
       "name": "BenchmarkBufferedIO/Writer",
       "description": "Buffered I/O reader/writer performance",
       "source_file": "perf-tracking/benchmarks/stdlib/stdlib_test.go",
       "category": "stdlib",
-      "reliability": "unstable"
+      "reliability": "unstable",
+      "max_cv": 0.2850358456495866
     },
     {
       "name": "BenchmarkCRC32/Castagnoli",
       "description": "CRC32 checksum calculation (IEEE, Castagnoli)",
       "source_file": "perf-tracking/benchmarks/stdlib/stdlib_test.go",
       "category": "stdlib",
-      "reliability": "reliable"
+      "reliability": "reliable",
+      "max_cv": 0.0012645705707800467
     },
     {
       "name": "BenchmarkCRC32/IEEE",
       "description": "CRC32 checksum calculation (IEEE, Castagnoli)",
       "source_file": "perf-tracking/benchmarks/stdlib/stdlib_test.go",
       "category": "stdlib",
-      "reliability": "reliable"
+      "reliability": "reliable",
+      "max_cv": 0.0011808400331525229
     },
     {
       "name": "BenchmarkConnectionPool/ColdPool",
       "description": "Connection pool lifecycle and reuse",
       "source_file": "perf-tracking/benchmarks/networking/networking_test.go",
       "category": "networking",
-      "reliability": "reliable"
+      "reliability": "reliable",
+      "max_cv": 0.046114635993906895
     },
     {
       "name": "BenchmarkConnectionPool/WarmPool",
       "description": "Connection pool lifecycle and reuse",
       "source_file": "perf-tracking/benchmarks/networking/networking_test.go",
       "category": "networking",
-      "reliability": "reliable"
+      "reliability": "reliable",
+      "max_cv": 0.04911979417043221
     },
     {
       "name": "BenchmarkConnectionPool/WarmPool_Parallel",
       "description": "Connection pool lifecycle and reuse",
       "source_file": "perf-tracking/benchmarks/networking/networking_test.go",
       "category": "networking",
-      "reliability": "noisy"
+      "reliability": "noisy",
+      "max_cv": 0.09972222324036142
     },
     {
       "name": "BenchmarkFNVHash/FNV1a_128",
       "description": "FNV-1a hash function performance",
       "source_file": "perf-tracking/benchmarks/stdlib/stdlib_test.go",
       "category": "stdlib",
-      "reliability": "reliable"
+      "reliability": "reliable",
+      "max_cv": 0.004313310928137536
     },
     {
       "name": "BenchmarkFNVHash/FNV1a_64",
       "description": "FNV-1a hash function performance",
       "source_file": "perf-tracking/benchmarks/stdlib/stdlib_test.go",
       "category": "stdlib",
-      "reliability": "reliable"
+      "reliability": "reliable",
+      "max_cv": 0.003471266732212144
     },
     {
       "name": "BenchmarkGCLatency",
       "description": "Average GC pause latency",
       "source_file": "perf-tracking/benchmarks/runtime/gc_test.go",
       "category": "runtime",
-      "reliability": "noisy"
+      "reliability": "noisy",
+      "max_cv": 0.1367985656252956
     },
     {
       "name": "BenchmarkGCMixedWorkload",
       "description": "GC performance with mixed allocation patterns",
       "source_file": "perf-tracking/benchmarks/runtime/gc_test.go",
       "category": "runtime",
-      "reliability": "reliable"
+      "reliability": "reliable",
+      "max_cv": 0.036121954146684454
     },
     {
       "name": "BenchmarkGCSmallObjects",
       "description": "GC performance with many small objects",
       "source_file": "perf-tracking/benchmarks/runtime/gc_test.go",
       "category": "runtime",
-      "reliability": "reliable"
+      "reliability": "reliable",
+      "max_cv": 0.03691489549453703
     },
     {
       "name": "BenchmarkGCThroughput",
       "description": "GC throughput with mixed allocation patterns",
       "source_file": "perf-tracking/benchmarks/runtime/gc_test.go",
       "category": "runtime",
-      "reliability": "noisy"
+      "reliability": "noisy",
+      "max_cv": 0.07036309948188574
     },
     {
       "name": "BenchmarkGoroutineCreate",
       "description": "Goroutine creation and initialization",
       "source_file": "perf-tracking/benchmarks/runtime/gc_test.go",
       "category": "runtime",
-      "reliability": "unstable"
+      "reliability": "unstable",
+      "max_cv": 0.200026981970533
     },
     {
       "name": "BenchmarkHTTP2/Parallel_10",
       "description": "HTTP/2 request handling (sequential/parallel)",
       "source_file": "perf-tracking/benchmarks/networking/networking_test.go",
       "category": "networking",
-      "reliability": "noisy"
+      "reliability": "noisy",
+      "max_cv": 0.05535548900741524
     },
     {
       "name": "BenchmarkHTTP2/Parallel_30",
       "description": "HTTP/2 request handling (sequential/parallel)",
       "source_file": "perf-tracking/benchmarks/networking/networking_test.go",
       "category": "networking",
-      "reliability": "reliable"
+      "reliability": "reliable",
+      "max_cv": 0.012004456564322542
     },
     {
       "name": "BenchmarkHTTP2/Sequential",
       "description": "HTTP/2 request handling (sequential/parallel)",
       "source_file": "perf-tracking/benchmarks/networking/networking_test.go",
       "category": "networking",
-      "reliability": "noisy"
+      "reliability": "noisy",
+      "max_cv": 0.07246746760653772
     },
     {
       "name": "BenchmarkHTTPRequest/GET_Small",
       "description": "HTTP/1.1 request latency (GET/POST)",
       "source_file": "perf-tracking/benchmarks/networking/networking_test.go",
       "category": "networking",
-      "reliability": "noisy"
+      "reliability": "noisy",
+      "max_cv": 0.08541393115335043
     },
     {
       "name": "BenchmarkHTTPRequest/POST_1KB",
       "description": "HTTP/1.1 request latency (GET/POST)",
       "source_file": "perf-tracking/benchmarks/networking/networking_test.go",
       "category": "networking",
-      "reliability": "noisy"
+      "reliability": "noisy",
+      "max_cv": 0.13302414982482327
     },
     {
       "name": "BenchmarkIOReadAll/Size1KB",
       "description": "io.ReadAll buffer reading performance",
       "source_file": "perf-tracking/benchmarks/stdlib/stdlib_test.go",
       "category": "stdlib",
-      "reliability": "reliable"
+      "reliability": "reliable",
+      "max_cv": 0.016877616855025687
     },
     {
       "name": "BenchmarkIOReadAll/Size1MB",
       "description": "io.ReadAll buffer reading performance",
       "source_file": "perf-tracking/benchmarks/stdlib/stdlib_test.go",
       "category": "stdlib",
-      "reliability": "unstable"
+      "reliability": "unstable",
+      "max_cv": 0.31492021551618304
     },
     {
       "name": "BenchmarkIOReadAll/Size64KB",
       "description": "io.ReadAll buffer reading performance",
       "source_file": "perf-tracking/benchmarks/stdlib/stdlib_test.go",
       "category": "stdlib",
-      "reliability": "noisy"
+      "reliability": "noisy",
+      "max_cv": 0.05344995113002933
     },
     {
       "name": "BenchmarkJSONDecode/Large",
       "description": "JSON decoding into Go structs",
       "source_file": "perf-tracking/benchmarks/stdlib/stdlib_test.go",
       "category": "stdlib",
-      "reliability": "reliable"
+      "reliability": "reliable",
+      "max_cv": 0.012370325925050581
     },
     {
       "name": "BenchmarkJSONDecode/Medium",
       "description": "JSON decoding into Go structs",
       "source_file": "perf-tracking/benchmarks/stdlib/stdlib_test.go",
       "category": "stdlib",
-      "reliability": "reliable"
+      "reliability": "reliable",
+      "max_cv": 0.009808468757857713
     },
     {
       "name": "BenchmarkJSONDecode/Small",
       "description": "JSON decoding into Go structs",
       "source_file": "perf-tracking/benchmarks/stdlib/stdlib_test.go",
       "category": "stdlib",
-      "reliability": "reliable"
+      "reliability": "reliable",
+      "max_cv": 0.009825074303801128
     },
     {
       "name": "BenchmarkJSONEncode/Small",
       "description": "JSON encoding of structured data",
       "source_file": "perf-tracking/benchmarks/stdlib/stdlib_test.go",
       "category": "stdlib",
-      "reliability": "reliable"
+      "reliability": "reliable",
+      "max_cv": 0.01543366998183355
     },
     {
       "name": "BenchmarkJSONEncode/WithEscaping",
       "description": "JSON encoding of structured data",
       "source_file": "perf-tracking/benchmarks/stdlib/stdlib_test.go",
       "category": "stdlib",
-      "reliability": "reliable"
+      "reliability": "reliable",
+      "max_cv": 0.014449973854744582
     },
     {
       "name": "BenchmarkMutexContention",
       "description": "Mutex contention under concurrent load",
       "source_file": "perf-tracking/benchmarks/runtime/gc_test.go",
       "category": "runtime",
-      "reliability": "reliable"
+      "reliability": "reliable",
+      "max_cv": 0.02240058004619542
     },
     {
       "name": "BenchmarkRSAKeyGen/Bits2048",
       "description": "RSA key generation performance",
       "source_file": "perf-tracking/benchmarks/stdlib/stdlib_test.go",
       "category": "stdlib",
-      "reliability": "noisy"
+      "reliability": "noisy",
+      "max_cv": 0.10728116493463764
     },
     {
       "name": "BenchmarkRSAKeyGen/Bits4096",
       "description": "RSA key generation performance",
       "source_file": "perf-tracking/benchmarks/stdlib/stdlib_test.go",
       "category": "stdlib",
-      "reliability": "unstable"
+      "reliability": "unstable",
+      "max_cv": 0.4225235447728833
     },
     {
       "name": "BenchmarkRegexp/Compile/Email",
       "description": "Regular expression matching and compilation",
       "source_file": "perf-tracking/benchmarks/stdlib/stdlib_test.go",
       "category": "stdlib",
-      "reliability": "reliable"
+      "reliability": "reliable",
+      "max_cv": 0.01296954032458051
     },
     {
       "name": "BenchmarkRegexp/Compile/IPv4",
       "description": "Regular expression matching and compilation",
       "source_file": "perf-tracking/benchmarks/stdlib/stdlib_test.go",
       "category": "stdlib",
-      "reliability": "reliable"
+      "reliability": "reliable",
+      "max_cv": 0.00447688072745514
     },
     {
       "name": "BenchmarkRegexp/Compile/LogLine",
       "description": "Regular expression matching and compilation",
       "source_file": "perf-tracking/benchmarks/stdlib/stdlib_test.go",
       "category": "stdlib",
-      "reliability": "reliable"
+      "reliability": "reliable",
+      "max_cv": 0.008591899875489164
     },
     {
       "name": "BenchmarkRegexp/Match/Email",
       "description": "Regular expression matching and compilation",
       "source_file": "perf-tracking/benchmarks/stdlib/stdlib_test.go",
       "category": "stdlib",
-      "reliability": "reliable"
+      "reliability": "reliable",
+      "max_cv": 0.003842420805715102
     },
     {
       "name": "BenchmarkRegexp/Match/IPv4",
       "description": "Regular expression matching and compilation",
       "source_file": "perf-tracking/benchmarks/stdlib/stdlib_test.go",
       "category": "stdlib",
-      "reliability": "reliable"
+      "reliability": "reliable",
+      "max_cv": 0.0026068692151423887
     },
     {
       "name": "BenchmarkRegexp/Match/LogLine",
       "description": "Regular expression matching and compilation",
       "source_file": "perf-tracking/benchmarks/stdlib/stdlib_test.go",
       "category": "stdlib",
-      "reliability": "reliable"
+      "reliability": "reliable",
+      "max_cv": 0.011070849777681205
     },
     {
       "name": "BenchmarkSHA/SHA1",
       "description": "SHA hashing throughput (SHA-1, SHA-256, SHA-512, SHA3)",
       "source_file": "perf-tracking/benchmarks/stdlib/stdlib_test.go",
       "category": "stdlib",
-      "reliability": "reliable"
+      "reliability": "reliable",
+      "max_cv": 0.0023437334352919953
     },
     {
       "name": "BenchmarkSHA/SHA256",
       "description": "SHA hashing throughput (SHA-1, SHA-256, SHA-512, SHA3)",
       "source_file": "perf-tracking/benchmarks/stdlib/stdlib_test.go",
       "category": "stdlib",
-      "reliability": "reliable"
+      "reliability": "reliable",
+      "max_cv": 0.001482021095463624
     },
     {
       "name": "BenchmarkSHA/SHA3_256",
       "description": "SHA hashing throughput (SHA-1, SHA-256, SHA-512, SHA3)",
       "source_file": "perf-tracking/benchmarks/stdlib/stdlib_test.go",
       "category": "stdlib",
-      "reliability": "reliable"
+      "reliability": "reliable",
+      "max_cv": 0.0047704573464973565
     },
     {
       "name": "BenchmarkSHA/SHA512",
       "description": "SHA hashing throughput (SHA-1, SHA-256, SHA-512, SHA3)",
       "source_file": "perf-tracking/benchmarks/stdlib/stdlib_test.go",
       "category": "stdlib",
-      "reliability": "reliable"
+      "reliability": "reliable",
+      "max_cv": 0.003686022849708361
     },
     {
       "name": "BenchmarkSmallAllocSpecialized/Size128",
       "description": "Specialized small allocations (32-512 bytes)",
       "source_file": "perf-tracking/benchmarks/runtime/gc_test.go",
       "category": "runtime",
-      "reliability": "reliable"
+      "reliability": "reliable",
+      "max_cv": 0.039074634086837555
     },
     {
       "name": "BenchmarkSmallAllocSpecialized/Size256",
       "description": "Specialized small allocations (32-512 bytes)",
       "source_file": "perf-tracking/benchmarks/runtime/gc_test.go",
       "category": "runtime",
-      "reliability": "noisy"
+      "reliability": "noisy",
+      "max_cv": 0.06539147943326226
     },
     {
       "name": "BenchmarkSmallAllocSpecialized/Size32",
       "description": "Specialized small allocations (32-512 bytes)",
       "source_file": "perf-tracking/benchmarks/runtime/gc_test.go",
       "category": "runtime",
-      "reliability": "reliable"
+      "reliability": "reliable",
+      "max_cv": 0.01807283452830356
     },
     {
       "name": "BenchmarkSmallAllocSpecialized/Size512",
       "description": "Specialized small allocations (32-512 bytes)",
       "source_file": "perf-tracking/benchmarks/runtime/gc_test.go",
       "category": "runtime",
-      "reliability": "noisy"
+      "reliability": "noisy",
+      "max_cv": 0.05213248444817976
     },
     {
       "name": "BenchmarkSmallAllocSpecialized/Size64",
       "description": "Specialized small allocations (32-512 bytes)",
       "source_file": "perf-tracking/benchmarks/runtime/gc_test.go",
       "category": "runtime",
-      "reliability": "unstable"
+      "reliability": "unstable",
+      "max_cv": 0.27333470208677113
     },
     {
       "name": "BenchmarkStackGrowth",
       "description": "Stack growth and shrinking performance",
       "source_file": "perf-tracking/benchmarks/runtime/gc_test.go",
       "category": "runtime",
-      "reliability": "reliable"
+      "reliability": "reliable",
+      "max_cv": 0.013816373764620141
     },
     {
       "name": "BenchmarkSwissMapIteration/Size100",
       "description": "Swiss map iteration performance (Go 1.24+)",
       "source_file": "perf-tracking/benchmarks/runtime/gc_test.go",
       "category": "runtime",
-      "reliability": "noisy"
+      "reliability": "noisy",
+      "max_cv": 0.05052993306988537
     },
     {
       "name": "BenchmarkSwissMapIteration/Size1000",
       "description": "Swiss map iteration performance (Go 1.24+)",
       "source_file": "perf-tracking/benchmarks/runtime/gc_test.go",
       "category": "runtime",
-      "reliability": "reliable"
+      "reliability": "reliable",
+      "max_cv": 0.020273865086606172
     },
     {
       "name": "BenchmarkSwissMapIteration/Size10000",
       "description": "Swiss map iteration performance (Go 1.24+)",
       "source_file": "perf-tracking/benchmarks/runtime/gc_test.go",
       "category": "runtime",
-      "reliability": "reliable"
+      "reliability": "reliable",
+      "max_cv": 0.015991945304929242
     },
     {
       "name": "BenchmarkSwissMapLarge",
       "description": "Large Swiss map operations (Go 1.24+)",
       "source_file": "perf-tracking/benchmarks/runtime/gc_test.go",
       "category": "runtime",
-      "reliability": "reliable"
+      "reliability": "reliable",
+      "max_cv": 0.008500341918146628
     },
     {
       "name": "BenchmarkSwissMapPresized/GrowAsNeeded",
       "description": "Swiss map with presizing comparison (Go 1.24+)",
       "source_file": "perf-tracking/benchmarks/runtime/gc_test.go",
       "category": "runtime",
-      "reliability": "reliable"
+      "reliability": "reliable",
+      "max_cv": 0.024199325340440454
     },
     {
       "name": "BenchmarkSwissMapPresized/Presized",
       "description": "Swiss map with presizing comparison (Go 1.24+)",
       "source_file": "perf-tracking/benchmarks/runtime/gc_test.go",
       "category": "runtime",
-      "reliability": "reliable"
+      "reliability": "reliable",
+      "max_cv": 0.01966977043147174
     },
     {
       "name": "BenchmarkSyncMap/Parallel",
       "description": "sync.Map concurrent access patterns",
       "source_file": "perf-tracking/benchmarks/runtime/gc_test.go",
       "category": "runtime",
-      "reliability": "reliable"
+      "reliability": "reliable",
+      "max_cv": 0.03175415004294042
     },
     {
       "name": "BenchmarkSyncMap/SingleThreaded",
       "description": "sync.Map concurrent access patterns",
       "source_file": "perf-tracking/benchmarks/runtime/gc_test.go",
       "category": "runtime",
-      "reliability": "reliable"
+      "reliability": "reliable",
+      "max_cv": 0.04099421379111779
     },
     {
       "name": "BenchmarkTCPConnect/Parallel",
       "description": "TCP connection establishment time",
       "source_file": "perf-tracking/benchmarks/networking/networking_test.go",
       "category": "networking",
-      "reliability": "unstable"
+      "reliability": "unstable",
+      "max_cv": 0.3484827489037687
     },
     {
       "name": "BenchmarkTCPConnect/Sequential",
       "description": "TCP connection establishment time",
       "source_file": "perf-tracking/benchmarks/networking/networking_test.go",
       "category": "networking",
-      "reliability": "reliable"
+      "reliability": "reliable",
+      "max_cv": 0.04464892816589633
     },
     {
       "name": "BenchmarkTCPKeepAlive/Default",
       "description": "TCP keep-alive behavior and configuration",
       "source_file": "perf-tracking/benchmarks/networking/networking_test.go",
       "category": "networking",
-      "reliability": "noisy"
+      "reliability": "noisy",
+      "max_cv": 0.07723454592439132
     },
     {
       "name": "BenchmarkTCPKeepAlive/WithConfig",
       "description": "TCP keep-alive behavior and configuration",
       "source_file": "perf-tracking/benchmarks/networking/networking_test.go",
       "category": "networking",
-      "reliability": "noisy"
+      "reliability": "noisy",
+      "max_cv": 0.07910735624556306
     },
     {
       "name": "BenchmarkTCPThroughput/1KB",
       "description": "TCP data transfer throughput",
       "source_file": "perf-tracking/benchmarks/networking/networking_test.go",
       "category": "networking",
-      "reliability": "reliable"
+      "reliability": "reliable",
+      "max_cv": 0.004158684789439048
     },
     {
       "name": "BenchmarkTCPThroughput/1MB",
       "description": "TCP data transfer throughput",
       "source_file": "perf-tracking/benchmarks/networking/networking_test.go",
       "category": "networking",
-      "reliability": "reliable"
+      "reliability": "reliable",
+      "max_cv": 0.01516744998475971
     },
     {
       "name": "BenchmarkTCPThroughput/64KB",
       "description": "TCP data transfer throughput",
       "source_file": "perf-tracking/benchmarks/networking/networking_test.go",
       "category": "networking",
-      "reliability": "reliable"
+      "reliability": "reliable",
+      "max_cv": 0.014573673595856814
     },
     {
       "name": "BenchmarkTLSHandshake/TLS12",
       "description": "TLS 1.3 handshake performance",
       "source_file": "perf-tracking/benchmarks/networking/networking_test.go",
       "category": "networking",
-      "reliability": "reliable"
+      "reliability": "reliable",
+      "max_cv": 0.01967364339200575
     },
     {
       "name": "BenchmarkTLSHandshake/TLS13",
       "description": "TLS 1.3 handshake performance",
       "source_file": "perf-tracking/benchmarks/networking/networking_test.go",
       "category": "networking",
-      "reliability": "reliable"
+      "reliability": "reliable",
+      "max_cv": 0.02671917879223579
     },
     {
       "name": "BenchmarkTLSHandshake/TLS13_ECDHE",
       "description": "TLS 1.3 handshake performance",
       "source_file": "perf-tracking/benchmarks/networking/networking_test.go",
       "category": "networking",
-      "reliability": "reliable"
+      "reliability": "reliable",
+      "max_cv": 0.03236153845659894
     },
     {
       "name": "BenchmarkTLSResume/FullHandshake",
       "description": "TLS session resumption",
       "source_file": "perf-tracking/benchmarks/networking/networking_test.go",
       "category": "networking",
-      "reliability": "reliable"
+      "reliability": "reliable",
+      "max_cv": 0.01742613945513039
     },
     {
       "name": "BenchmarkTLSThroughput/1KB",
       "description": "TLS encrypted data transfer throughput",
       "source_file": "perf-tracking/benchmarks/networking/networking_test.go",
       "category": "networking",
-      "reliability": "reliable"
+      "reliability": "reliable",
+      "max_cv": 0.01683749340227997
     },
     {
       "name": "BenchmarkTLSThroughput/64KB",
       "description": "TLS encrypted data transfer throughput",
       "source_file": "perf-tracking/benchmarks/networking/networking_test.go",
       "category": "networking",
-      "reliability": "reliable"
+      "reliability": "reliable",
+      "max_cv": 0.012037384023564975
     }
   ],
   "repository": {
     "url": "https://github.com/astavonin/go-optimization-guide",
     "source_path": "blob/main"
   },
-  "last_updated": "2026-02-17T09:56:17+06:00"
+  "last_updated": "2026-02-17T10:30:07+06:00"
 }
