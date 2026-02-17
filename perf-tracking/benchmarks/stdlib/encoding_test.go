@@ -61,7 +61,7 @@ func BenchmarkJSONDecode(b *testing.B) {
 	b.Run("Small", func(b *testing.B) {
 		b.ReportAllocs()
 		b.SetBytes(int64(len(jsonSmall)))
-		for i := 0; i < b.N; i++ {
+		for b.Loop() {
 			var resp APIResponse
 			err := json.Unmarshal(jsonSmall, &resp)
 			if err != nil {
@@ -74,7 +74,7 @@ func BenchmarkJSONDecode(b *testing.B) {
 	b.Run("Medium", func(b *testing.B) {
 		b.ReportAllocs()
 		b.SetBytes(int64(len(jsonMedium)))
-		for i := 0; i < b.N; i++ {
+		for b.Loop() {
 			var resp APIResponse
 			err := json.Unmarshal(jsonMedium, &resp)
 			if err != nil {
@@ -87,7 +87,7 @@ func BenchmarkJSONDecode(b *testing.B) {
 	b.Run("Large", func(b *testing.B) {
 		b.ReportAllocs()
 		b.SetBytes(int64(len(jsonLarge)))
-		for i := 0; i < b.N; i++ {
+		for b.Loop() {
 			var resp APIResponse
 			err := json.Unmarshal(jsonLarge, &resp)
 			if err != nil {
@@ -109,7 +109,7 @@ func BenchmarkJSONEncode(b *testing.B) {
 		}
 		b.SetBytes(int64(len(warm)))
 		b.ResetTimer()
-		for i := 0; i < b.N; i++ {
+		for b.Loop() {
 			data, err := json.Marshal(encodeSmall)
 			if err != nil {
 				b.Fatal(err)
@@ -126,7 +126,7 @@ func BenchmarkJSONEncode(b *testing.B) {
 		}
 		b.SetBytes(int64(len(warm)))
 		b.ResetTimer()
-		for i := 0; i < b.N; i++ {
+		for b.Loop() {
 			data, err := json.Marshal(encodeWithEscaping)
 			if err != nil {
 				b.Fatal(err)
@@ -150,7 +150,7 @@ func BenchmarkBinaryEncode(b *testing.B) {
 		buf := make([]byte, binary.Size(data))
 		b.SetBytes(int64(binary.Size(data)))
 
-		for i := 0; i < b.N; i++ {
+		for b.Loop() {
 			_, err := binary.Encode(buf, binary.LittleEndian, data)
 			if err != nil {
 				b.Fatal(err)
@@ -162,7 +162,7 @@ func BenchmarkBinaryEncode(b *testing.B) {
 		buf := make([]byte, 0, binary.Size(data))
 		b.SetBytes(int64(binary.Size(data)))
 
-		for i := 0; i < b.N; i++ {
+		for b.Loop() {
 			result, err := binary.Append(buf[:0], binary.LittleEndian, data)
 			if err != nil {
 				b.Fatal(err)
@@ -175,7 +175,7 @@ func BenchmarkBinaryEncode(b *testing.B) {
 		buf := make([]byte, 0, binary.Size(data))
 		b.SetBytes(int64(binary.Size(data)))
 
-		for i := 0; i < b.N; i++ {
+		for b.Loop() {
 			w := &bytesWriter{buf: buf[:0]}
 			err := binary.Write(w, binary.LittleEndian, data)
 			if err != nil {

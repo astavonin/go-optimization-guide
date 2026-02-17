@@ -33,7 +33,7 @@ func BenchmarkRegexp(b *testing.B) {
 		b.Run("Email", func(b *testing.B) {
 			b.ReportAllocs()
 			pattern := regexpPatterns["Email"]
-			for i := 0; i < b.N; i++ {
+			for b.Loop() {
 				re, err := regexp.Compile(pattern)
 				if err != nil {
 					b.Fatal(err)
@@ -45,7 +45,7 @@ func BenchmarkRegexp(b *testing.B) {
 		b.Run("IPv4", func(b *testing.B) {
 			b.ReportAllocs()
 			pattern := regexpPatterns["IPv4"]
-			for i := 0; i < b.N; i++ {
+			for b.Loop() {
 				re, err := regexp.Compile(pattern)
 				if err != nil {
 					b.Fatal(err)
@@ -57,7 +57,7 @@ func BenchmarkRegexp(b *testing.B) {
 		b.Run("LogLine", func(b *testing.B) {
 			b.ReportAllocs()
 			pattern := regexpPatterns["LogLine"]
-			for i := 0; i < b.N; i++ {
+			for b.Loop() {
 				re, err := regexp.Compile(pattern)
 				if err != nil {
 					b.Fatal(err)
@@ -71,7 +71,7 @@ func BenchmarkRegexp(b *testing.B) {
 		b.Run("Email", func(b *testing.B) {
 			b.ReportAllocs()
 			re := compiledRegexps["Email"]
-			for i := 0; i < b.N; i++ {
+			for b.Loop() {
 				matches := re.FindAllString(regexpInput, -1)
 				_ = matches
 			}
@@ -80,7 +80,7 @@ func BenchmarkRegexp(b *testing.B) {
 		b.Run("IPv4", func(b *testing.B) {
 			b.ReportAllocs()
 			re := compiledRegexps["IPv4"]
-			for i := 0; i < b.N; i++ {
+			for b.Loop() {
 				matches := re.FindAllString(regexpInput, -1)
 				_ = matches
 			}
@@ -89,7 +89,7 @@ func BenchmarkRegexp(b *testing.B) {
 		b.Run("LogLine", func(b *testing.B) {
 			b.ReportAllocs()
 			re := compiledRegexps["LogLine"]
-			for i := 0; i < b.N; i++ {
+			for b.Loop() {
 				matches := re.FindAllString(regexpInput, -1)
 				_ = matches
 			}

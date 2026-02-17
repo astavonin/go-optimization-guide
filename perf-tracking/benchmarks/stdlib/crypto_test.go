@@ -91,7 +91,7 @@ func BenchmarkAESCTR(b *testing.B) {
 			ciphertext := make([]byte, len(tc.data))
 			b.SetBytes(int64(len(tc.data)))
 
-			for i := 0; i < b.N; i++ {
+			for b.Loop() {
 				// Reset stream for each iteration to avoid state carryover
 				stream := cipher.NewCTR(block, cryptoIV)
 				stream.XORKeyStream(ciphertext, tc.data)
@@ -106,7 +106,7 @@ func BenchmarkAESCTR(b *testing.B) {
 func BenchmarkSHA(b *testing.B) {
 	b.Run("SHA1", func(b *testing.B) {
 		b.SetBytes(int64(len(cryptoData64KB)))
-		for i := 0; i < b.N; i++ {
+		for b.Loop() {
 			h := sha1.Sum(cryptoData64KB)
 			_ = h
 		}
@@ -114,7 +114,7 @@ func BenchmarkSHA(b *testing.B) {
 
 	b.Run("SHA256", func(b *testing.B) {
 		b.SetBytes(int64(len(cryptoData64KB)))
-		for i := 0; i < b.N; i++ {
+		for b.Loop() {
 			h := sha256.Sum256(cryptoData64KB)
 			_ = h
 		}
@@ -122,17 +122,19 @@ func BenchmarkSHA(b *testing.B) {
 
 	b.Run("SHA512", func(b *testing.B) {
 		b.SetBytes(int64(len(cryptoData64KB)))
-		for i := 0; i < b.N; i++ {
+		for b.Loop() {
 			h := sha512.Sum512(cryptoData64KB)
 			_ = h
 		}
 	})
 
 	b.Run("SHA3_256", func(b *testing.B) {
-		h := sha3.New256()
+		// Allocate the hash once outside the loop so we measure hashing
+		// throughput, not allocation cost. Reset() is cheaper than New256().
+		h := sha3.New256() //nolint:inline // intentional: reuse via Reset() to isolate hashing from allocation
 		b.SetBytes(int64(len(cryptoData64KB)))
 
-		for i := 0; i < b.N; i++ {
+		for b.Loop() {
 			h.Reset()
 			h.Write(cryptoData64KB)
 			sum := h.Sum(nil)
@@ -146,7 +148,7 @@ func BenchmarkSHA(b *testing.B) {
 func BenchmarkRSAKeyGen(b *testing.B) {
 	b.Run("Bits2048", func(b *testing.B) {
 		b.ReportAllocs()
-		for i := 0; i < b.N; i++ {
+		for b.Loop() {
 			_, err := rsa.GenerateKey(rand.Reader, 2048)
 			if err != nil {
 				b.Fatal(err)
@@ -156,7 +158,7 @@ func BenchmarkRSAKeyGen(b *testing.B) {
 
 	b.Run("Bits4096", func(b *testing.B) {
 		b.ReportAllocs()
-		for i := 0; i < b.N; i++ {
+		for b.Loop() {
 			_, err := rsa.GenerateKey(rand.Reader, 4096)
 			if err != nil {
 				b.Fatal(err)
@@ -193,7 +195,7 @@ func BenchmarkAESGCM(b *testing.B) {
 			ciphertext := make([]byte, 0, len(tc.data)+aead.Overhead())
 			b.SetBytes(int64(len(tc.data)))
 
-			for i := 0; i < b.N; i++ {
+			for b.Loop() {
 				// Reuse ciphertext buffer
 				ciphertext = aead.Seal(ciphertext[:0], cryptoNonce12, tc.data, nil)
 				_ = ciphertext

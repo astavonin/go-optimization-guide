@@ -11,9 +11,11 @@ import (
 func BenchmarkSyncMap(b *testing.B) {
 	b.Run("SingleThreaded", func(b *testing.B) {
 		var m sync.Map
-		for i := 0; i < b.N; i++ {
+		var i int
+		for b.Loop() {
 			m.Store(i%1000, i)
 			_, _ = m.Load(i % 1000)
+			i++
 		}
 	})
 
@@ -52,8 +54,10 @@ func BenchmarkSwissMapLarge(b *testing.B) {
 	})
 
 	b.ResetTimer()
-	for i := 0; i < b.N; i++ {
+	var i int
+	for b.Loop() {
 		_ = m[indices[i%10000]]
+		i++
 	}
 }
 
@@ -62,7 +66,7 @@ func BenchmarkSwissMapLarge(b *testing.B) {
 func BenchmarkSwissMapPresized(b *testing.B) {
 	b.Run("Presized", func(b *testing.B) {
 		b.ReportAllocs()
-		for i := 0; i < b.N; i++ {
+		for b.Loop() {
 			m := make(map[int]int, 1000) // Pre-sized
 			for j := range 1000 {
 				m[j] = j
@@ -73,7 +77,7 @@ func BenchmarkSwissMapPresized(b *testing.B) {
 
 	b.Run("GrowAsNeeded", func(b *testing.B) {
 		b.ReportAllocs()
-		for i := 0; i < b.N; i++ {
+		for b.Loop() {
 			m := make(map[int]int) // No pre-sizing
 			for j := range 1000 {
 				m[j] = j
@@ -97,7 +101,7 @@ func BenchmarkSwissMapIteration(b *testing.B) {
 			}
 
 			b.ResetTimer()
-			for i := 0; i < b.N; i++ {
+			for b.Loop() {
 				sum := 0
 				for _, v := range m {
 					sum += v

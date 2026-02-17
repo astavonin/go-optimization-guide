@@ -99,7 +99,7 @@ func BenchmarkTLSHandshake(b *testing.B) {
 			MaxVersion:         tls.VersionTLS12,
 		}
 		b.ResetTimer()
-		for i := 0; i < b.N; i++ {
+		for b.Loop() {
 			conn, err := tls.Dial("tcp", addr, clientConfig)
 			if err != nil {
 				b.Fatal(err)
@@ -114,7 +114,7 @@ func BenchmarkTLSHandshake(b *testing.B) {
 			MinVersion:         tls.VersionTLS13,
 		}
 		b.ResetTimer()
-		for i := 0; i < b.N; i++ {
+		for b.Loop() {
 			conn, err := tls.Dial("tcp", addr, clientConfig)
 			if err != nil {
 				b.Fatal(err)
@@ -130,7 +130,7 @@ func BenchmarkTLSHandshake(b *testing.B) {
 			CurvePreferences:   []tls.CurveID{tls.X25519},
 		}
 		b.ResetTimer()
-		for i := 0; i < b.N; i++ {
+		for b.Loop() {
 			conn, err := tls.Dial("tcp", addr, clientConfig)
 			if err != nil {
 				b.Fatal(err)
@@ -182,7 +182,7 @@ func BenchmarkTLSResume(b *testing.B) {
 			MinVersion:         tls.VersionTLS13,
 		}
 		b.ResetTimer()
-		for i := 0; i < b.N; i++ {
+		for b.Loop() {
 			conn, err := tls.Dial("tcp", addr, clientConfig)
 			if err != nil {
 				b.Fatal(err)
@@ -232,8 +232,9 @@ func BenchmarkTLSResume(b *testing.B) {
 		}
 
 		resumedCount := 0
+		var n int
 		b.ResetTimer()
-		for i := 0; i < b.N; i++ {
+		for b.Loop() {
 			conn, err := tls.Dial("tcp", addr, clientConfig)
 			if err != nil {
 				b.Fatal(err)
@@ -242,8 +243,9 @@ func BenchmarkTLSResume(b *testing.B) {
 				resumedCount++
 			}
 			conn.Close()
+			n++
 		}
-		b.ReportMetric(100.0*float64(resumedCount)/float64(b.N), "resumed-%")
+		b.ReportMetric(100.0*float64(resumedCount)/float64(n), "resumed-%")
 	})
 }
 
@@ -302,7 +304,7 @@ func BenchmarkTLSThroughput(b *testing.B) {
 			b.SetBytes(int64(2 * s.size))
 			b.ResetTimer()
 
-			for i := 0; i < b.N; i++ {
+			for b.Loop() {
 				_, err := conn.Write(data)
 				if err != nil {
 					b.Fatal(err)

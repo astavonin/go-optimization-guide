@@ -24,7 +24,7 @@ func BenchmarkGCThroughput(b *testing.B) {
 	b.SetBytes(128 * 1000)
 	var sink []*Data // Live heap across iterations
 
-	for i := 0; i < b.N; i++ {
+	for b.Loop() {
 		objects := make([]*Data, 1000)
 		for j := range 1000 {
 			objects[j] = &Data{payload: make([]byte, 128)}
@@ -48,14 +48,15 @@ func BenchmarkGCLatency(b *testing.B) {
 
 	// Warmup and setup
 	b.StopTimer()
-	for i := 0; i < 100; i++ {
+	for range 100 {
 		sink = append(sink, make([]byte, 1024))
 	}
 	runtime.ReadMemStats(&ms)
 	basePauseNs := ms.PauseTotalNs
 	b.StartTimer()
 
-	for i := 0; i < b.N; i++ {
+	var n int
+	for b.Loop() {
 		// Allocate burst
 		burst := make([][]byte, 1000)
 		for j := range 1000 {
@@ -68,13 +69,14 @@ func BenchmarkGCLatency(b *testing.B) {
 
 		// Force GC and measure pause
 		runtime.GC()
+		n++
 	}
 
 	b.StopTimer()
 	runtime.ReadMemStats(&ms)
 	pauseNs := ms.PauseTotalNs - basePauseNs
-	if b.N > 0 {
-		b.ReportMetric(float64(pauseNs)/float64(b.N), "pause-ns/gc")
+	if n > 0 {
+		b.ReportMetric(float64(pauseNs)/float64(n), "pause-ns/gc")
 	}
 	_ = sink // Prevent DCE
 }
@@ -85,7 +87,8 @@ func BenchmarkGCSmallObjects(b *testing.B) {
 	b.ReportAllocs()
 	var sink []*SmallData // Retain live heap, use concrete type to avoid interface boxing
 
-	for i := 0; i < b.N; i++ {
+	var i int
+	for b.Loop() {
 		objects := make([]*SmallData, 10000)
 		for j := range 10000 {
 			objects[j] = &SmallData{value: int64(j)}
@@ -97,6 +100,7 @@ func BenchmarkGCSmallObjects(b *testing.B) {
 				sink = sink[100:]
 			}
 		}
+		i++
 	}
 
 	_ = sink // Prevent DCE
@@ -108,7 +112,8 @@ func BenchmarkGCMixedWorkload(b *testing.B) {
 	b.ReportAllocs()
 	var sink [][]byte // Retain live heap
 
-	for i := 0; i < b.N; i++ {
+	var i int
+	for b.Loop() {
 		small := make([]byte, 32)
 		medium := make([]byte, 4096)
 		large := make([]byte, 1<<20)
@@ -124,6 +129,7 @@ func BenchmarkGCMixedWorkload(b *testing.B) {
 		_ = small
 		_ = medium
 		_ = large
+		i++
 	}
 
 	_ = sink // Prevent DCE

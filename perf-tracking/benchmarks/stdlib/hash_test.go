@@ -33,7 +33,7 @@ func BenchmarkCRC32(b *testing.B) {
 		table := crc32.MakeTable(crc32.IEEE)
 		b.SetBytes(int64(len(hashData64KB)))
 
-		for i := 0; i < b.N; i++ {
+		for b.Loop() {
 			sum := crc32.Checksum(hashData64KB, table)
 			_ = sum
 		}
@@ -44,7 +44,7 @@ func BenchmarkCRC32(b *testing.B) {
 		table := crc32.MakeTable(crc32.Castagnoli)
 		b.SetBytes(int64(len(hashData64KB)))
 
-		for i := 0; i < b.N; i++ {
+		for b.Loop() {
 			sum := crc32.Checksum(hashData64KB, table)
 			_ = sum
 		}
@@ -58,7 +58,7 @@ func BenchmarkFNVHash(b *testing.B) {
 		b.ReportAllocs()
 		b.SetBytes(int64(len(hashData1KB)))
 
-		for i := 0; i < b.N; i++ {
+		for b.Loop() {
 			h := fnv.New64a()
 			h.Write(hashData1KB)
 			sum := h.Sum64()
@@ -70,7 +70,7 @@ func BenchmarkFNVHash(b *testing.B) {
 		b.ReportAllocs()
 		b.SetBytes(int64(len(hashData1KB)))
 
-		for i := 0; i < b.N; i++ {
+		for b.Loop() {
 			h := fnv.New128a()
 			h.Write(hashData1KB)
 			sum := h.Sum(nil)

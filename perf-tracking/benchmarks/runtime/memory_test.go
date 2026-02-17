@@ -17,7 +17,7 @@ var (
 func BenchmarkStackGrowth(b *testing.B) {
 	b.ReportAllocs()
 	resultCh := make(chan int, 1)
-	for i := 0; i < b.N; i++ {
+	for b.Loop() {
 		go func() {
 			resultCh <- recursive(100)
 		}()
@@ -46,7 +46,7 @@ func BenchmarkSmallAllocSpecialized(b *testing.B) {
 		b.Run(allocSizeToString(size), func(b *testing.B) {
 			b.ReportAllocs()
 			b.SetBytes(int64(size))
-			for i := 0; i < b.N; i++ {
+			for b.Loop() {
 				sinkBytes = make([]byte, size)
 			}
 			_ = unsafe.Pointer(&sinkBytes)
@@ -75,7 +75,7 @@ func allocSizeToString(size int) string {
 // BenchmarkGoroutineCreate measures goroutine creation overhead.
 // Baseline for scheduler performance across versions.
 func BenchmarkGoroutineCreate(b *testing.B) {
-	for i := 0; i < b.N; i++ {
+	for b.Loop() {
 		done := make(chan struct{})
 		go func() {
 			close(done)

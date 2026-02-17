@@ -36,7 +36,7 @@ func BenchmarkHTTPRequest(b *testing.B) {
 		}
 
 		b.ResetTimer()
-		for i := 0; i < b.N; i++ {
+		for b.Loop() {
 			resp, err := client.Get(server.URL)
 			if err != nil {
 				b.Fatal(err)
@@ -69,7 +69,7 @@ func BenchmarkHTTPRequest(b *testing.B) {
 		}
 
 		b.ResetTimer()
-		for i := 0; i < b.N; i++ {
+		for b.Loop() {
 			_, err := data.Seek(0, io.SeekStart)
 			if err != nil {
 				b.Fatal(err)
@@ -122,7 +122,7 @@ func BenchmarkHTTP2(b *testing.B) {
 		}
 
 		b.ResetTimer()
-		for i := 0; i < b.N; i++ {
+		for b.Loop() {
 			resp, err := client.Get(server.URL)
 			if err != nil {
 				b.Fatal(err)

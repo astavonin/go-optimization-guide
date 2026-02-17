@@ -24,7 +24,7 @@ func BenchmarkConnectionPool(b *testing.B) {
 
 	b.Run("ColdPool", func(b *testing.B) {
 		b.ResetTimer()
-		for i := 0; i < b.N; i++ {
+		for b.Loop() {
 			// Create new transport per iteration (no pooling)
 			client := &http.Client{
 				Transport: &http.Transport{
@@ -67,7 +67,7 @@ func BenchmarkConnectionPool(b *testing.B) {
 		}
 
 		b.ResetTimer()
-		for i := 0; i < b.N; i++ {
+		for b.Loop() {
 			resp, err := client.Get(server.URL)
 			if err != nil {
 				b.Fatal(err)

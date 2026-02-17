@@ -762,8 +762,8 @@ func TestVersionFromJSONFilename(t *testing.T) {
 	}{
 		{"go1.24.json", "1.24"},
 		{"go1.24.0.json", "1.24.0"},
+		{"go1.25.json", "1.25"},
 		{"go1.26.json", "1.26"},
-		{"go1.23.json", "1.23"},
 	}
 
 	for _, tt := range tests {
@@ -801,17 +801,17 @@ func TestRebuildIndex(t *testing.T) {
 		}
 	}
 
-	writeVersion("go1.23.json", "1.23", map[string]Benchmark{
+	writeVersion("go1.24.json", "1.24", map[string]Benchmark{
 		"BenchmarkFoo": {Name: "BenchmarkFoo", NsPerOp: 100, NsPerOpVariance: 0.02},
 		"BenchmarkBar": {Name: "BenchmarkBar", NsPerOp: 200, NsPerOpVariance: 0.12},
 	})
-	writeVersion("go1.24.json", "1.24", map[string]Benchmark{
+	writeVersion("go1.25.json", "1.25", map[string]Benchmark{
 		"BenchmarkFoo": {Name: "BenchmarkFoo", NsPerOp: 95, NsPerOpVariance: 0.03},
 		"BenchmarkBar": {Name: "BenchmarkBar", NsPerOp: 190, NsPerOpVariance: 0.08},
 	})
 
-	// Stale duplicate for 1.24 — should be skipped (older mtime via write order).
-	writeVersion("go1.24.0.json", "1.24", map[string]Benchmark{
+	// Stale duplicate for 1.25 — should be skipped (older mtime via write order).
+	writeVersion("go1.25.0.json", "1.25", map[string]Benchmark{
 		"BenchmarkFoo": {Name: "BenchmarkFoo", NsPerOp: 90, NsPerOpVariance: 0.01},
 	})
 
@@ -835,7 +835,7 @@ func TestRebuildIndex(t *testing.T) {
 	}
 
 	// Versions should be sorted ascending.
-	if idx.Versions[0].Version != "1.23" || idx.Versions[1].Version != "1.24" {
+	if idx.Versions[0].Version != "1.24" || idx.Versions[1].Version != "1.25" {
 		t.Errorf("unexpected version order: %v", idx.Versions)
 	}
 

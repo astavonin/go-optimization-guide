@@ -13,12 +13,12 @@ cd perf-tracking
 ./tools/install-tools.sh
 
 # 2. Set up Go versions
-./tools/setup-go-versions.sh install 1.23.0
 ./tools/setup-go-versions.sh install 1.24.0
 ./tools/setup-go-versions.sh install 1.25.0
+./tools/setup-go-versions.sh install 1.26.0
 
 # 3. Collect benchmarks (runs versions sequentially by default)
-./tools/collect_benchmarks.py 1.23 1.24 1.25 --progress
+./tools/collect_benchmarks.py 1.24 1.25 1.26 --progress
 
 # 4. Export to JSON for web UI (use your platform directory)
 cd tools/benchexport
@@ -37,7 +37,7 @@ go run . --export-all \
 ./tools/collect_benchmarks.py 1.24 --progress
 
 # Multiple versions (runs sequentially by default)
-./tools/collect_benchmarks.py 1.23 1.24 1.25 --progress
+./tools/collect_benchmarks.py 1.24 1.25 1.26 --progress
 
 # Re-run ONLY failed benchmarks from a previous run
 ./tools/collect_benchmarks.py 1.24 \
@@ -86,9 +86,9 @@ data/
 ├── platforms.json              # Lists all available platforms
 ├── darwin-arm64/
 │   ├── index.json              # Version index for this platform
-│   ├── go1.23.json
 │   ├── go1.24.json
-│   └── go1.25.json
+│   ├── go1.25.json
+│   └── go1.26.json
 └── linux-amd64/
     ├── index.json
     └── ...
@@ -115,8 +115,7 @@ perf-tracking/
 │   ├── runtime/             # GC, sync, memory (20 benchmarks)
 │   ├── stdlib/              # encoding, I/O, crypto, hash, text (35 benchmarks)
 │   ├── networking/          # TCP, TLS, HTTP/2, gRPC, QUIC (21 benchmarks)
-│   ├── go.mod.template      # Minimal template (go 1.23)
-│   ├── go.mod.1.23.0        # Go 1.23 dependencies
+│   ├── go.mod.template      # Minimal template (go 1.24)
 │   ├── go.mod.1.24.0        # Go 1.24 dependencies
 │   └── go.mod.1.25.0        # Go 1.25 dependencies
 ├── tools/
@@ -129,20 +128,20 @@ perf-tracking/
 │       ├── export.go              # Main export logic
 │       └── export_test.go         # 81 unit tests
 ├── .go-versions/
-│   ├── go1.23.0/                  # Isolated Go 1.23.0 installation
 │   ├── go1.24.0/                  # Isolated Go 1.24.0 installation
-│   └── go1.25.0/                  # Isolated Go 1.25.0 installation
+│   ├── go1.25.0/                  # Isolated Go 1.25.0 installation
+│   └── go1.26.0/                  # Isolated Go 1.26.0 installation
 └── results/stable/                # Collected benchmark results
     ├── darwin-arm64/              # Platform: GOOS-GOARCH (auto-detected)
-    │   ├── go1.23/
+    │   ├── go1.24/
     │   │   ├── YYYY-MM-DD_HH-MM-SS.txt                  # Main result file (auto-updated with successful retries)
     │   │   ├── YYYY-MM-DD_HH-MM-SS_retry1.txt           # Retry attempt 1 results
     │   │   ├── YYYY-MM-DD_HH-MM-SS_retry2.txt           # Retry attempt 2 results
     │   │   └── YYYY-MM-DD_HH-MM-SS_failed_benchmarks.txt # List of benchmarks that still failed after retries
-    │   ├── go1.24/
-    │   └── go1.25/
+    │   ├── go1.25/
+    │   └── go1.26/
     ├── linux-amd64/               # Another platform
-    │   ├── go1.23/
+    │   ├── go1.24/
     │   └── ...
     └── collection_progress.json               # Real-time progress tracking
 ```
@@ -176,10 +175,9 @@ perf-tracking/
 ## Dependency Management
 
 The collection tool automatically handles versioned go.mod templates:
-- `go.mod.template` - Base template (go 1.23)
-- `go.mod.1.23.0` - x/crypto v0.27.0 (Go 1.23 compatible)
-- `go.mod.1.24.0` - x/crypto v0.47.0 (latest for Go 1.24+)
-- `go.mod.1.25.0` - x/crypto v0.47.0 (latest for Go 1.25+)
+- `go.mod.template` - Base template (go 1.24)
+- `go.mod.1.24.0` - x/crypto v0.47.0 (Go 1.24 dependencies)
+- `go.mod.1.25.0` - x/crypto v0.47.0 (Go 1.25+ dependencies)
 
 Template is automatically selected based on Go version being tested.
 
@@ -198,7 +196,7 @@ For high-quality, reliable data:
 #    - Progress tracking enabled
 #    - Automatic retry up to 5 times for high-variance benchmarks
 #    - Creates _failed_benchmarks.txt if issues persist after retries
-./tools/collect_benchmarks.py 1.23 1.24 1.25 \
+./tools/collect_benchmarks.py 1.24 1.25 1.26 \
   --progress \
   --variance-threshold 10 \
   --max-reruns 5 \
@@ -207,8 +205,8 @@ For high-quality, reliable data:
 
 # 3. If any benchmarks failed variance checks after retries:
 #    Re-run with higher iteration count (platform dir is auto-detected)
-./tools/collect_benchmarks.py 1.23 \
-  --rerun-failed results/stable/darwin-arm64/go1.23/YYYY-MM-DD_failed_benchmarks.txt \
+./tools/collect_benchmarks.py 1.26 \
+  --rerun-failed results/stable/darwin-arm64/go1.26/YYYY-MM-DD_failed_benchmarks.txt \
   --rerun-count 100 \
   --max-reruns 3
 
@@ -271,7 +269,7 @@ For continuous benchmarking in CI:
 cd benchmarks
 
 # Copy appropriate go.mod for your Go version
-cp go.mod.1.23.0 go.mod
+cp go.mod.template go.mod
 
 # Run specific category
 go test -bench=. -benchmem ./runtime/

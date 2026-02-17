@@ -30,7 +30,7 @@ func BenchmarkTCPConnect(b *testing.B) {
 
 	b.Run("Sequential", func(b *testing.B) {
 		b.ResetTimer()
-		for i := 0; i < b.N; i++ {
+		for b.Loop() {
 			conn, err := net.Dial("tcp", addr)
 			if err != nil {
 				b.Fatal(err)
@@ -81,7 +81,7 @@ func BenchmarkTCPKeepAlive(b *testing.B) {
 	b.Run("Default", func(b *testing.B) {
 		dialer := &net.Dialer{}
 		b.ResetTimer()
-		for i := 0; i < b.N; i++ {
+		for b.Loop() {
 			conn, err := dialer.Dial("tcp", addr)
 			if err != nil {
 				b.Fatal(err)
@@ -96,7 +96,7 @@ func BenchmarkTCPKeepAlive(b *testing.B) {
 			KeepAlive: 30000000000, // 30 seconds in nanoseconds
 		}
 		b.ResetTimer()
-		for i := 0; i < b.N; i++ {
+		for b.Loop() {
 			conn, err := dialer.Dial("tcp", addr)
 			if err != nil {
 				b.Fatal(err)
@@ -159,7 +159,7 @@ func BenchmarkTCPThroughput(b *testing.B) {
 			b.SetBytes(int64(2 * s.size))
 			b.ResetTimer()
 
-			for i := 0; i < b.N; i++ {
+			for b.Loop() {
 				_, err := conn.Write(data)
 				if err != nil {
 					b.Fatal(err)

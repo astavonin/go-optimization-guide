@@ -1,11 +1,6 @@
 {
   "versions": [
     {
-      "version": "1.23",
-      "file": "go1.23.json",
-      "collected_at": "2026-02-01T14:58:22+06:00"
-    },
-    {
       "version": "1.24",
       "file": "go1.24.json",
       "collected_at": "2026-01-31T00:28:55+06:00"
@@ -92,7 +87,7 @@
       "source_file": "perf-tracking/benchmarks/stdlib/stdlib_test.go",
       "category": "stdlib",
       "reliability": "reliable",
-      "max_cv": 0.009851759074199192
+      "max_cv": 0.008127857415112495
     },
     {
       "name": "BenchmarkBufferedIO/Reader",
@@ -132,7 +127,7 @@
       "source_file": "perf-tracking/benchmarks/networking/networking_test.go",
       "category": "networking",
       "reliability": "reliable",
-      "max_cv": 0.046114635993906895
+      "max_cv": 0.025795869752571133
     },
     {
       "name": "BenchmarkConnectionPool/WarmPool",
@@ -140,7 +135,7 @@
       "source_file": "perf-tracking/benchmarks/networking/networking_test.go",
       "category": "networking",
       "reliability": "reliable",
-      "max_cv": 0.04911979417043221
+      "max_cv": 0.01634247981821118
     },
     {
       "name": "BenchmarkConnectionPool/WarmPool_Parallel",
@@ -172,7 +167,7 @@
       "source_file": "perf-tracking/benchmarks/runtime/gc_test.go",
       "category": "runtime",
       "reliability": "noisy",
-      "max_cv": 0.1367985656252956
+      "max_cv": 0.06361674673255109
     },
     {
       "name": "BenchmarkGCMixedWorkload",
@@ -188,15 +183,15 @@
       "source_file": "perf-tracking/benchmarks/runtime/gc_test.go",
       "category": "runtime",
       "reliability": "reliable",
-      "max_cv": 0.03691489549453703
+      "max_cv": 0.031219871485777335
     },
     {
       "name": "BenchmarkGCThroughput",
       "description": "GC throughput with mixed allocation patterns",
       "source_file": "perf-tracking/benchmarks/runtime/gc_test.go",
       "category": "runtime",
-      "reliability": "noisy",
-      "max_cv": 0.07036309948188574
+      "reliability": "reliable",
+      "max_cv": 0.047443234245432155
     },
     {
       "name": "BenchmarkGoroutineCreate",
@@ -211,8 +206,8 @@
       "description": "HTTP/2 request handling (sequential/parallel)",
       "source_file": "perf-tracking/benchmarks/networking/networking_test.go",
       "category": "networking",
-      "reliability": "noisy",
-      "max_cv": 0.05535548900741524
+      "reliability": "reliable",
+      "max_cv": 0.011483097710376207
     },
     {
       "name": "BenchmarkHTTP2/Parallel_30",
@@ -227,8 +222,8 @@
       "description": "HTTP/2 request handling (sequential/parallel)",
       "source_file": "perf-tracking/benchmarks/networking/networking_test.go",
       "category": "networking",
-      "reliability": "noisy",
-      "max_cv": 0.07246746760653772
+      "reliability": "reliable",
+      "max_cv": 0.03465263443454115
     },
     {
       "name": "BenchmarkHTTPRequest/GET_Small",
@@ -236,15 +231,15 @@
       "source_file": "perf-tracking/benchmarks/networking/networking_test.go",
       "category": "networking",
       "reliability": "noisy",
-      "max_cv": 0.08541393115335043
+      "max_cv": 0.0659987099432718
     },
     {
       "name": "BenchmarkHTTPRequest/POST_1KB",
       "description": "HTTP/1.1 request latency (GET/POST)",
       "source_file": "perf-tracking/benchmarks/networking/networking_test.go",
       "category": "networking",
-      "reliability": "noisy",
-      "max_cv": 0.13302414982482327
+      "reliability": "reliable",
+      "max_cv": 0.020921388725700832
     },
     {
       "name": "BenchmarkIOReadAll/Size1KB",
@@ -276,7 +271,7 @@
       "source_file": "perf-tracking/benchmarks/stdlib/stdlib_test.go",
       "category": "stdlib",
       "reliability": "reliable",
-      "max_cv": 0.012370325925050581
+      "max_cv": 0.00789495389975768
     },
     {
       "name": "BenchmarkJSONDecode/Medium",
@@ -284,7 +279,7 @@
       "source_file": "perf-tracking/benchmarks/stdlib/stdlib_test.go",
       "category": "stdlib",
       "reliability": "reliable",
-      "max_cv": 0.009808468757857713
+      "max_cv": 0.00880433103924137
     },
     {
       "name": "BenchmarkJSONDecode/Small",
@@ -332,7 +327,7 @@
       "source_file": "perf-tracking/benchmarks/stdlib/stdlib_test.go",
       "category": "stdlib",
       "reliability": "unstable",
-      "max_cv": 0.4225235447728833
+      "max_cv": 0.3371482406914919
     },
     {
       "name": "BenchmarkRegexp/Compile/Email",
@@ -396,7 +391,7 @@
       "source_file": "perf-tracking/benchmarks/stdlib/stdlib_test.go",
       "category": "stdlib",
       "reliability": "reliable",
-      "max_cv": 0.001482021095463624
+      "max_cv": 0.0010234725551954381
     },
     {
       "name": "BenchmarkSHA/SHA3_256",
@@ -436,7 +431,7 @@
       "source_file": "perf-tracking/benchmarks/runtime/gc_test.go",
       "category": "runtime",
       "reliability": "reliable",
-      "max_cv": 0.01807283452830356
+      "max_cv": 0.01675012797615137
     },
     {
       "name": "BenchmarkSmallAllocSpecialized/Size512",
@@ -516,7 +511,7 @@
       "source_file": "perf-tracking/benchmarks/runtime/gc_test.go",
       "category": "runtime",
       "reliability": "reliable",
-      "max_cv": 0.03175415004294042
+      "max_cv": 0.01055295869693091
     },
     {
       "name": "BenchmarkSyncMap/SingleThreaded",
@@ -604,7 +599,7 @@
       "source_file": "perf-tracking/benchmarks/networking/networking_test.go",
       "category": "networking",
       "reliability": "reliable",
-      "max_cv": 0.03236153845659894
+      "max_cv": 0.028360340901037062
     },
     {
       "name": "BenchmarkTLSResume/FullHandshake",
@@ -612,7 +607,7 @@
       "source_file": "perf-tracking/benchmarks/networking/networking_test.go",
       "category": "networking",
       "reliability": "reliable",
-      "max_cv": 0.01742613945513039
+      "max_cv": 0.017305913879708378
     },
     {
       "name": "BenchmarkTLSThroughput/1KB",
@@ -635,5 +630,5 @@
     "url": "https://github.com/astavonin/go-optimization-guide",
     "source_path": "blob/main"
   },
-  "last_updated": "2026-02-17T10:30:07+06:00"
+  "last_updated": "2026-02-17T10:50:01+06:00"
 }

@@ -19,7 +19,7 @@ func BenchmarkSmallAllocation(b *testing.B) {
 	b.SetBytes(64)
 	runtime.GC()
 	b.ResetTimer()
-	for i := 0; i < b.N; i++ {
+	for b.Loop() {
 		sinkBytes = make([]byte, 64)
 	}
 	_ = unsafe.Pointer(&sinkBytes)
@@ -31,7 +31,7 @@ func BenchmarkLargeAllocation(b *testing.B) {
 	b.SetBytes(1 << 20)
 	runtime.GC()
 	b.ResetTimer()
-	for i := 0; i < b.N; i++ {
+	for b.Loop() {
 		sinkBytes = make([]byte, 1<<20) // 1MB
 	}
 	_ = unsafe.Pointer(&sinkBytes)
@@ -43,7 +43,7 @@ func BenchmarkMapAllocation(b *testing.B) {
 	b.ReportAllocs()
 	runtime.GC()
 	b.ResetTimer()
-	for i := 0; i < b.N; i++ {
+	for b.Loop() {
 		m := make(map[int]int, 100)
 		for j := range 100 {
 			m[j] = j
@@ -59,7 +59,7 @@ func BenchmarkSliceAppend(b *testing.B) {
 	b.ReportAllocs()
 	runtime.GC()
 	b.ResetTimer()
-	for i := 0; i < b.N; i++ {
+	for b.Loop() {
 		s := make([]int, 0)
 		for j := range 1000 {
 			s = append(s, j)
@@ -80,17 +80,19 @@ func BenchmarkGCPressure(b *testing.B) {
 	runtime.ReadMemStats(&ms)
 	basePauseNs := ms.PauseTotalNs
 	b.StartTimer()
-	for i := 0; i < b.N; i++ {
+	var n int
+	for b.Loop() {
 		sink = append(sink, make([]byte, 1024))
 		if len(sink) > 100 {
 			sink = sink[:0]
 		}
+		n++
 	}
 	b.StopTimer()
 	runtime.ReadMemStats(&ms)
 	pauseNs := ms.PauseTotalNs - basePauseNs
-	if b.N > 0 {
-		b.ReportMetric(float64(pauseNs)/float64(b.N), "pause-ns/op")
+	if n > 0 {
+		b.ReportMetric(float64(pauseNs)/float64(n), "pause-ns/op")
 	}
 	_ = unsafe.Pointer(&sink)
 }

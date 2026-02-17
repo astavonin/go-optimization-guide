@@ -64,7 +64,7 @@ func BenchmarkIOReadAll(b *testing.B) {
 			runtime.GC()
 			b.ResetTimer()
 
-			for i := 0; i < b.N; i++ {
+			for b.Loop() {
 				reader := bytes.NewReader(tc.data)
 				result, err := io.ReadAll(reader)
 				if err != nil {
@@ -82,7 +82,7 @@ func BenchmarkBufferedIO(b *testing.B) {
 	b.Run("Reader", func(b *testing.B) {
 		chunk := make([]byte, 4096)
 
-		for i := 0; i < b.N; i++ {
+		for b.Loop() {
 			reader := bufio.NewReader(bytes.NewReader(ioData64KB))
 			for {
 				_, err := reader.Read(chunk)
@@ -97,7 +97,7 @@ func BenchmarkBufferedIO(b *testing.B) {
 	})
 
 	b.Run("Writer", func(b *testing.B) {
-		for i := 0; i < b.N; i++ {
+		for b.Loop() {
 			var buf bytes.Buffer
 			writer := bufio.NewWriter(&buf)
 

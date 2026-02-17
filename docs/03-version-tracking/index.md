@@ -82,12 +82,6 @@ Core allocation patterns (5 benchmarks):
 
 ## Key Findings
 
-### Go 1.23 → 1.24
-- **Overall**: 25.11% faster (geomean)
-- **MapAllocation**: 57% faster, 50% fewer allocations (6→3 allocs/op)
-- **SmallAllocation**: 22% faster
-- **LargeAllocation**: 21% faster
-
 ### Go 1.24 → 1.25
 - **Overall**: Stable performance (no significant regressions)
 - All benchmarks within statistical noise threshold
