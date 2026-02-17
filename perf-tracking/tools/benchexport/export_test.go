@@ -716,6 +716,153 @@ func TestUpdatePlatformsJSON(t *testing.T) {
 	}
 }
 
+func TestCompareVersionStrings(t *testing.T) {
+	tests := []struct {
+		a, b string
+		want int // -1, 0, or 1
+	}{
+		// Basic ordering
+		{"1.6", "1.24", -1},
+		{"1.24", "1.6", 1},
+		{"1.24", "1.24", 0},
+		// Patch-level ordering
+		{"1.24", "1.24.0", 0},
+		{"1.24.1", "1.24.2", -1},
+		{"1.24.2", "1.24.1", 1},
+		{"1.24.0", "1.24.1", -1},
+		// Major version ordering
+		{"1.25", "2.0", -1},
+		{"2.0", "1.25", 1},
+		// Three-part vs two-part
+		{"1.24.1", "1.25", -1},
+		{"1.25", "1.24.1", 1},
+		// Empty strings treated as zero
+		{"", "1.0", -1},
+		{"1.0", "", 1},
+	}
+
+	for _, tt := range tests {
+		got := compareVersionStrings(tt.a, tt.b)
+		// Normalise to -1/0/1 for comparison
+		if got < 0 {
+			got = -1
+		} else if got > 0 {
+			got = 1
+		}
+		if got != tt.want {
+			t.Errorf("compareVersionStrings(%q, %q) = %d, want %d", tt.a, tt.b, got, tt.want)
+		}
+	}
+}
+
+func TestVersionFromJSONFilename(t *testing.T) {
+	tests := []struct {
+		filename string
+		want     string
+	}{
+		{"go1.24.json", "1.24"},
+		{"go1.24.0.json", "1.24.0"},
+		{"go1.26.json", "1.26"},
+		{"go1.23.json", "1.23"},
+	}
+
+	for _, tt := range tests {
+		got := versionFromJSONFilename(tt.filename)
+		if got != tt.want {
+			t.Errorf("versionFromJSONFilename(%q) = %q, want %q", tt.filename, got, tt.want)
+		}
+	}
+}
+
+func TestRebuildIndex(t *testing.T) {
+	tmpDir := t.TempDir()
+	platformDir := tmpDir + "/linux-amd64"
+	if err := os.MkdirAll(platformDir, 0755); err != nil {
+		t.Fatalf("failed to create platform dir: %v", err)
+	}
+
+	// Helper to write a synthetic version JSON.
+	writeVersion := func(filename, version string, benchmarks map[string]Benchmark) {
+		t.Helper()
+		vd := VersionData{
+			Version: version,
+			Metadata: VersionMetadata{
+				CollectedAt: "2025-01-01T00:00:00Z",
+				System:      SystemInfo{OS: "linux", Arch: "amd64"},
+			},
+			Benchmarks: benchmarks,
+		}
+		data, err := json.Marshal(vd)
+		if err != nil {
+			t.Fatalf("failed to marshal version data: %v", err)
+		}
+		if err := os.WriteFile(platformDir+"/"+filename, data, 0644); err != nil {
+			t.Fatalf("failed to write %s: %v", filename, err)
+		}
+	}
+
+	writeVersion("go1.23.json", "1.23", map[string]Benchmark{
+		"BenchmarkFoo": {Name: "BenchmarkFoo", NsPerOp: 100, NsPerOpVariance: 0.02},
+		"BenchmarkBar": {Name: "BenchmarkBar", NsPerOp: 200, NsPerOpVariance: 0.12},
+	})
+	writeVersion("go1.24.json", "1.24", map[string]Benchmark{
+		"BenchmarkFoo": {Name: "BenchmarkFoo", NsPerOp: 95, NsPerOpVariance: 0.03},
+		"BenchmarkBar": {Name: "BenchmarkBar", NsPerOp: 190, NsPerOpVariance: 0.08},
+	})
+
+	// Stale duplicate for 1.24 — should be skipped (older mtime via write order).
+	writeVersion("go1.24.0.json", "1.24", map[string]Benchmark{
+		"BenchmarkFoo": {Name: "BenchmarkFoo", NsPerOp: 90, NsPerOpVariance: 0.01},
+	})
+
+	if err := rebuildIndex(platformDir, tmpDir, "linux-amd64"); err != nil {
+		t.Fatalf("rebuildIndex failed: %v", err)
+	}
+
+	data, err := os.ReadFile(platformDir + "/index.json")
+	if err != nil {
+		t.Fatalf("failed to read index.json: %v", err)
+	}
+
+	var idx IndexData
+	if err := json.Unmarshal(data, &idx); err != nil {
+		t.Fatalf("failed to unmarshal index.json: %v", err)
+	}
+
+	// Expect exactly 2 unique versions.
+	if len(idx.Versions) != 2 {
+		t.Fatalf("expected 2 versions, got %d: %v", len(idx.Versions), idx.Versions)
+	}
+
+	// Versions should be sorted ascending.
+	if idx.Versions[0].Version != "1.23" || idx.Versions[1].Version != "1.24" {
+		t.Errorf("unexpected version order: %v", idx.Versions)
+	}
+
+	// benchmarkMaxCV for BenchmarkBar is max(0.12, 0.08) = 0.12 → noisy.
+	// benchmarkMaxCV for BenchmarkFoo is max(0.02, 0.03) = 0.03 → reliable.
+	reliabilityFor := func(name string) string {
+		for _, b := range idx.Benchmarks {
+			if b.Name == name {
+				return b.Reliability
+			}
+		}
+		return ""
+	}
+
+	if r := reliabilityFor("BenchmarkBar"); r != "noisy" {
+		t.Errorf("BenchmarkBar reliability = %q, want %q", r, "noisy")
+	}
+	if r := reliabilityFor("BenchmarkFoo"); r != "reliable" {
+		t.Errorf("BenchmarkFoo reliability = %q, want %q", r, "reliable")
+	}
+
+	// platforms.json should have been created.
+	if _, err := os.Stat(tmpDir + "/platforms.json"); err != nil {
+		t.Errorf("platforms.json not created: %v", err)
+	}
+}
+
 // TestAllBenchmarksWithDescriptionsHaveCategories ensures that every benchmark
 // with a description also has a category assigned
 func TestAllBenchmarksWithDescriptionsHaveCategories(t *testing.T) {

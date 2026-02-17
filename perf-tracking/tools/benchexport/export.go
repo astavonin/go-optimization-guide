@@ -8,6 +8,7 @@ import (
 	"os"
 	"path/filepath"
 	"sort"
+	"strconv"
 	"strings"
 	"time"
 )
@@ -64,7 +65,7 @@ func parseBenchmarkFile(filename, version string) (*VersionData, error) {
 	if err != nil {
 		return nil, fmt.Errorf("failed to open file: %w", err)
 	}
-	defer file.Close()
+	defer func() { _ = file.Close() }() // read-only; close errors don't affect parsed data
 
 	versionData := &VersionData{
 		Version:    version,
@@ -573,21 +574,21 @@ func getReliability(maxCV float64) string {
 	}
 }
 
-// exportAll exports all versions found in the results directory
+// exportAll exports all versions found in the results directory, then rebuilds
+// the index from all go*.json files present in the output platform directory.
+// This makes every export additive: pre-existing version files are never dropped.
 func exportAll(resultsDir, outputDir string) error {
 	fmt.Println("=== Exporting All Versions ===")
 
-	// Find all version directories
 	entries, err := os.ReadDir(resultsDir)
 	if err != nil {
 		return fmt.Errorf("failed to read results directory: %w", err)
 	}
 
-	var versions []VersionInfo
-	benchmarkNames := make(map[string]bool)
-	benchmarkMaxCV := map[string]float64{}
+	var exportedVersions []string
 	var platform string
 
+	// Phase 1: export each go*/ dir found in resultsDir.
 	for _, entry := range entries {
 		if !entry.IsDir() || !strings.HasPrefix(entry.Name(), "go") {
 			continue
@@ -596,21 +597,20 @@ func exportAll(resultsDir, outputDir string) error {
 		version := strings.TrimPrefix(entry.Name(), "go")
 		versionDir := filepath.Join(resultsDir, entry.Name())
 
-		// Find latest benchmark file (excluding retry and failed_benchmarks files)
+		// Find benchmark files, excluding auxiliary files.
 		files, err := filepath.Glob(filepath.Join(versionDir, "*.txt"))
 		if err != nil || len(files) == 0 {
 			continue
 		}
 
-		// Filter out retry, rerun, failed_benchmarks, and failed_packages files
 		var mainFiles []string
 		for _, f := range files {
 			base := filepath.Base(f)
 			if !strings.Contains(base, "_retry") &&
-			   !strings.Contains(base, "_rerun") &&
-			   !strings.Contains(base, "_failed_benchmarks") &&
-			   !strings.Contains(base, "_failed_packages") &&
-			   !strings.HasSuffix(base, ".backup") {
+				!strings.Contains(base, "_rerun") &&
+				!strings.Contains(base, "_failed_benchmarks") &&
+				!strings.Contains(base, "_failed_packages") &&
+				!strings.HasSuffix(base, ".backup") {
 				mainFiles = append(mainFiles, f)
 			}
 		}
@@ -619,11 +619,18 @@ func exportAll(resultsDir, outputDir string) error {
 			continue
 		}
 
-		// Sort by modification time, newest first
+		// Sort by modification time, newest first.
+		// Pre-cache mtimes so the comparator never calls os.Stat on a file
+		// that may have disappeared, which would yield nil and panic.
+		mainMtimes := make(map[string]time.Time, len(mainFiles))
+		for _, f := range mainFiles {
+			if fi, statErr := os.Stat(f); statErr == nil {
+				mainMtimes[f] = fi.ModTime()
+			}
+			// Zero time is a safe fallback; missing files sort last.
+		}
 		sort.Slice(mainFiles, func(i, j int) bool {
-			iInfo, _ := os.Stat(mainFiles[i])
-			jInfo, _ := os.Stat(mainFiles[j])
-			return iInfo.ModTime().After(jInfo.ModTime())
+			return mainMtimes[mainFiles[i]].After(mainMtimes[mainFiles[j]])
 		})
 
 		latestFile := mainFiles[0]
@@ -631,6 +638,9 @@ func exportAll(resultsDir, outputDir string) error {
 		// Compute inter-run CV across all main files for this version.
 		// This catches benchmarks that appear stable within a single run
 		// (low within-run CV) but differ significantly between runs.
+		// The resulting CV is written into the exported JSON so that
+		// rebuildIndex can use it when computing per-benchmark reliability.
+		interRunMaxCV := map[string]float64{}
 		if len(mainFiles) > 1 {
 			interRunMeans := map[string][]float64{}
 			for _, f := range mainFiles {
@@ -655,14 +665,11 @@ func exportAll(resultsDir, outputDir string) error {
 				for _, m := range means {
 					variance += (m - mean) * (m - mean)
 				}
-				cv := math.Sqrt(variance/float64(len(means)-1)) / mean
-				if cv > benchmarkMaxCV[name] {
-					benchmarkMaxCV[name] = cv
-				}
+				interRunMaxCV[name] = math.Sqrt(variance/float64(len(means)-1)) / mean
 			}
 		}
 
-		// Detect platform from the first version file if not yet determined
+		// Detect platform from the first available version file.
 		if platform == "" {
 			probeData, probeErr := parseBenchmarkFile(latestFile, version)
 			if probeErr == nil && probeData.Metadata.System.OS != "" && probeData.Metadata.System.Arch != "" {
@@ -670,41 +677,176 @@ func exportAll(resultsDir, outputDir string) error {
 			}
 		}
 
-		// Write version JSON into platform subdirectory
 		platformDir := filepath.Join(outputDir, platform)
 		outputFile := filepath.Join(platformDir, fmt.Sprintf("go%s.json", version))
 
-		// Export this version
 		if err := exportVersion(latestFile, version, outputFile); err != nil {
 			fmt.Printf("  Error: %v\n", err)
 			continue
 		}
 
-		// Read back to get metadata
-		data, _ := os.ReadFile(outputFile)
-		var versionData VersionData
-		if err := json.Unmarshal(data, &versionData); err == nil {
-			versions = append(versions, VersionInfo{
-				Version:     version,
-				File:        fmt.Sprintf("go%s.json", version),
-				CollectedAt: versionData.Metadata.CollectedAt,
-			})
-
-			// Collect benchmark names and track max CV across versions
-			for name, bench := range versionData.Benchmarks {
-				benchmarkNames[name] = true
-				if bench.NsPerOpVariance > benchmarkMaxCV[name] {
-					benchmarkMaxCV[name] = bench.NsPerOpVariance
-				}
+		// Promote inter-run CV into the exported JSON where it exceeds
+		// the within-run CV, so rebuildIndex sees the full variance signal.
+		if len(interRunMaxCV) > 0 {
+			if err := applyInterRunCV(outputFile, interRunMaxCV); err != nil {
+				fmt.Printf("  Warning: could not apply inter-run CV: %v\n", err)
 			}
 		}
+
+		exportedVersions = append(exportedVersions, version)
 	}
 
 	if platform == "" {
 		return fmt.Errorf("could not detect platform from benchmark files")
 	}
 
-	// Generate index.json inside platform subdirectory
+	// Phase 2: rebuild index from ALL go*.json files in the platform output
+	// directory (both newly written and pre-existing), so no version is lost.
+	platformDir := filepath.Join(outputDir, platform)
+	if err := rebuildIndex(platformDir, outputDir, platform); err != nil {
+		return fmt.Errorf("failed to rebuild index: %w", err)
+	}
+
+	// Read back the rebuilt index for accurate summary counts.
+	var indexData IndexData
+	if data, err := os.ReadFile(filepath.Join(platformDir, "index.json")); err == nil {
+		if unmarshalErr := json.Unmarshal(data, &indexData); unmarshalErr != nil {
+			fmt.Printf("  Warning: could not parse rebuilt index for summary: %v\n", unmarshalErr)
+		}
+	}
+
+	exportedStrs := make([]string, len(exportedVersions))
+	for i, v := range exportedVersions {
+		exportedStrs[i] = "go" + v
+	}
+	totalStrs := make([]string, len(indexData.Versions))
+	for i, v := range indexData.Versions {
+		totalStrs[i] = "go" + v.Version
+	}
+
+	fmt.Println("=== Export Summary ===")
+	fmt.Printf("Platform:          %s\n", platform)
+	fmt.Printf("Exported this run: %d (%s)\n", len(exportedVersions), strings.Join(exportedStrs, ", "))
+	fmt.Printf("Total in index:    %d (%s)\n", len(indexData.Versions), strings.Join(totalStrs, ", "))
+	fmt.Printf("Benchmarks:        %d\n", len(indexData.Benchmarks))
+	fmt.Printf("✓ Export complete!\n")
+
+	return nil
+}
+
+// applyInterRunCV updates NsPerOpVariance in the exported JSON for any benchmark
+// where the inter-run CV exceeds the within-run CV already stored.
+func applyInterRunCV(outputFile string, interRunMaxCV map[string]float64) error {
+	data, err := os.ReadFile(outputFile)
+	if err != nil {
+		return fmt.Errorf("failed to read %s: %w", outputFile, err)
+	}
+
+	var vd VersionData
+	if err := json.Unmarshal(data, &vd); err != nil {
+		return fmt.Errorf("failed to unmarshal %s: %w", outputFile, err)
+	}
+
+	updated := false
+	for name, irCV := range interRunMaxCV {
+		if b, ok := vd.Benchmarks[name]; ok && irCV > b.NsPerOpVariance {
+			b.NsPerOpVariance = irCV
+			vd.Benchmarks[name] = b
+			updated = true
+		}
+	}
+
+	if !updated {
+		return nil
+	}
+
+	jsonData, err := json.MarshalIndent(vd, "", "  ")
+	if err != nil {
+		return fmt.Errorf("failed to marshal %s: %w", outputFile, err)
+	}
+	return os.WriteFile(outputFile, jsonData, 0644)
+}
+
+// rebuildIndex scans all go<version>.json files in platformDir, computes
+// benchmarkMaxCV across all versions, and writes a complete index.json.
+// It also keeps platforms.json current via updatePlatformsJSON.
+func rebuildIndex(platformDir, outputDir, platform string) error {
+	jsonFiles, err := filepath.Glob(filepath.Join(platformDir, "go*.json"))
+	if err != nil {
+		return fmt.Errorf("failed to glob json files: %w", err)
+	}
+
+	// Keep only files whose name starts with go<digit> (e.g. go1.24.json).
+	var validFiles []string
+	for _, f := range jsonFiles {
+		base := filepath.Base(f)
+		if len(base) > 2 && base[2] >= '0' && base[2] <= '9' {
+			validFiles = append(validFiles, f)
+		}
+	}
+
+	// Pre-cache mtimes so the comparator never calls os.Stat on a file that
+	// may have disappeared between glob and sort, which would yield nil and panic.
+	fileMtimes := make(map[string]time.Time, len(validFiles))
+	for _, f := range validFiles {
+		if fi, statErr := os.Stat(f); statErr == nil {
+			fileMtimes[f] = fi.ModTime()
+		}
+		// Zero time is a safe fallback; missing files sort last on tie-break.
+	}
+
+	// Sort ascending by version number, newest mtime first within the same version.
+	// This ensures that when two files share the same JSON version string (e.g.
+	// go1.26.json and go1.26.0.json both contain "version":"1.26"), we process
+	// the most recently written file first and skip the stale duplicate.
+	sort.Slice(validFiles, func(i, j int) bool {
+		vi := versionFromJSONFilename(filepath.Base(validFiles[i]))
+		vj := versionFromJSONFilename(filepath.Base(validFiles[j]))
+		cmp := compareVersionStrings(vi, vj)
+		if cmp != 0 {
+			return cmp < 0
+		}
+		// Tie-break: prefer most recently modified file.
+		return fileMtimes[validFiles[i]].After(fileMtimes[validFiles[j]])
+	})
+
+	var versions []VersionInfo
+	benchmarkNames := make(map[string]bool)
+	benchmarkMaxCV := map[string]float64{}
+	seenVersions := make(map[string]bool)
+
+	for _, f := range validFiles {
+		data, err := os.ReadFile(f)
+		if err != nil {
+			fmt.Printf("  Warning: skipping %s: %v\n", filepath.Base(f), err)
+			continue
+		}
+		var vd VersionData
+		if err := json.Unmarshal(data, &vd); err != nil {
+			fmt.Printf("  Warning: skipping %s (parse error): %v\n", filepath.Base(f), err)
+			continue
+		}
+
+		// Skip stale duplicates: keep only the first (newest) file per version.
+		if seenVersions[vd.Version] {
+			continue
+		}
+		seenVersions[vd.Version] = true
+
+		versions = append(versions, VersionInfo{
+			Version:     vd.Version,
+			File:        filepath.Base(f),
+			CollectedAt: vd.Metadata.CollectedAt,
+		})
+
+		for name, bench := range vd.Benchmarks {
+			benchmarkNames[name] = true
+			if bench.NsPerOpVariance > benchmarkMaxCV[name] {
+				benchmarkMaxCV[name] = bench.NsPerOpVariance
+			}
+		}
+	}
+
 	var benchmarks []BenchmarkInfo
 	for name := range benchmarkNames {
 		benchmarks = append(benchmarks, BenchmarkInfo{
@@ -734,25 +876,47 @@ func exportAll(resultsDir, outputDir string) error {
 		return fmt.Errorf("failed to marshal index JSON: %w", err)
 	}
 
-	platformDir := filepath.Join(outputDir, platform)
-	indexFile := filepath.Join(platformDir, "index.json")
-	if err := os.WriteFile(indexFile, indexJSON, 0644); err != nil {
+	if err := os.WriteFile(filepath.Join(platformDir, "index.json"), indexJSON, 0644); err != nil {
 		return fmt.Errorf("failed to write index file: %w", err)
 	}
 
-	// Generate/update top-level platforms.json
-	if err := updatePlatformsJSON(outputDir, platform); err != nil {
-		return fmt.Errorf("failed to update platforms.json: %w", err)
+	return updatePlatformsJSON(outputDir, platform)
+}
+
+// versionFromJSONFilename extracts the version string from a filename like "go1.24.json".
+func versionFromJSONFilename(filename string) string {
+	s := strings.TrimPrefix(filename, "go")
+	return strings.TrimSuffix(s, ".json")
+}
+
+// compareVersionStrings compares two dot-separated version strings (e.g. "1.23", "1.24.1").
+// Returns negative if a < b, 0 if equal, positive if a > b.
+// Version parts are expected to be purely numeric; non-numeric components (e.g. "rc1")
+// are treated as 0 by strconv.Atoi. Go benchmark filenames use only stable release
+// versions so this is safe, but pre-release suffixes would sort incorrectly.
+func compareVersionStrings(a, b string) int {
+	partsA := strings.Split(a, ".")
+	partsB := strings.Split(b, ".")
+	maxLen := len(partsA)
+	if len(partsB) > maxLen {
+		maxLen = len(partsB)
 	}
-
-	fmt.Println("=== Export Summary ===")
-	fmt.Printf("Platform:          %s\n", platform)
-	fmt.Printf("Versions exported: %d\n", len(versions))
-	fmt.Printf("Benchmarks found:  %d\n", len(benchmarks))
-	fmt.Printf("Output directory:  %s/%s\n", outputDir, platform)
-	fmt.Printf("✓ Export complete!\n")
-
-	return nil
+	for i := 0; i < maxLen; i++ {
+		var va, vb int
+		if i < len(partsA) {
+			va, _ = strconv.Atoi(partsA[i])
+		}
+		if i < len(partsB) {
+			vb, _ = strconv.Atoi(partsB[i])
+		}
+		if va != vb {
+			if va < vb {
+				return -1
+			}
+			return 1
+		}
+	}
+	return 0
 }
 
 // updatePlatformsJSON reads an existing platforms.json (if present), merges/updates
