@@ -1,0 +1,15 @@
+{
+  "platforms": [
+    {
+      "name": "linux-amd64",
+      "display": "Linux amd64",
+      "index": "linux-amd64/index.json"
+    },
+    {
+      "name": "darwin-arm64",
+      "display": "macOS arm64",
+      "index": "darwin-arm64/index.json"
+    }
+  ],
+  "last_updated": "2026-02-17T10:50:01+06:00"
+}
