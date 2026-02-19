@@ -4,14 +4,13 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Go Performance Tracking - Version Comparison</title>
-    <script src="https://cdn.plot.ly/plotly-2.27.0.min.js"></script>
     <style>
         :root {
             --bg-primary: #f5f5f5;
             --bg-card: #ffffff;
             --bg-hover: #f8f9fa;
             --text-primary: #333333;
-            --text-secondary: #7f8c8d;
+            --text-secondary: #666666;
             --border-color: #e0e0e0;
             --border-hover: #3498db;
             --accent-color: #3498db;
@@ -46,11 +45,18 @@
             box-sizing: border-box;
         }
 
+        /* Prevent page-level horizontal scroll on all browsers including iOS Safari.
+           overflow-x: hidden on body alone is not enough on iOS — must be on html too. */
+        html {
+            overflow-x: hidden;
+        }
+
         body {
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
             background: var(--bg-primary);
             color: var(--text-primary);
             line-height: 1.6;
+            overflow-x: hidden;
         }
 
         .container {
@@ -123,7 +129,8 @@
         }
 
         select:focus {
-            outline: none;
+            outline: 2px solid var(--accent-hover);
+            outline-offset: 2px;
             border-color: var(--accent-hover);
         }
 
@@ -355,6 +362,12 @@
             margin-bottom: 20px;
         }
 
+        [data-md-color-scheme="slate"] .error {
+            background: #3d0009;
+            border-color: #dc3545;
+            color: #ff8a94;
+        }
+
         .variance-badge {
             display: inline-block;
             padding: 4px 8px;
@@ -376,6 +389,19 @@
         .variance-high {
             background: #f8d7da;
             color: #721c24;
+        }
+
+        [data-md-color-scheme="slate"] .variance-low {
+            background: #1a3a2a;
+            color: #6fcf97;
+        }
+        [data-md-color-scheme="slate"] .variance-medium {
+            background: #3a3010;
+            color: #f2c94c;
+        }
+        [data-md-color-scheme="slate"] .variance-high {
+            background: #3a1010;
+            color: #eb5757;
         }
 
         .reliability-badge {
@@ -443,37 +469,53 @@
             }
 
             .category-filter {
-                padding: 15px;
+                padding: 12px;
             }
 
+            /* Grid guarantees 2-column layout without overflow regardless of container width */
             .category-tabs {
+                display: grid;
+                grid-template-columns: 1fr 1fr;
                 gap: 8px;
             }
 
             .category-tab {
-                flex: 1 1 calc(50% - 4px);
+                flex: none;
                 min-width: 0;
-                padding: 10px 12px;
-                font-size: 14px;
+                padding: 8px 10px;
+                font-size: 13px;
             }
 
             .category-badge {
                 font-size: 11px;
-                padding: 2px 6px;
-                min-width: 20px;
+                padding: 2px 5px;
+                min-width: 18px;
             }
 
             .metadata {
-                padding: 15px;
+                padding: 12px;
+            }
+
+            .metadata h2 {
+                font-size: 16px;
+                margin-bottom: 12px;
             }
 
             .metadata-grid {
                 grid-template-columns: 1fr;
-                gap: 10px;
+                gap: 8px;
             }
 
             .metadata-item {
-                padding: 12px;
+                padding: 10px;
+            }
+
+            .metadata-label {
+                font-size: 11px;
+            }
+
+            .metadata-value {
+                font-size: 13px;
             }
 
             .summary {
@@ -527,8 +569,6 @@
 
             .chart-container {
                 padding: 15px;
-                margin-left: -5px;
-                margin-right: -5px;
                 overflow-x: auto;
                 -webkit-overflow-scrolling: touch;
             }
@@ -573,6 +613,243 @@
                 font-size: 12px;
                 max-width: 100px;
             }
+        }
+
+        /* ── Mobile card layout ─────────────────────────────────── */
+
+        .benchmark-cards {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            margin-top: 10px;
+        }
+
+        .benchmark-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            padding: 10px 12px;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+        }
+
+        .card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            gap: 8px;
+            margin-bottom: 6px;
+        }
+
+        .card-name {
+            font-weight: 600;
+            color: var(--text-primary);
+            font-size: 13px;
+            word-break: break-word;
+            flex: 1;
+        }
+
+        .card-delta {
+            font-size: 13px;
+            font-weight: 700;
+            white-space: nowrap;
+            flex-shrink: 0;
+        }
+
+        .card-metrics {
+            display: grid;
+            grid-template-columns: auto 1fr;
+            gap: 3px 10px;
+            margin-bottom: 6px;
+            align-items: baseline;
+        }
+
+        .card-metric-label {
+            font-size: 11px;
+            color: var(--text-secondary);
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.3px;
+        }
+
+        .card-metric-value {
+            font-size: 12px;
+            color: var(--text-primary);
+        }
+
+        .card-variance {
+            margin-bottom: 6px;
+        }
+
+        .card-details-toggle {
+            width: 100%;
+            min-height: 36px;
+            background: var(--bg-hover);
+            color: var(--text-primary);
+            border: 1px solid var(--border-color);
+            border-radius: 4px;
+            font-size: 12px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: background 0.2s, border-color 0.2s;
+            padding: 0 10px;
+            text-align: left;
+        }
+
+        .card-details-toggle:hover {
+            background: var(--bg-card);
+            border-color: var(--border-hover);
+        }
+
+        .card-details-toggle:focus {
+            outline: 2px solid var(--accent-hover);
+            outline-offset: 2px;
+        }
+
+        .card-details {
+            margin-top: 8px;
+            border-top: 1px solid var(--border-color);
+            padding-top: 8px;
+        }
+
+        .card-detail-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: baseline;
+            gap: 8px;
+            padding: 3px 0;
+            border-bottom: 1px solid var(--border-color);
+            font-size: 12px;
+        }
+
+        .card-detail-row:last-child {
+            border-bottom: none;
+        }
+
+        .card-detail-row span:first-child {
+            color: var(--text-secondary);
+            font-weight: 600;
+            font-size: 11px;
+            text-transform: uppercase;
+            letter-spacing: 0.3px;
+            white-space: nowrap;
+        }
+
+        .card-detail-row span:last-child {
+            color: var(--text-primary);
+            text-align: right;
+        }
+
+        /* Category header for card groups */
+        .card-category-header {
+            background: var(--bg-hover);
+            border-top: 2px solid var(--accent-color);
+            border-bottom: 1px solid var(--border-color);
+            padding: 6px 10px;
+            font-weight: 600;
+            color: var(--text-primary);
+            font-size: 12px;
+            border-radius: 4px;
+            margin-top: 4px;
+        }
+
+        .mobile-summary-bar {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            gap: 4px;
+            margin-bottom: 10px;
+            font-size: 12px;
+        }
+        .summary-improved { color: var(--success-color); font-weight: 600; }
+        .summary-regressed { color: var(--danger-color); font-weight: 600; }
+        .summary-neutral { color: var(--neutral-color); }
+        .summary-sep { color: var(--text-secondary); margin: 0 4px; }
+
+        .top-movers { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 20px; }
+        .top-movers-col { background: var(--bg-card); border: 1px solid var(--border-color); border-radius: 6px; padding: 8px; min-width: 0; }
+        .top-movers-heading { font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.3px; color: var(--text-secondary); margin-bottom: 6px; }
+        .top-mover-row { display: flex; justify-content: space-between; align-items: baseline; gap: 4px; padding: 3px 0; font-size: 12px; border-bottom: 1px solid var(--border-color); }
+        .top-mover-row:last-child { border-bottom: none; }
+        /* min-width: 0 is required for text-overflow: ellipsis to work in a flex row */
+        .top-mover-name { color: var(--text-primary); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; flex: 1; min-width: 0; }
+        /* flex-shrink: 0 keeps the delta value from being squeezed off the right edge */
+        .top-mover-delta { flex-shrink: 0; white-space: nowrap; }
+        .top-mover-none { font-size: 12px; color: var(--text-secondary); font-style: italic; }
+
+        .category-averages {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+            gap: 8px;
+            margin-bottom: 16px;
+        }
+        .cat-avg-item {
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-left: 3px solid var(--accent-color);
+            border-radius: 6px;
+            padding: 10px 12px;
+        }
+        .cat-avg-name { display: block; font-size: 12px; font-weight: 600; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 0.3px; margin-bottom: 4px; }
+        .cat-avg-delta { display: block; font-size: 15px; font-weight: 700; }
+        .cat-avg-count { display: block; font-size: 11px; color: var(--text-secondary); margin-top: 2px; }
+
+        /* Collapsible group header — replaces the static .card-category-header for the "all" view on mobile */
+        .collapsible-header {
+            width: 100%; display: flex; align-items: center; gap: 6px;
+            background: var(--bg-hover); border: none; border-top: 2px solid var(--accent-color);
+            border-bottom: 1px solid var(--border-color); padding: 8px 10px;
+            font-size: 12px; font-weight: 600; color: var(--text-primary);
+            border-radius: 4px; margin-top: 4px; cursor: pointer; text-align: left;
+            min-height: 36px;
+        }
+        .collapsible-header:focus { outline: 2px solid var(--accent-hover); outline-offset: 2px; }
+        .group-title { flex: 1; }
+        .group-meta { font-size: 11px; font-weight: 400; color: var(--text-secondary); white-space: nowrap; }
+        .group-arrow { font-size: 10px; color: var(--text-secondary); flex-shrink: 0; }
+        .card-group-body { display: flex; flex-direction: column; gap: 6px; margin-top: 4px; }
+        /* Explicit overrides — display:flex/grid above would otherwise win over [hidden]'s display:none */
+        .card-group-body[hidden] { display: none; }
+        #metadata-body[hidden] { display: none; }
+
+        /* ── Mobile collapsible chart toggle ────────────────────── */
+
+        .chart-toggle-btn {
+            width: 100%;
+            min-height: 44px;
+            background: var(--bg-hover);
+            color: var(--text-primary);
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            font-size: 15px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: background 0.2s, border-color 0.2s;
+            padding: 0 14px;
+            text-align: left;
+            margin-bottom: 12px;
+        }
+
+        .chart-toggle-btn:hover {
+            background: var(--bg-card);
+            border-color: var(--border-hover);
+        }
+
+        .chart-toggle-btn:focus {
+            outline: 2px solid var(--accent-hover);
+            outline-offset: 2px;
+        }
+
+        /* Visually hidden but accessible to screen readers */
+        .sr-only {
+            position: absolute;
+            width: 1px;
+            height: 1px;
+            padding: 0;
+            margin: -1px;
+            overflow: hidden;
+            clip: rect(0, 0, 0, 0);
+            white-space: nowrap;
+            border: 0;
         }
     </style>
 </head>
@@ -624,6 +901,7 @@
             </div>
         </div>
 
+        <div id="sr-status" role="status" aria-live="polite" aria-atomic="true" class="sr-only"></div>
         <div id="error-container"></div>
         <div id="metadata-container"></div>
         <div id="summary-container"></div>
@@ -631,6 +909,34 @@
     </div>
 
     <script>
+        // Benchmark categories — single source of truth used by both table and card renderers
+        const CATEGORIES = [
+            { name: 'runtime', label: 'Runtime & GC' },
+            { name: 'stdlib', label: 'Standard Library' },
+            { name: 'networking', label: 'Networking' },
+            { name: 'uncategorized', label: 'Other' }
+        ];
+
+        // Lazily load Plotly.js the first time charts are needed.
+        // Returns a Promise that resolves when Plotly is available.
+        // Subsequent calls return the cached promise (no duplicate loads).
+        let _plotlyPromise = null;
+        function ensurePlotly() {
+            if (window.Plotly) return Promise.resolve();
+            if (_plotlyPromise) return _plotlyPromise;
+            _plotlyPromise = new Promise((resolve, reject) => {
+                const s = document.createElement('script');
+                // TODO(security): Add SRI integrity hash before production deployment.
+                // Generate with: curl -s https://cdn.plot.ly/plotly-2.27.0.min.js | openssl dgst -sha384 -binary | openssl base64 -A
+                // Then add: s.integrity = 'sha384-<hash>'; s.crossOrigin = 'anonymous';
+                s.src = 'https://cdn.plot.ly/plotly-2.27.0.min.js';
+                s.onload = resolve;
+                s.onerror = () => { _plotlyPromise = null; reject(new Error('Failed to load Plotly')); };
+                document.head.appendChild(s);
+            });
+            return _plotlyPromise;
+        }
+
         let platformsData = null;
         let currentPlatform = null;
         let indexData = null;
@@ -733,6 +1039,7 @@
 
         // Listen for theme changes from parent window
         window.addEventListener('message', (event) => {
+            if (event.origin !== window.location.origin) return;
             if (event.data && event.data.theme) {
                 console.log('Received theme change message:', event.data.theme);
                 // Re-detect and apply theme (this will update all colors)
@@ -853,6 +1160,7 @@
         async function loadPlatforms() {
             try {
                 const response = await fetch('data/platforms.json');
+                if (!response.ok) throw new Error(`HTTP ${response.status}`);
                 platformsData = await response.json();
                 populatePlatformSelector();
             } catch (error) {
@@ -881,6 +1189,7 @@
             try {
                 currentPlatform = platform;
                 const response = await fetch(`data/${platform}/index.json`);
+                if (!response.ok) throw new Error(`HTTP ${response.status}`);
                 indexData = await response.json();
 
                 // Build benchmark metadata map
@@ -921,6 +1230,7 @@
         // Load version data
         async function loadVersionData(filename) {
             const response = await fetch(`data/${currentPlatform}/${filename}`);
+            if (!response.ok) throw new Error(`HTTP ${response.status}`);
             return await response.json();
         }
 
@@ -947,7 +1257,7 @@
                 updateCategoryBadges();
                 renderMetadata();
                 renderSummary();
-                renderCharts();
+                await renderCharts();
             } catch (error) {
                 showError('Failed to load version data: ' + error.message);
             }
@@ -957,35 +1267,51 @@
         function renderMetadata() {
             const container = document.getElementById('metadata-container');
 
-            const html = `
-                <div class="metadata">
-                    <h2>System Information</h2>
-                    <div class="metadata-grid">
-                        <div class="metadata-item">
-                            <div class="metadata-label">Baseline Version</div>
-                            <div class="metadata-value">${sanitizeHTML(baselineData.metadata.go_version_full)}</div>
-                        </div>
-                        <div class="metadata-item">
-                            <div class="metadata-label">Target Version</div>
-                            <div class="metadata-value">${sanitizeHTML(targetData.metadata.go_version_full)}</div>
-                        </div>
-                        <div class="metadata-item">
-                            <div class="metadata-label">CPU</div>
-                            <div class="metadata-value">${sanitizeHTML(baselineData.metadata.system.cpu)}</div>
-                        </div>
-                        <div class="metadata-item">
-                            <div class="metadata-label">Platform</div>
-                            <div class="metadata-value">${sanitizeHTML(baselineData.metadata.system.os)}/${sanitizeHTML(baselineData.metadata.system.arch)}</div>
-                        </div>
-                        <div class="metadata-item">
-                            <div class="metadata-label">Benchmark Config</div>
-                            <div class="metadata-value">${sanitizeHTML(String(baselineData.metadata.benchmark_config.iterations))} iterations × ${sanitizeHTML(baselineData.metadata.benchmark_config.benchtime)}</div>
-                        </div>
+            const gridHTML = `
+                <div class="metadata-grid">
+                    <div class="metadata-item">
+                        <div class="metadata-label">Baseline Version</div>
+                        <div class="metadata-value">${sanitizeHTML(baselineData.metadata.go_version_full)}</div>
                     </div>
-                </div>
-            `;
+                    <div class="metadata-item">
+                        <div class="metadata-label">Target Version</div>
+                        <div class="metadata-value">${sanitizeHTML(targetData.metadata.go_version_full)}</div>
+                    </div>
+                    <div class="metadata-item">
+                        <div class="metadata-label">CPU</div>
+                        <div class="metadata-value">${sanitizeHTML(baselineData.metadata.system.cpu)}</div>
+                    </div>
+                    <div class="metadata-item">
+                        <div class="metadata-label">Platform</div>
+                        <div class="metadata-value">${sanitizeHTML(baselineData.metadata.system.os)}/${sanitizeHTML(baselineData.metadata.system.arch)}</div>
+                    </div>
+                    <div class="metadata-item">
+                        <div class="metadata-label">Benchmark Config</div>
+                        <div class="metadata-value">${sanitizeHTML(String(baselineData.metadata.benchmark_config.iterations))} iterations × ${sanitizeHTML(baselineData.metadata.benchmark_config.benchtime)}</div>
+                    </div>
+                </div>`;
 
-            container.innerHTML = html;
+            if (isMobile()) {
+                container.innerHTML = `
+                    <div class="metadata">
+                        <button class="collapsible-header" id="metadata-toggle" aria-expanded="false" aria-controls="metadata-body">
+                            <span class="group-title">System Information</span>
+                            <span class="group-arrow">&#x25B6;</span>
+                        </button>
+                        <div id="metadata-body" hidden>${gridHTML}</div>
+                    </div>`;
+
+                document.getElementById('metadata-toggle').addEventListener('click', function() {
+                    const body = document.getElementById('metadata-body');
+                    const expanded = this.getAttribute('aria-expanded') === 'true';
+                    const arrow = this.querySelector('.group-arrow');
+                    body.hidden = expanded;
+                    this.setAttribute('aria-expanded', String(!expanded));
+                    arrow.textContent = expanded ? '\u25B6' : '\u25BC';
+                });
+            } else {
+                container.innerHTML = `<div class="metadata"><h2>System Information</h2>${gridHTML}</div>`;
+            }
         }
 
         // Calculate percentage change
@@ -1008,7 +1334,9 @@
 
             // Use GitHub's text search anchor to jump to the function
             const searchText = `func%20${benchmarkName}`;
-            return `${url}/${source_path}/${sourceFile}#:~:text=${searchText}`;
+            const constructed = `${url}/${source_path}/${sourceFile}#:~:text=${searchText}`;
+            if (!constructed.startsWith('https://')) return null;
+            return constructed;
         }
 
         // Format delta with clear color coding.
@@ -1123,24 +1451,42 @@
             `;
         }
 
-        // Render summary table
+        // True when the viewport is at or below the mobile breakpoint
+        function isMobile() {
+            return window.innerWidth <= 768;
+        }
+
+        // Announce summary stats to screen readers via the live region
+        function announceToScreenReader(benchmarks) {
+            const stats = computeSummaryStats(benchmarks);
+            const msg = `Comparison updated: ${stats.improved} improved, ${stats.regressed} regressed, ${stats.neutral} neutral.`;
+            const el = document.getElementById('sr-status');
+            if (el) el.textContent = msg;
+        }
+
+        // Render summary — delegates to card layout on mobile, table on desktop
         function renderSummary() {
             const container = document.getElementById('summary-container');
-
-            let tableRows = '';
             const allBenchmarks = Object.keys(baselineData.benchmarks);
             const filteredBenchmarks = filterBenchmarksByCategory(allBenchmarks, activeCategory);
 
+            if (isMobile()) {
+                renderCards(filteredBenchmarks, container);
+                announceToScreenReader(filteredBenchmarks);
+                return;
+            }
+
+            // ── Desktop: table layout ──────────────────────────────────
+            const stats = computeSummaryStats(filteredBenchmarks);
+            const summaryBarHTML = buildSummaryBarHTML(stats);
+            const categoryAveragesHTML = buildCategoryAveragesHTML(filteredBenchmarks);
+            const topMoversHTML = filteredBenchmarks.length >= 2 ? buildTopMoversHTML(stats) : '';
+
+            let tableRows = '';
+
             // Group benchmarks by category when showing "all"
             if (activeCategory === 'all') {
-                const categories = [
-                    { name: 'runtime', label: 'Runtime & GC' },
-                    { name: 'stdlib', label: 'Standard Library' },
-                    { name: 'networking', label: 'Networking' },
-                    { name: 'uncategorized', label: 'Other' }
-                ];
-
-                categories.forEach(({ name: categoryName, label }) => {
+                CATEGORIES.forEach(({ name: categoryName, label }) => {
                     const categoryBenchmarks = filteredBenchmarks.filter(name =>
                         getBenchmarkCategory(name) === categoryName
                     );
@@ -1172,6 +1518,9 @@
                         <span class="delta-positive">Green (negative %)</span> = improvement,
                         <span class="delta-negative">Red (positive %)</span> = regression
                     </p>
+                    ${summaryBarHTML}
+                    ${categoryAveragesHTML}
+                    ${topMoversHTML}
                     <div class="table-wrapper">
                         <table class="benchmark-table">
                             <thead>
@@ -1195,6 +1544,327 @@
             `;
 
             container.innerHTML = html;
+            announceToScreenReader(filteredBenchmarks);
+        }
+
+        // Compute improved / regressed / neutral counts and top movers for mobile summary.
+        // A benchmark is "improved" when timeDelta < -0.5%, "regressed" when > +0.5%,
+        // and "neutral" otherwise.  Infinite deltas are excluded from the top-movers lists
+        // because they cannot be meaningfully ranked by magnitude.
+        function computeSummaryStats(benchmarks) {
+            let improved = 0, regressed = 0, neutral = 0;
+            const improvements = [], regressions = [];
+
+            benchmarks.forEach(name => {
+                const baseline = baselineData.benchmarks[name];
+                const target = targetData.benchmarks[name];
+                if (!target) return;
+
+                const delta = percentChange(baseline.ns_per_op, target.ns_per_op);
+
+                if (!Number.isFinite(delta)) return; // skip infinities for counts and ranking
+
+                // Unstable benchmarks (CV ≥ 15%) still contribute to the improved/regressed/
+                // neutral counts so the summary bar reflects reality, but they are excluded
+                // from the ranked top-movers lists because their delta may not be a real change.
+                const isUnstable = Math.max(
+                    baseline.ns_per_op_variance ?? 0,
+                    target.ns_per_op_variance ?? 0
+                ) >= 0.15;
+
+                if (delta < -0.5) {
+                    improved++;
+                    if (!isUnstable) improvements.push({ name: name.replace('Benchmark', ''), delta });
+                } else if (delta > 0.5) {
+                    regressed++;
+                    if (!isUnstable) regressions.push({ name: name.replace('Benchmark', ''), delta });
+                } else {
+                    neutral++;
+                }
+            });
+
+            // Sort improvements by most negative delta first (largest absolute improvement)
+            improvements.sort((a, b) => a.delta - b.delta);
+            // Sort regressions by most positive delta first (largest absolute regression)
+            regressions.sort((a, b) => b.delta - a.delta);
+
+            return {
+                improved,
+                regressed,
+                neutral,
+                topImprovements: improvements.slice(0, 3),
+                topRegressions: regressions.slice(0, 3)
+            };
+        }
+
+        // Build per-category average delta cards. Only rendered when activeCategory === 'all'.
+        // Unstable benchmarks (CV ≥ 15%) are excluded from the average so noise does not
+        // distort the per-category summary.
+        function buildCategoryAveragesHTML(benchmarks) {
+            if (activeCategory !== 'all') return '';
+
+            let html = '<div class="category-averages">';
+            CATEGORIES.forEach(({ name: categoryName, label }) => {
+                const catBenchmarks = benchmarks.filter(n => getBenchmarkCategory(n) === categoryName);
+                if (catBenchmarks.length === 0) return;
+
+                // stableDeltas excludes benchmarks whose max comparison CV ≥ 15%
+                const stableDeltas = catBenchmarks
+                    .map(n => {
+                        const b = baselineData.benchmarks[n];
+                        const t = targetData.benchmarks[n];
+                        if (!t) return null;
+                        if (Math.max(b.ns_per_op_variance ?? 0, t.ns_per_op_variance ?? 0) >= 0.15) return null;
+                        const d = percentChange(b.ns_per_op, t.ns_per_op);
+                        return Number.isFinite(d) ? d : null;
+                    })
+                    .filter(d => d !== null);
+
+                const stableCount = stableDeltas.length;
+                const countLabel = stableCount < catBenchmarks.length
+                    ? `${stableCount}/${catBenchmarks.length} stable`
+                    : `${catBenchmarks.length} benchmarks`;
+
+                let deltaClass = 'delta-neutral', deltaLabel = '~0%';
+                if (stableDeltas.length > 0) {
+                    const avg = stableDeltas.reduce((s, v) => s + v, 0) / stableDeltas.length;
+                    if (avg < -0.5) {
+                        deltaClass = 'delta-positive';
+                        // avgMeta is raw HTML — deltaClass is hardcoded, avg.toFixed is numeric-only
+                        deltaLabel = `\u2212${Math.abs(avg).toFixed(2)}%`;
+                    } else if (avg > 0.5) {
+                        deltaClass = 'delta-negative';
+                        deltaLabel = `+${avg.toFixed(2)}%`;
+                    }
+                }
+
+                html += `<div class="cat-avg-item">` +
+                    `<span class="cat-avg-name">${sanitizeHTML(label)}</span>` +
+                    `<span class="cat-avg-delta ${deltaClass}">${deltaLabel}</span>` +
+                    `<span class="cat-avg-count">${sanitizeHTML(countLabel)}</span>` +
+                    `</div>`;
+            });
+            html += '</div>';
+            return html;
+        }
+
+        // Build the summary bar HTML showing improved / regressed / neutral counts.
+        function buildSummaryBarHTML(stats) {
+            return `<div class="mobile-summary-bar">` +
+                `<span class="summary-improved">\u2191 ${stats.improved} improved</span>` +
+                `<span class="summary-sep">\u00B7</span>` +
+                `<span class="summary-regressed">\u2193 ${stats.regressed} regressed</span>` +
+                `<span class="summary-sep">\u00B7</span>` +
+                `<span class="summary-neutral">\u2192 ${stats.neutral} neutral</span>` +
+                `</div>`;
+        }
+
+        // Build the top-movers two-column panel HTML.
+        // Only rendered when there are at least 2 benchmarks in scope.
+        function buildTopMoversHTML(stats) {
+            // cssClass is a hardcoded caller-supplied string — never external data
+            function buildMoverRows(entries, cssClass) {
+                if (entries.length === 0) {
+                    return `<div class="top-mover-none">None</div>`;
+                }
+                return entries.map(e => {
+                    const sign = e.delta > 0 ? '+' : '';
+                    return `<div class="top-mover-row">` +
+                        `<span class="top-mover-name">${sanitizeHTML(e.name)}</span>` +
+                        `<span class="top-mover-delta ${cssClass}">${sign}${e.delta.toFixed(1)}%</span>` +
+                        `</div>`;
+                }).join('');
+            }
+
+            return `<div class="top-movers">` +
+                `<div class="top-movers-col">` +
+                `<div class="top-movers-heading">Top improvements</div>` +
+                buildMoverRows(stats.topImprovements, 'delta-positive') +
+                `</div>` +
+                `<div class="top-movers-col">` +
+                `<div class="top-movers-heading">Top regressions</div>` +
+                buildMoverRows(stats.topRegressions, 'delta-negative') +
+                `</div>` +
+                `</div>`;
+        }
+
+        // Render benchmark cards for mobile layout
+        function renderCards(benchmarks, container) {
+
+            // ── Summary bar + top movers ──────────────────────────────
+            const stats = computeSummaryStats(benchmarks);
+            const summaryBarHTML = buildSummaryBarHTML(stats);
+            const categoryAveragesHTML = buildCategoryAveragesHTML(benchmarks);
+            // Top movers are only meaningful when there are at least 2 benchmarks in scope
+            const topMoversHTML = benchmarks.length >= 2 ? buildTopMoversHTML(stats) : '';
+
+            let cardsHTML = '';
+
+            if (activeCategory === 'all') {
+                // Group cards under collapsible category headers; all start collapsed
+                CATEGORIES.forEach(({ name: categoryName, label }) => {
+                    const categoryBenchmarks = benchmarks.filter(name =>
+                        getBenchmarkCategory(name) === categoryName
+                    );
+
+                    if (categoryBenchmarks.length === 0) return;
+
+                    // Compute average timeDelta for this category.
+                    // Skip infinities and unstable benchmarks (CV ≥ 15%) so noise
+                    // does not distort the per-category header summary.
+                    const finiteDeltas = categoryBenchmarks
+                        .map(name => {
+                            const b = baselineData.benchmarks[name];
+                            const t = targetData.benchmarks[name];
+                            if (!t) return null;
+                            if (Math.max(b.ns_per_op_variance ?? 0, t.ns_per_op_variance ?? 0) >= 0.15) return null;
+                            const d = percentChange(b.ns_per_op, t.ns_per_op);
+                            return Number.isFinite(d) ? d : null;
+                        })
+                        .filter(d => d !== null);
+
+                    let avgMeta = '';
+                    if (finiteDeltas.length > 0) {
+                        const avg = finiteDeltas.reduce((s, v) => s + v, 0) / finiteDeltas.length;
+                        let avgClass, avgLabel;
+                        if (avg < -0.5) {
+                            avgClass = 'delta-positive';
+                            avgLabel = `avg \u2212${Math.abs(avg).toFixed(2)}%`;
+                        } else if (avg > 0.5) {
+                            avgClass = 'delta-negative';
+                            avgLabel = `avg +${avg.toFixed(2)}%`;
+                        } else {
+                            avgClass = 'delta-neutral';
+                            avgLabel = 'avg ~0%';
+                        }
+                        // avgMeta is raw HTML — avgClass is hardcoded, avgLabel is numeric-only
+                        avgMeta = ` <span class="${avgClass}">${avgLabel}</span>`;
+                    }
+
+                    const groupBodyId = `group-body-${categoryName}`;
+                    cardsHTML += `<button class="card-category-header collapsible-header" aria-expanded="false" aria-controls="${sanitizeHTML(groupBodyId)}" data-group="${sanitizeHTML(categoryName)}">` +
+                        `<span class="group-title">${sanitizeHTML(label)}</span>` +
+                        `<span class="group-meta">${sanitizeHTML(String(categoryBenchmarks.length))}${avgMeta}</span>` +
+                        `<span class="group-arrow">\u25B6</span>` +
+                        `</button>` +
+                        `<div class="card-group-body" id="${sanitizeHTML(groupBodyId)}" hidden>`;
+
+                    categoryBenchmarks.forEach(name => {
+                        cardsHTML += renderCardRow(name);
+                    });
+
+                    cardsHTML += `</div>`;
+                });
+            } else {
+                benchmarks.forEach(name => {
+                    cardsHTML += renderCardRow(name);
+                });
+            }
+
+            container.innerHTML = `
+                <div class="summary">
+                    <h2>Performance Comparison</h2>
+                    <p style="color: var(--text-secondary); font-size: 14px; margin-bottom: 15px;">
+                        <span class="delta-positive">Green (negative %)</span> = improvement,
+                        <span class="delta-negative">Red (positive %)</span> = regression
+                    </p>
+                    ${summaryBarHTML}
+                    ${categoryAveragesHTML}
+                    ${topMoversHTML}
+                    <div class="benchmark-cards">${cardsHTML}</div>
+                </div>
+            `;
+
+            // Attach toggle listeners for individual card details
+            container.querySelectorAll('.card-details-toggle').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    const details = this.nextElementSibling;
+                    const expanded = this.getAttribute('aria-expanded') === 'true';
+                    if (expanded) {
+                        details.hidden = true;
+                        this.setAttribute('aria-expanded', 'false');
+                        this.textContent = 'Show details \u25BC';
+                    } else {
+                        details.hidden = false;
+                        this.setAttribute('aria-expanded', 'true');
+                        this.textContent = 'Hide details \u25B2';
+                    }
+                });
+            });
+
+            // Attach toggle listeners for collapsible category group headers
+            container.querySelectorAll('.collapsible-header').forEach(header => {
+                header.addEventListener('click', function() {
+                    const groupName = this.dataset.group;
+                    const body = document.getElementById(`group-body-${groupName}`);
+                    const arrow = this.querySelector('.group-arrow');
+                    const expanded = this.getAttribute('aria-expanded') === 'true';
+                    if (expanded) {
+                        body.hidden = true;
+                        this.setAttribute('aria-expanded', 'false');
+                        arrow.textContent = '\u25B6';
+                    } else {
+                        body.hidden = false;
+                        this.setAttribute('aria-expanded', 'true');
+                        arrow.textContent = '\u25BC';
+                    }
+                });
+            });
+        }
+
+        // Build the HTML for a single benchmark card (analogous to renderBenchmarkRow)
+        function renderCardRow(name) {
+            const baseline = baselineData.benchmarks[name];
+            const target = targetData.benchmarks[name];
+
+            if (!target) return '';
+
+            const timeDelta = percentChange(baseline.ns_per_op, target.ns_per_op);
+            const allocDelta = percentChange(baseline.allocs_per_op, target.allocs_per_op);
+
+            const baselineVariance = baseline?.ns_per_op_variance ?? 0;
+            const targetVariance = target?.ns_per_op_variance ?? 0;
+            const comparisonMaxCV = Math.max(baselineVariance, targetVariance);
+
+            const displayName = name.replace('Benchmark', '');
+            const reliabilityBadge = getReliabilityBadge(name, baselineVariance, targetVariance);
+            const detailsId = `card-details-${sanitizeHTML(name.replace(/[^a-zA-Z0-9]/g, '-'))}`;
+
+            // Determine the delta CSS class for the card header summary value.
+            // Uses same sign convention as formatDelta: negative = improvement = green.
+            let deltaClass = 'delta-neutral';
+            let deltaText = '~0%';
+            if (Number.isFinite(timeDelta) && Math.abs(timeDelta) >= 0.5) {
+                deltaClass = timeDelta < 0 ? 'delta-positive' : 'delta-negative';
+                const sign = timeDelta > 0 ? '+' : '';
+                deltaText = `${sign}${timeDelta.toFixed(2)}%`;
+            } else if (!Number.isFinite(timeDelta)) {
+                deltaClass = timeDelta > 0 ? 'delta-negative' : 'delta-positive';
+                deltaText = timeDelta > 0 ? '+\u221E' : '-\u221E';
+            }
+
+            return `
+                <div class="benchmark-card">
+                    <div class="card-header">
+                        <span class="card-name">${sanitizeHTML(displayName)}${reliabilityBadge}</span>
+                        <span class="card-delta ${sanitizeHTML(deltaClass)}">${sanitizeHTML(deltaText)}</span>
+                    </div>
+                    <div class="card-metrics">
+                        <span class="card-metric-label">Time</span>
+                        <span class="card-metric-value">${sanitizeHTML(baseline.ns_per_op.toFixed(2))} \u2192 ${sanitizeHTML(target.ns_per_op.toFixed(2))} ns/op</span>
+                        <span class="card-metric-label">Allocs</span>
+                        <span class="card-metric-value">${sanitizeHTML(String(baseline.allocs_per_op))} \u2192 ${sanitizeHTML(String(target.allocs_per_op))}</span>
+                    </div>
+                    <div class="card-variance">${getVarianceBadge(baselineVariance, targetVariance)}</div>
+                    <button class="card-details-toggle" aria-expanded="false" aria-controls="${detailsId}">Show details \u25BC</button>
+                    <div class="card-details" id="${detailsId}" hidden>
+                        <div class="card-detail-row"><span>\u0394 Time</span><span>${formatDelta(timeDelta, comparisonMaxCV)}</span></div>
+                        <div class="card-detail-row"><span>\u0394 Allocs</span><span>${formatDelta(allocDelta)}</span></div>
+                        <div class="card-detail-row"><span>Baseline</span><span>${sanitizeHTML(baseline.ns_per_op.toFixed(2))} ns/op, ${sanitizeHTML(String(baseline.allocs_per_op))} allocs</span></div>
+                        <div class="card-detail-row"><span>Target</span><span>${sanitizeHTML(target.ns_per_op.toFixed(2))} ns/op, ${sanitizeHTML(String(target.allocs_per_op))} allocs</span></div>
+                    </div>
+                </div>
+            `;
         }
 
         // Get theme-aware chart layout
@@ -1224,33 +1894,112 @@
             };
         }
 
-        // Render charts
-        function renderCharts() {
-            const container = document.getElementById('charts-container');
-            container.innerHTML = `
+        // Build the inner HTML for a single chart section.
+        // On mobile the chart div is omitted until the user expands the section,
+        // saving the cost of an immediate Plotly render.
+        function buildChartSection(title, chartId) {
+            if (isMobile()) {
+                const wrapperId = `${sanitizeHTML(chartId)}-wrapper`;
+                return `
+                    <div class="chart-container" data-chart-id="${sanitizeHTML(chartId)}">
+                        <h2>${sanitizeHTML(title)}</h2>
+                        <button class="chart-toggle-btn" aria-expanded="false" aria-controls="${wrapperId}">\u25B6 Show chart</button>
+                        <div class="chart-plot-wrapper" id="${wrapperId}" hidden></div>
+                    </div>
+                `;
+            }
+            // Desktop: render chart immediately, no toggle button
+            return `
                 <div class="chart-container">
-                    <h2>Performance Comparison (ns/op)</h2>
-                    <div id="time-chart"></div>
-                </div>
-                <div class="chart-container">
-                    <h2>Memory Allocations</h2>
-                    <div id="allocs-chart"></div>
-                </div>
-                <div class="chart-container">
-                    <h2>Performance Delta (%)</h2>
-                    <div id="delta-chart"></div>
+                    <h2>${sanitizeHTML(title)}</h2>
+                    <div id="${sanitizeHTML(chartId)}"></div>
                 </div>
             `;
+        }
 
-            renderTimeChart();
-            renderAllocsChart();
-            renderDeltaChart();
+        // Wire up expand/collapse behaviour for chart toggle buttons.
+        // When a chart is expanded for the first time, the appropriate render
+        // function is called.  When collapsed, the Plotly plot is purged to
+        // reclaim memory.
+        function attachChartToggles() {
+            const renderFns = {
+                'time-chart': renderTimeChart,
+                'allocs-chart': renderAllocsChart,
+                'delta-chart': renderDeltaChart
+            };
+
+            document.querySelectorAll('.chart-toggle-btn').forEach(btn => {
+                btn.addEventListener('click', async function() {
+                    const container = this.closest('.chart-container');
+                    const chartId = container.dataset.chartId;
+                    const wrapper = container.querySelector('.chart-plot-wrapper');
+                    const expanded = this.getAttribute('aria-expanded') === 'true';
+
+                    if (expanded) {
+                        // Collapse: purge plot to free memory, then hide wrapper
+                        const plotEl = wrapper.querySelector('[id]');
+                        if (plotEl && window.Plotly) {
+                            Plotly.purge(plotEl);
+                        }
+                        wrapper.hidden = true;
+                        this.setAttribute('aria-expanded', 'false');
+                        this.textContent = '\u25B6 Show chart';
+                    } else {
+                        // Expand: load Plotly if needed, inject div, then render
+                        try {
+                            await ensurePlotly();
+                        } catch (e) {
+                            showError('Failed to load chart library: ' + e.message);
+                            return;
+                        }
+                        if (!wrapper.querySelector(`#${CSS.escape(chartId)}`)) {
+                            const plotDiv = document.createElement('div');
+                            plotDiv.id = chartId;
+                            wrapper.appendChild(plotDiv);
+                        }
+                        wrapper.hidden = false;
+                        this.setAttribute('aria-expanded', 'true');
+                        this.textContent = '\u25BC Hide chart';
+                        if (renderFns[chartId]) {
+                            renderFns[chartId]();
+                        }
+                    }
+                });
+            });
+        }
+
+        // Render charts
+        async function renderCharts() {
+            const container = document.getElementById('charts-container');
+            // Purge any existing Plotly instances before replacing the DOM to prevent memory leaks
+            if (window.Plotly) {
+                container.querySelectorAll('[id$="-chart"]').forEach(el => Plotly.purge(el));
+            }
+            container.innerHTML =
+                buildChartSection('Performance Comparison (ns/op)', 'time-chart') +
+                buildChartSection('Memory Allocations', 'allocs-chart') +
+                buildChartSection('Performance Delta (%)', 'delta-chart');
+
+            if (isMobile()) {
+                // Charts are collapsed by default on mobile; Plotly loads on first expand.
+                attachChartToggles();
+            } else {
+                // Desktop: load Plotly then render all charts.
+                try {
+                    await ensurePlotly();
+                    renderTimeChart();
+                    renderAllocsChart();
+                    renderDeltaChart();
+                } catch (e) {
+                    showError('Failed to load chart library: ' + e.message);
+                }
+            }
         }
 
         // Adjust chart configuration for mobile
         function getResponsiveChartConfig(baseConfig) {
-            const isMobile = window.innerWidth <= 768;
-            if (isMobile) {
+            const onMobile = window.innerWidth <= 768;
+            if (onMobile) {
                 return {
                     ...baseConfig,
                     margin: { t: 20, r: 10, b: 110, l: 50 },
@@ -1277,7 +2026,8 @@
         // Render time comparison chart
         function renderTimeChart() {
             const allBenchmarks = Object.keys(baselineData.benchmarks);
-            const benchmarks = filterBenchmarksByCategory(allBenchmarks, activeCategory);
+            const benchmarks = filterBenchmarksByCategory(allBenchmarks, activeCategory)
+                .filter(name => targetData.benchmarks[name]);
             const labels = benchmarks.map(name => name.replace('Benchmark', ''));
 
             const baselineValues = benchmarks.map(name => baselineData.benchmarks[name].ns_per_op);
@@ -1313,7 +2063,8 @@
         // Render allocations chart
         function renderAllocsChart() {
             const allBenchmarks = Object.keys(baselineData.benchmarks);
-            const benchmarks = filterBenchmarksByCategory(allBenchmarks, activeCategory);
+            const benchmarks = filterBenchmarksByCategory(allBenchmarks, activeCategory)
+                .filter(name => targetData.benchmarks[name]);
             const labels = benchmarks.map(name => name.replace('Benchmark', ''));
 
             const baselineAllocs = benchmarks.map(name => baselineData.benchmarks[name].allocs_per_op);
@@ -1349,7 +2100,8 @@
         // Render delta chart
         function renderDeltaChart() {
             const allBenchmarks = Object.keys(baselineData.benchmarks);
-            const benchmarks = filterBenchmarksByCategory(allBenchmarks, activeCategory);
+            const benchmarks = filterBenchmarksByCategory(allBenchmarks, activeCategory)
+                .filter(name => targetData.benchmarks[name]);
             const labels = benchmarks.map(name => name.replace('Benchmark', ''));
 
             const deltas = benchmarks.map(name => {
@@ -1416,6 +2168,28 @@
                 setActiveCategory(category);
             });
         });
+
+        // Debounced resize handler — re-renders summary and charts when the
+        // viewport crosses the 768px mobile/desktop breakpoint.
+        (function attachResizeHandler() {
+            let lastMobile = isMobile();
+            let resizeTimer = null;
+
+            window.addEventListener('resize', function() {
+                clearTimeout(resizeTimer);
+                resizeTimer = setTimeout(function() {
+                    const nowMobile = isMobile();
+                    if (nowMobile !== lastMobile) {
+                        lastMobile = nowMobile;
+                        // Only re-render when data is loaded
+                        if (baselineData && targetData) {
+                            renderSummary();
+                            renderCharts();
+                        }
+                    }
+                }, 200);
+            });
+        })();
 
         // Initialize
         loadPlatforms();
