@@ -1,0 +1,6 @@
+mkdocs
+mkdocs-material
+mkdocs-glightbox
+mkdocs-git-revision-date-localized-plugin
+mkdocs-include-markdown-plugin
+mkdocs-rss-plugin
