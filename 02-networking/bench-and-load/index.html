@@ -1,0 +1,3014 @@
+<!DOCTYPE html><html lang="en" class="no-js"><head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+        <meta name="description" content="Patterns and Techniques for Writing High-Performance Applications with Go">
+      
+      
+      
+        <link rel="canonical" href="https://goperf.dev/02-networking/bench-and-load/">
+      
+      
+        <link rel="prev" href="../">
+      
+      
+        <link rel="next" href="../gc-endpoint-profiling/">
+      
+      
+        
+      
+      
+        <link rel="alternate" type="application/rss+xml" title="RSS feed" href="../../feed_rss_created.xml">
+        <link rel="alternate" type="application/rss+xml" title="RSS feed of updated content" href="../../feed_rss_updated.xml">
+      
+      <link rel="icon" href="../../assets/images/favicon.png">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.2">
+    
+    
+      
+        <title>Benchmarking and Load Testing for Networked Go Apps - Go Optimization Guide</title>
+      
+    
+    
+      <link rel="stylesheet" href="../../assets/stylesheets/main.484c7ddc.min.css">
+      
+        
+        <link rel="stylesheet" href="../../assets/stylesheets/palette.ab4e12ef.min.css">
+      
+      
+
+  
+  
+  
+  
+  <style>:root{--md-annotation-icon:url('data:image/svg+xml;charset=utf-8,%3Csvg%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%20viewBox%3D%220%200%2024%2024%22%3E%3Cpath%20d%3D%22M17%2013h-4v4h-2v-4H7v-2h4V7h2v4h4m-5-9A10%2010%200%200%200%202%2012a10%2010%200%200%200%2010%2010%2010%2010%200%200%200%2010-10A10%2010%200%200%200%2012%202%22/%3E%3C/svg%3E');}</style>
+
+
+    
+    
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,300i,400,400i,700,700i%7CRoboto+Mono:400,400i,700,700i&amp;display=fallback">
+        <style>:root{--md-text-font:"Roboto";--md-code-font:"Roboto Mono"}</style>
+      
+    
+    
+    <script>__md_scope=new URL("../..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+  
+
+
+  
+  
+
+<script id="__analytics">function __md_analytics(){function e(){dataLayer.push(arguments)}window.dataLayer=window.dataLayer||[],e("js",new Date),e("config","G-9G75PKHPKN"),document.addEventListener("DOMContentLoaded",(function(){document.forms.search&&document.forms.search.query.addEventListener("blur",(function(){this.value&&e("event","search",{search_term:this.value})}));document$.subscribe((function(){var t=document.forms.feedback;if(void 0!==t)for(var a of t.querySelectorAll("[type=submit]"))a.addEventListener("click",(function(a){a.preventDefault();var n=document.location.pathname,d=this.getAttribute("data-md-value");e("event","feedback",{page:n,data:d}),t.firstElementChild.disabled=!0;var r=t.querySelector(".md-feedback__note [data-md-value='"+d+"']");r&&(r.hidden=!1)})),t.hidden=!1})),location$.subscribe((function(t){e("config","G-9G75PKHPKN",{page_path:t.pathname})}))}));var t=document.createElement("script");t.async=!0,t.src="https://www.googletagmanager.com/gtag/js?id=G-9G75PKHPKN",document.getElementById("__analytics").insertAdjacentElement("afterEnd",t)}</script>
+  
+    <script>"undefined"!=typeof __md_analytics&&__md_analytics()</script>
+  
+
+    
+    
+  <link href="../../assets/stylesheets/glightbox.min.css" rel="stylesheet"><script src="../../assets/javascripts/glightbox.min.js"></script><style id="glightbox-style">
+            html.glightbox-open { overflow: initial; height: 100%; }
+            .gslide-title { margin-top: 0px; user-select: text; }
+            .gslide-desc { color: #666; user-select: text; }
+            .gslide-image img { background: white; }
+            .gscrollbar-fixer { padding-right: 15px; }
+            .gdesc-inner { font-size: 0.75rem; }
+            body[data-md-color-scheme="slate"] .gdesc-inner { background: var(--md-default-bg-color); }
+            body[data-md-color-scheme="slate"] .gslide-title { color: var(--md-default-fg-color); }
+            body[data-md-color-scheme="slate"] .gslide-desc { color: var(--md-default-fg-color); }
+        </style></head>
+  
+  
+    
+    
+      
+    
+    
+    
+    
+    <body dir="ltr" data-md-color-scheme="default" data-md-color-primary="indigo" data-md-color-accent="indigo">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#benchmarking-and-load-testing-for-networked-go-apps" class="md-skip">
+          Skip to content
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+    
+      
+
+<header class="md-header" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Header">
+    <a href="../.." title="Go Optimization Guide" class="md-header__button md-logo" aria-label="Go Optimization Guide" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"></path></svg>
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3zm0 5h18v2H3zm0 5h18v2H3z"></path></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            Go Optimization Guide
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              Benchmarking and Load Testing for Networked Go Apps
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+      
+        <form class="md-header__option" data-md-component="palette">
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="(prefers-color-scheme)" data-md-color-scheme="default" data-md-color-primary="indigo" data-md-color-accent="indigo" aria-label="Switch to light mode" type="radio" name="__palette" id="__palette_0">
+    
+      <label class="md-header__button md-icon" title="Switch to light mode" for="__palette_1" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="m14.3 16-.7-2h-3.2l-.7 2H7.8L11 7h2l3.2 9zM20 8.69V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12zm-9.15 3.96h2.3L12 9z"></path></svg>
+      </label>
+    
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="(prefers-color-scheme: light)" data-md-color-scheme="default" data-md-color-primary="indigo" data-md-color-accent="indigo" aria-label="Switch to dark mode" type="radio" name="__palette" id="__palette_1">
+    
+      <label class="md-header__button md-icon" title="Switch to dark mode" for="__palette_2" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a4 4 0 0 0-4 4 4 4 0 0 0 4 4 4 4 0 0 0 4-4 4 4 0 0 0-4-4m0 10a6 6 0 0 1-6-6 6 6 0 0 1 6-6 6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12z"></path></svg>
+      </label>
+    
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="(prefers-color-scheme: dark)" data-md-color-scheme="slate" data-md-color-primary="indigo" data-md-color-accent="indigo" aria-label="Switch to system preference" type="radio" name="__palette" id="__palette_2">
+    
+      <label class="md-header__button md-icon" title="Switch to system preference" for="__palette_0" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 18c-.89 0-1.74-.2-2.5-.55C11.56 16.5 13 14.42 13 12s-1.44-4.5-3.5-5.45C10.26 6.2 11.11 6 12 6a6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12z"></path></svg>
+      </label>
+    
+  
+</form>
+      
+    
+    
+      <script>var palette=__md_get("__palette");if(palette&&palette.color){if("(prefers-color-scheme)"===palette.color.media){var media=matchMedia("(prefers-color-scheme: light)"),input=document.querySelector(media.matches?"[data-md-color-media='(prefers-color-scheme: light)']":"[data-md-color-media='(prefers-color-scheme: dark)']");palette.color.media=input.getAttribute("data-md-color-media"),palette.color.scheme=input.getAttribute("data-md-color-scheme"),palette.color.primary=input.getAttribute("data-md-color-primary"),palette.color.accent=input.getAttribute("data-md-color-accent")}for(var[key,value]of Object.entries(palette.color))document.body.setAttribute("data-md-color-"+key,value)}</script>
+    
+    
+    
+      
+      
+        <label class="md-header__button md-icon" for="__search">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"></path></svg>
+        </label>
+        <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="Search" placeholder="Search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"></path></svg>
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"></path></svg>
+      </label>
+      <nav class="md-search__options" aria-label="Search">
+        
+        <button type="reset" class="md-search__icon md-icon" title="Clear" aria-label="Clear" tabindex="-1">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"></path></svg>
+        </button>
+      </nav>
+      
+        <div class="md-search__suggest" data-md-component="search-suggest"></div>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" tabindex="0" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            Initializing search
+          </div>
+          <ol class="md-search-result__list" role="presentation"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+      
+    
+    
+      <div class="md-header__source">
+        <a href="https://github.com/astavonin/go-optimization-guide" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"></path></svg>
+  </div>
+  <div class="md-source__repository">
+    GitHub
+  </div>
+</a>
+      </div>
+    
+  </nav>
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+          
+            
+<nav class="md-tabs" aria-label="Tabs" data-md-component="tabs">
+  <div class="md-grid">
+    <ul class="md-tabs__list">
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../.." class="md-tabs__link">
+        
+  
+  
+    
+  
+  Home
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../../blog/" class="md-tabs__link">
+        
+  
+  
+    
+  
+  Blog
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href="../../01-common-patterns/" class="md-tabs__link">
+          
+  
+  
+    
+  
+  Common Performance Patterns
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+    
+  
+  
+    
+    
+      <li class="md-tabs__item md-tabs__item--active">
+        <a href="../" class="md-tabs__link">
+          
+  
+  
+    
+  
+  Practical Networking Patterns
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../../03-version-tracking/" class="md-tabs__link">
+        
+  
+  
+    
+  
+  Version Performance Tracking
+
+      </a>
+    </li>
+  
+
+      
+    </ul>
+  </div>
+</nav>
+          
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation">
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+  
+
+
+  
+
+<nav class="md-nav md-nav--primary md-nav--lifted md-nav--integrated" aria-label="Navigation" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href="../.." title="Go Optimization Guide" class="md-nav__button md-logo" aria-label="Go Optimization Guide" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"></path></svg>
+
+    </a>
+    Go Optimization Guide
+  </label>
+  
+    <div class="md-nav__source">
+      <a href="https://github.com/astavonin/go-optimization-guide" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"></path></svg>
+  </div>
+  <div class="md-source__repository">
+    GitHub
+  </div>
+</a>
+    </div>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../.." class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Home
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+    
+  
+  
+    <li class="md-nav__item">
+      <a href="../../blog/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Blog
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+          
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3">
+        
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../../01-common-patterns/" class="md-nav__link ">
+              
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Common Performance Patterns
+  
+
+    
+  </span>
+  
+  
+
+            </a>
+            
+              
+              <label class="md-nav__link " for="__nav_3" id="__nav_3_label" tabindex="0">
+                <span class="md-nav__icon md-icon"></span>
+              </label>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_3_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_3">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Common Performance Patterns
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3_2">
+        
+          
+          <label class="md-nav__link" for="__nav_3_2" id="__nav_3_2_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Memory Management &amp; Efficiency
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_3_2_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_3_2">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Memory Management &amp; Efficiency
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../01-common-patterns/object-pooling/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Object Pooling
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../01-common-patterns/mem-prealloc/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Memory Preallocation
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../01-common-patterns/fields-alignment/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Struct Field Alignment
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../01-common-patterns/interface-boxing/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Avoiding Interface Boxing
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../01-common-patterns/zero-copy/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Zero-Copy Techniques
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../01-common-patterns/gc/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Memory Efficiency and Go’s Garbage Collector
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../01-common-patterns/stack-alloc/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Stack Allocations and Escape Analysis
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3_3">
+        
+          
+          <label class="md-nav__link" for="__nav_3_3" id="__nav_3_3_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Concurrency and Synchronization
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_3_3_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_3_3">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Concurrency and Synchronization
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../01-common-patterns/worker-pool/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Goroutine Worker Pools
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../01-common-patterns/atomic-ops/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Atomic Operations and Synchronization Primitives
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../01-common-patterns/lazy-init/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Lazy Initialization
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../01-common-patterns/immutable-data/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Immutable Data Sharing
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../01-common-patterns/context/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Efficient Context Management
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3_4">
+        
+          
+          <label class="md-nav__link" for="__nav_3_4" id="__nav_3_4_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    I/O Optimization and Throughput
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_3_4_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_3_4">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    I/O Optimization and Throughput
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../01-common-patterns/buffered-io/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Efficient Buffering
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../01-common-patterns/batching-ops/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Batching Operations
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+      
+        
+      
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3_5">
+        
+          
+          <label class="md-nav__link" for="__nav_3_5" id="__nav_3_5_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Compiler-Level Optimization and Tuning
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_3_5_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_3_5">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Compiler-Level Optimization and Tuning
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../01-common-patterns/comp-flags/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Leveraging Compiler Optimization Flags
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+    
+  
+  
+  
+    
+    
+      
+        
+          
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+        
+        
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--active md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4" checked>
+        
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../" class="md-nav__link ">
+              
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Practical Networking Patterns
+  
+
+    
+  </span>
+  
+  
+
+            </a>
+            
+              
+              <label class="md-nav__link " for="__nav_4" id="__nav_4_label" tabindex="">
+                <span class="md-nav__icon md-icon"></span>
+              </label>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_4_label" aria-expanded="true">
+          <label class="md-nav__title" for="__nav_4">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Practical Networking Patterns
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+            
+              
+                
+  
+  
+    
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+    
+    
+    
+      
+      
+        
+          
+          
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--active md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4_2" checked>
+        
+          
+          <label class="md-nav__link" for="__nav_4_2" id="__nav_4_2_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Benchmarking First
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_4_2_label" aria-expanded="true">
+          <label class="md-nav__title" for="__nav_4_2">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Benchmarking First
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+    
+  
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Benchmarking and Load Testing for Networked Go Apps
+  
+
+    
+  </span>
+  
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Benchmarking and Load Testing for Networked Go Apps
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#test-app-simulating-fastslow-paths-and-gc-pressure" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Test App: Simulating Fast/Slow Paths and GC pressure
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#simulating-load-tools-that-reflect-reality" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Simulating Load: Tools That Reflect Reality
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Simulating Load: Tools That Reflect Reality">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#when-to-use-what" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        When to Use What
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#vegeta" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Vegeta
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#wrk" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        wrk
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#k6" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        k6
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#profiling-networked-go-applications-with-pprof" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Profiling Networked Go Applications with pprof
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Profiling Networked Go Applications with pprof">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#cpu-profiling" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        CPU Profiling
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="CPU Profiling">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#what-to-look-for" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        What to Look For
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#flamegraphs" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Flamegraphs
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Flamegraphs">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#what-to-look-for_1" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        What to Look For
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#managing-garbage-collection-gc-pressure" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Managing Garbage Collection (GC) Pressure
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Managing Garbage Collection (GC) Pressure">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#what-to-look-for_2" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        What to Look For
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#identifying-cpu-bottlenecks" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Identifying CPU Bottlenecks
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Identifying CPU Bottlenecks">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#what-to-look-for_3" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        What to Look For
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#practicle-example-of-profiling-networked-go-applications-with-pprof" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Practicle example of Profiling Networked Go Applications with pprof
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#benchmarking-as-a-feedback-loop" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Benchmarking as a Feedback Loop
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../gc-endpoint-profiling/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Practicle example of Profiling Networked Go Applications with pprof
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+    
+    
+    
+      
+      
+        
+          
+          
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4_3">
+        
+          
+          <label class="md-nav__link" for="__nav_4_3" id="__nav_4_3_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Foundations and Core Concepts
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_4_3_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_4_3">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Foundations and Core Concepts
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../networking-internals/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    How Go Handles Networking
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../efficient-net-use/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Efficient Use of net/http, net.Conn, and UDP
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+    
+    
+    
+      
+      
+        
+          
+          
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4_4">
+        
+          
+          <label class="md-nav__link" for="__nav_4_4" id="__nav_4_4_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Scaling and Performance Engineering
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_4_4_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_4_4">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Scaling and Performance Engineering
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../10k-connections/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Managing 10K+ Concurrent Connections in Go
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../a-bit-more-tuning/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    GOMAXPROCS, epoll/kqueue, and Scheduler-Level Tuning
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+    
+    
+    
+      
+      
+        
+          
+          
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4_5">
+        
+          
+          <label class="md-nav__link" for="__nav_4_5" id="__nav_4_5_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Diagnostics and Resilience
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_4_5_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_4_5">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Diagnostics and Resilience
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../resilient-connection-handling/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Building Resilient Connection Handling
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../long-lived-connections/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Memory Management and Leak Prevention in Long-Lived Connections
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+    
+    
+    
+      
+      
+        
+          
+          
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4_6">
+        
+          
+          <label class="md-nav__link" for="__nav_4_6" id="__nav_4_6_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Transport-Level Optimization
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_4_6_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_4_6">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Transport-Level Optimization
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../tcp-http2-grpc/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Comparing TCP, HTTP/2, and gRPC Performance in Go
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../quic-in-go/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    QUIC – Building Low-Latency Services with quic-go
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+      
+        
+          
+          
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4_7">
+        
+          
+          <label class="md-nav__link" for="__nav_4_7" id="__nav_4_7_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Low-Level and Advanced Tuning
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_4_7_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_4_7">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Low-Level and Advanced Tuning
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../low-level-optimizations/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Socket Options That Matter
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../dns_performance/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Tuning DNS Performance in Go Services
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../tls-for-speed/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Optimizing TLS for Speed
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../connection_observability/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Connection Lifecycle Observability
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../03-version-tracking/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Version Performance Tracking
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+
+  
+  
+
+
+<h1 id="benchmarking-and-load-testing-for-networked-go-apps">Benchmarking and Load Testing for Networked Go Apps<a class="headerlink" href="#benchmarking-and-load-testing-for-networked-go-apps" title="Permanent link">¶</a></h1>
+<p>Before you reach for a mutex-free queue or tune your goroutine pool, step back. Optimization without a baseline is just guesswork. In Go applications, performance tuning starts with understanding how your system behaves under pressure, which means benchmarking it under load.</p>
+<p>Load testing isn't just about pushing requests until things break. It's about simulating realistic usage patterns to extract measurable, repeatable data. That data anchors every optimization that follows.</p>
+<h2 id="test-app-simulating-fastslow-paths-and-gc-pressure">Test App: Simulating Fast/Slow Paths and GC pressure<a class="headerlink" href="#test-app-simulating-fastslow-paths-and-gc-pressure" title="Permanent link">¶</a></h2>
+<p>To benchmark meaningfully, we need endpoints that reflect different workload characteristics.</p>
+<details class="example">
+<summary>Show the benchmarking app</summary>
+<div class="highlight"><pre><span></span><code><span class="kn">package</span><span class="w"> </span><span class="nx">main</span>
+
+<span class="c1">// pprof-start</span>
+<span class="kn">import</span><span class="w"> </span><span class="p">(</span>
+<span class="c1">// pprof-end</span>
+<span class="w">    </span><span class="s">"flag"</span>
+<span class="w">    </span><span class="s">"fmt"</span>
+<span class="w">    </span><span class="s">"log"</span>
+<span class="w">    </span><span class="s">"math/rand/v2"</span>
+<span class="w">    </span><span class="s">"net/http"</span>
+<span class="c1">// pprof-start</span>
+<span class="w">    </span><span class="nx">_</span><span class="w"> </span><span class="s">"net/http/pprof"</span>
+<span class="c1">// pprof-end</span>
+<span class="w">    </span><span class="s">"os"</span>
+<span class="w">    </span><span class="s">"os/signal"</span>
+<span class="w">    </span><span class="s">"time"</span>
+<span class="c1">// pprof-start</span>
+<span class="p">)</span>
+<span class="c1">// pprof-end</span>
+
+<span class="kd">var</span><span class="w"> </span><span class="p">(</span>
+<span class="w">    </span><span class="nx">fastDelay</span><span class="w">   </span><span class="p">=</span><span class="w"> </span><span class="nx">flag</span><span class="p">.</span><span class="nx">Duration</span><span class="p">(</span><span class="s">"fast-delay"</span><span class="p">,</span><span class="w"> </span><span class="mi">0</span><span class="p">,</span><span class="w"> </span><span class="s">"Fixed delay for fast handler (if any)"</span><span class="p">)</span>
+<span class="w">    </span><span class="nx">slowMin</span><span class="w">     </span><span class="p">=</span><span class="w"> </span><span class="nx">flag</span><span class="p">.</span><span class="nx">Duration</span><span class="p">(</span><span class="s">"slow-min"</span><span class="p">,</span><span class="w"> </span><span class="mi">1</span><span class="o">*</span><span class="nx">time</span><span class="p">.</span><span class="nx">Millisecond</span><span class="p">,</span><span class="w"> </span><span class="s">"Minimum delay for slow handler"</span><span class="p">)</span>
+<span class="w">    </span><span class="nx">slowMax</span><span class="w">     </span><span class="p">=</span><span class="w"> </span><span class="nx">flag</span><span class="p">.</span><span class="nx">Duration</span><span class="p">(</span><span class="s">"slow-max"</span><span class="p">,</span><span class="w"> </span><span class="mi">300</span><span class="o">*</span><span class="nx">time</span><span class="p">.</span><span class="nx">Millisecond</span><span class="p">,</span><span class="w"> </span><span class="s">"Maximum delay for slow handler"</span><span class="p">)</span>
+<span class="w">    </span><span class="nx">gcMinAlloc</span><span class="w">  </span><span class="p">=</span><span class="w"> </span><span class="nx">flag</span><span class="p">.</span><span class="nx">Int</span><span class="p">(</span><span class="s">"gc-min-alloc"</span><span class="p">,</span><span class="w"> </span><span class="mi">50</span><span class="p">,</span><span class="w"> </span><span class="s">"Minimum number of allocations in GC heavy handler"</span><span class="p">)</span>
+<span class="w">    </span><span class="nx">gcMaxAlloc</span><span class="w">  </span><span class="p">=</span><span class="w"> </span><span class="nx">flag</span><span class="p">.</span><span class="nx">Int</span><span class="p">(</span><span class="s">"gc-max-alloc"</span><span class="p">,</span><span class="w"> </span><span class="mi">1000</span><span class="p">,</span><span class="w"> </span><span class="s">"Maximum number of allocations in GC heavy handler"</span><span class="p">)</span>
+<span class="p">)</span>
+
+<span class="kd">func</span><span class="w"> </span><span class="nx">randRange</span><span class="p">(</span><span class="nx">min</span><span class="p">,</span><span class="w"> </span><span class="nx">max</span><span class="w"> </span><span class="kt">int</span><span class="p">)</span><span class="w"> </span><span class="kt">int</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="nx">rand</span><span class="p">.</span><span class="nx">IntN</span><span class="p">(</span><span class="nx">max</span><span class="o">-</span><span class="nx">min</span><span class="p">)</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="nx">min</span>
+<span class="p">}</span>
+
+<span class="kd">func</span><span class="w"> </span><span class="nx">fastHandler</span><span class="p">(</span><span class="nx">w</span><span class="w"> </span><span class="nx">http</span><span class="p">.</span><span class="nx">ResponseWriter</span><span class="p">,</span><span class="w"> </span><span class="nx">r</span><span class="w"> </span><span class="o">*</span><span class="nx">http</span><span class="p">.</span><span class="nx">Request</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="k">if</span><span class="w"> </span><span class="o">*</span><span class="nx">fastDelay</span><span class="w"> </span><span class="p">&gt;</span><span class="w"> </span><span class="mi">0</span><span class="w"> </span><span class="p">{</span>
+<span class="w">        </span><span class="nx">time</span><span class="p">.</span><span class="nx">Sleep</span><span class="p">(</span><span class="o">*</span><span class="nx">fastDelay</span><span class="p">)</span>
+<span class="w">    </span><span class="p">}</span>
+<span class="w">    </span><span class="nx">fmt</span><span class="p">.</span><span class="nx">Fprintln</span><span class="p">(</span><span class="nx">w</span><span class="p">,</span><span class="w"> </span><span class="s">"fast response"</span><span class="p">)</span>
+<span class="p">}</span>
+
+<span class="kd">func</span><span class="w"> </span><span class="nx">slowHandler</span><span class="p">(</span><span class="nx">w</span><span class="w"> </span><span class="nx">http</span><span class="p">.</span><span class="nx">ResponseWriter</span><span class="p">,</span><span class="w"> </span><span class="nx">r</span><span class="w"> </span><span class="o">*</span><span class="nx">http</span><span class="p">.</span><span class="nx">Request</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="nx">delayRange</span><span class="w"> </span><span class="o">:=</span><span class="w"> </span><span class="nb">int</span><span class="p">((</span><span class="o">*</span><span class="nx">slowMax</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="o">*</span><span class="nx">slowMin</span><span class="p">)</span><span class="w"> </span><span class="o">/</span><span class="w"> </span><span class="nx">time</span><span class="p">.</span><span class="nx">Millisecond</span><span class="p">)</span>
+<span class="w">    </span><span class="nx">delay</span><span class="w"> </span><span class="o">:=</span><span class="w"> </span><span class="nx">time</span><span class="p">.</span><span class="nx">Duration</span><span class="p">(</span><span class="nx">randRange</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="nx">delayRange</span><span class="p">))</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="nx">time</span><span class="p">.</span><span class="nx">Millisecond</span>
+<span class="w">    </span><span class="nx">time</span><span class="p">.</span><span class="nx">Sleep</span><span class="p">(</span><span class="nx">delay</span><span class="p">)</span>
+<span class="w">    </span><span class="nx">fmt</span><span class="p">.</span><span class="nx">Fprintf</span><span class="p">(</span><span class="nx">w</span><span class="p">,</span><span class="w"> </span><span class="s">"slow response with delay %d ms\n"</span><span class="p">,</span><span class="w"> </span><span class="nx">delay</span><span class="p">.</span><span class="nx">Milliseconds</span><span class="p">())</span>
+<span class="p">}</span>
+
+<span class="c1">// heavy-start</span>
+<span class="kd">var</span><span class="w"> </span><span class="nx">longLivedData</span><span class="w"> </span><span class="p">[][]</span><span class="kt">byte</span>
+
+<span class="kd">func</span><span class="w"> </span><span class="nx">gcHeavyHandler</span><span class="p">(</span><span class="nx">w</span><span class="w"> </span><span class="nx">http</span><span class="p">.</span><span class="nx">ResponseWriter</span><span class="p">,</span><span class="w"> </span><span class="nx">r</span><span class="w"> </span><span class="o">*</span><span class="nx">http</span><span class="p">.</span><span class="nx">Request</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="nx">numAllocs</span><span class="w"> </span><span class="o">:=</span><span class="w"> </span><span class="nx">randRange</span><span class="p">(</span><span class="o">*</span><span class="nx">gcMinAlloc</span><span class="p">,</span><span class="w"> </span><span class="o">*</span><span class="nx">gcMaxAlloc</span><span class="p">)</span>
+<span class="w">    </span><span class="kd">var</span><span class="w"> </span><span class="nx">data</span><span class="w"> </span><span class="p">[][]</span><span class="kt">byte</span>
+<span class="w">    </span><span class="k">for</span><span class="w"> </span><span class="nx">i</span><span class="w"> </span><span class="o">:=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="nx">i</span><span class="w"> </span><span class="p">&lt;</span><span class="w"> </span><span class="nx">numAllocs</span><span class="p">;</span><span class="w"> </span><span class="nx">i</span><span class="o">++</span><span class="w"> </span><span class="p">{</span>
+<span class="w">        </span><span class="c1">// Allocate 10KB slices. Occasionally retain a reference to simulate long-lived objects.</span>
+<span class="w">        </span><span class="nx">b</span><span class="w"> </span><span class="o">:=</span><span class="w"> </span><span class="nb">make</span><span class="p">([]</span><span class="kt">byte</span><span class="p">,</span><span class="w"> </span><span class="mi">1024</span><span class="o">*</span><span class="mi">10</span><span class="p">)</span>
+<span class="w">        </span><span class="nx">data</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="nb">append</span><span class="p">(</span><span class="nx">data</span><span class="p">,</span><span class="w"> </span><span class="nx">b</span><span class="p">)</span>
+<span class="w">        </span><span class="k">if</span><span class="w"> </span><span class="nx">i</span><span class="o">%</span><span class="mi">100</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="mi">0</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="c1">// every 100 allocations, keep the data alive</span>
+<span class="w">            </span><span class="nx">longLivedData</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="nb">append</span><span class="p">(</span><span class="nx">longLivedData</span><span class="p">,</span><span class="w"> </span><span class="nx">b</span><span class="p">)</span>
+<span class="w">        </span><span class="p">}</span>
+<span class="w">    </span><span class="p">}</span>
+<span class="w">    </span><span class="nx">fmt</span><span class="p">.</span><span class="nx">Fprintf</span><span class="p">(</span><span class="nx">w</span><span class="p">,</span><span class="w"> </span><span class="s">"allocated %d KB\n"</span><span class="p">,</span><span class="w"> </span><span class="nb">len</span><span class="p">(</span><span class="nx">data</span><span class="p">)</span><span class="o">*</span><span class="mi">10</span><span class="p">)</span>
+<span class="p">}</span>
+<span class="c1">// heavy-end</span>
+
+<span class="kd">func</span><span class="w"> </span><span class="nx">main</span><span class="p">()</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="nx">flag</span><span class="p">.</span><span class="nx">Parse</span><span class="p">()</span>
+
+<span class="w">    </span><span class="nx">http</span><span class="p">.</span><span class="nx">HandleFunc</span><span class="p">(</span><span class="s">"/fast"</span><span class="p">,</span><span class="w"> </span><span class="nx">fastHandler</span><span class="p">)</span>
+<span class="w">    </span><span class="nx">http</span><span class="p">.</span><span class="nx">HandleFunc</span><span class="p">(</span><span class="s">"/slow"</span><span class="p">,</span><span class="w"> </span><span class="nx">slowHandler</span><span class="p">)</span>
+<span class="w">    </span><span class="nx">http</span><span class="p">.</span><span class="nx">HandleFunc</span><span class="p">(</span><span class="s">"/gc"</span><span class="p">,</span><span class="w"> </span><span class="nx">gcHeavyHandler</span><span class="p">)</span>
+
+<span class="c1">// pprof-start</span>
+<span class="c1">// ...</span>
+
+<span class="w">    </span><span class="c1">// Start pprof in a separate goroutine.</span>
+<span class="w">    </span><span class="k">go</span><span class="w"> </span><span class="kd">func</span><span class="p">()</span><span class="w"> </span><span class="p">{</span>
+<span class="w">        </span><span class="nx">log</span><span class="p">.</span><span class="nx">Println</span><span class="p">(</span><span class="s">"pprof listening on :6060"</span><span class="p">)</span>
+<span class="w">        </span><span class="k">if</span><span class="w"> </span><span class="nx">err</span><span class="w"> </span><span class="o">:=</span><span class="w"> </span><span class="nx">http</span><span class="p">.</span><span class="nx">ListenAndServe</span><span class="p">(</span><span class="s">"localhost:6060"</span><span class="p">,</span><span class="w"> </span><span class="kc">nil</span><span class="p">);</span><span class="w"> </span><span class="nx">err</span><span class="w"> </span><span class="o">!=</span><span class="w"> </span><span class="kc">nil</span><span class="w"> </span><span class="p">{</span>
+<span class="w">            </span><span class="nx">log</span><span class="p">.</span><span class="nx">Fatalf</span><span class="p">(</span><span class="s">"pprof server error: %v"</span><span class="p">,</span><span class="w"> </span><span class="nx">err</span><span class="p">)</span>
+<span class="w">        </span><span class="p">}</span>
+<span class="w">    </span><span class="p">}()</span>
+<span class="c1">// pprof-end</span>
+
+<span class="w">    </span><span class="c1">// Create a server to allow for graceful shutdown.</span>
+<span class="w">    </span><span class="nx">server</span><span class="w"> </span><span class="o">:=</span><span class="w"> </span><span class="o">&amp;</span><span class="nx">http</span><span class="p">.</span><span class="nx">Server</span><span class="p">{</span><span class="nx">Addr</span><span class="p">:</span><span class="w"> </span><span class="s">":8080"</span><span class="p">}</span>
+
+<span class="w">    </span><span class="k">go</span><span class="w"> </span><span class="kd">func</span><span class="p">()</span><span class="w"> </span><span class="p">{</span>
+<span class="w">        </span><span class="nx">log</span><span class="p">.</span><span class="nx">Println</span><span class="p">(</span><span class="s">"HTTP server listening on :8080"</span><span class="p">)</span>
+<span class="w">        </span><span class="k">if</span><span class="w"> </span><span class="nx">err</span><span class="w"> </span><span class="o">:=</span><span class="w"> </span><span class="nx">server</span><span class="p">.</span><span class="nx">ListenAndServe</span><span class="p">();</span><span class="w"> </span><span class="nx">err</span><span class="w"> </span><span class="o">!=</span><span class="w"> </span><span class="kc">nil</span><span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span><span class="nx">err</span><span class="w"> </span><span class="o">!=</span><span class="w"> </span><span class="nx">http</span><span class="p">.</span><span class="nx">ErrServerClosed</span><span class="w"> </span><span class="p">{</span>
+<span class="w">            </span><span class="nx">log</span><span class="p">.</span><span class="nx">Fatalf</span><span class="p">(</span><span class="s">"HTTP server error: %v"</span><span class="p">,</span><span class="w"> </span><span class="nx">err</span><span class="p">)</span>
+<span class="w">        </span><span class="p">}</span>
+<span class="w">    </span><span class="p">}()</span>
+
+<span class="w">    </span><span class="c1">// Graceful shutdown on interrupt signal.</span>
+<span class="w">    </span><span class="nx">sigCh</span><span class="w"> </span><span class="o">:=</span><span class="w"> </span><span class="nb">make</span><span class="p">(</span><span class="kd">chan</span><span class="w"> </span><span class="nx">os</span><span class="p">.</span><span class="nx">Signal</span><span class="p">,</span><span class="w"> </span><span class="mi">1</span><span class="p">)</span>
+<span class="w">    </span><span class="nx">signal</span><span class="p">.</span><span class="nx">Notify</span><span class="p">(</span><span class="nx">sigCh</span><span class="p">,</span><span class="w"> </span><span class="nx">os</span><span class="p">.</span><span class="nx">Interrupt</span><span class="p">)</span>
+<span class="w">    </span><span class="o">&lt;-</span><span class="nx">sigCh</span>
+<span class="w">    </span><span class="nx">log</span><span class="p">.</span><span class="nx">Println</span><span class="p">(</span><span class="s">"Shutting down server..."</span><span class="p">)</span>
+<span class="w">    </span><span class="k">if</span><span class="w"> </span><span class="nx">err</span><span class="w"> </span><span class="o">:=</span><span class="w"> </span><span class="nx">server</span><span class="p">.</span><span class="nx">Shutdown</span><span class="p">(</span><span class="kc">nil</span><span class="p">);</span><span class="w"> </span><span class="nx">err</span><span class="w"> </span><span class="o">!=</span><span class="w"> </span><span class="kc">nil</span><span class="w"> </span><span class="p">{</span>
+<span class="w">        </span><span class="nx">log</span><span class="p">.</span><span class="nx">Fatalf</span><span class="p">(</span><span class="s">"Server Shutdown Failed:%+v"</span><span class="p">,</span><span class="w"> </span><span class="nx">err</span><span class="p">)</span>
+<span class="w">    </span><span class="p">}</span>
+<span class="w">    </span><span class="nx">log</span><span class="p">.</span><span class="nx">Println</span><span class="p">(</span><span class="s">"Server exited"</span><span class="p">)</span>
+<span class="p">}</span>
+</code></pre></div>
+</details>
+<ul>
+<li><code>/fast</code>: A quick response, ideal for throughput testing.</li>
+<li><code>/slow</code>: Simulates latency and contention.</li>
+<li><code>/gc</code>: Simulate GC heavy workflow.</li>
+<li><code>net/http/pprof</code>: Exposes runtime profiling on <code>localhost:6060</code>.</li>
+</ul>
+<p>Run it with:</p>
+<div class="highlight"><pre><span></span><code>go<span class="w"> </span>run<span class="w"> </span>main.go
+</code></pre></div>
+<h2 id="simulating-load-tools-that-reflect-reality">Simulating Load: Tools That Reflect Reality<a class="headerlink" href="#simulating-load-tools-that-reflect-reality" title="Permanent link">¶</a></h2>
+<h3 id="when-to-use-what">When to Use What<a class="headerlink" href="#when-to-use-what" title="Permanent link">¶</a></h3>
+<div class="admonition info">
+<p class="admonition-title">Info</p>
+<p>This is by no means an exhaustive list. The ecosystem of load-testing tools is broad and constantly evolving. Tools like Apache JMeter, Locust, Artillery, and Gatling each bring their own strengths—ranging from UI-driven test design to distributed execution or JVM-based scenarios. The right choice depends on your stack, test goals, and team workflow. The tools listed here are optimized for Go-based services and local-first benchmarking, but they’re just a starting point.</p>
+</div>
+<p>At a glance, <code>vegeta</code>, <code>wrk</code>, and <code>k6</code> all hammer HTTP endpoints. But they serve different roles depending on what you're testing, how much precision you need, and how complex your scenario is.</p>
+<table>
+<thead>
+<tr>
+<th>Tool</th>
+<th>Focus</th>
+<th>Scriptable</th>
+<th>Metrics Depth</th>
+<th>Ideal Use Case</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>vegeta</code></td>
+<td>Constant rate load generation</td>
+<td>No (but composable)</td>
+<td>High (histogram, percentiles)</td>
+<td>Tracking latency percentiles over time; CI benchmarking</td>
+</tr>
+<tr>
+<td><code>wrk</code></td>
+<td>Max throughput stress tests</td>
+<td>Yes (Lua)</td>
+<td>Medium</td>
+<td>Measuring raw server capacity and concurrency limits</td>
+</tr>
+<tr>
+<td><code>k6</code></td>
+<td>Scenario-based simulation</td>
+<td>Yes (JavaScript)</td>
+<td>High (VU metrics, dashboards)</td>
+<td>Simulating real-world user workflows and pacing</td>
+</tr>
+</tbody>
+</table>
+<p>Use <code>vegeta</code> when:</p>
+<ul>
+<li>You need a consistent RPS load (e.g., 100 requests/sec for the 60s).</li>
+<li>You're observing latency degradation under controlled pressure.</li>
+<li>You want structured output (histograms, percentiles) for profiling.</li>
+<li>You want to verify local changes before deeper profiling.</li>
+</ul>
+<p>Use <code>wrk</code> when:</p>
+<ul>
+<li>You're exploring upper-bound throughput.</li>
+<li>You want raw, fast load with minimal setup.</li>
+<li>You’re profiling at high concurrency (e.g., 10k connections).</li>
+</ul>
+<p>Use <code>k6</code> when:</p>
+<ul>
+<li>You must model complex flows like login → API call → wait → logout.</li>
+<li>You’re integrating performance tests into CI/CD.</li>
+<li>You want thresholds, pacing, and visual feedback.</li>
+</ul>
+<p>Each of these tools has a place in your benchmarking toolkit. Picking the right one depends on whether you're validating performance, exploring scaling thresholds, or simulating end-user behavior.</p>
+<h3 id="vegeta">Vegeta<a class="headerlink" href="#vegeta" title="Permanent link">¶</a></h3>
+<p><a href="https://github.com/tsenart/vegeta">Vegeta</a> is a flexible HTTP load testing tool written in Go, built for generating constant request rates. This makes it well-suited for simulating steady, sustained traffic patterns instead of sudden spikes.</p>
+<p>We reach for Vegeta when precision matters. It maintains exact request rates and captures detailed latency distributions, which helps track how system behavior changes under load. It’s lightweight, easy to automate, and integrates cleanly into CI workflows—making it a reliable option for benchmarking Go services.</p>
+<p>Install:</p>
+<div class="highlight"><pre><span></span><code>go<span class="w"> </span>install<span class="w"> </span>github.com/tsenart/vegeta@latest
+</code></pre></div>
+<p>Which endpoint(s) we are going to test:</p>
+<div class="highlight"><pre><span></span><code><span class="nb">echo</span><span class="w"> </span><span class="s2">"GET http://localhost:8080/slow"</span><span class="w"> </span>&gt;<span class="w"> </span>targets.txt
+</code></pre></div>
+<p>Run:</p>
+<div class="highlight"><pre><span></span><code>vegeta<span class="w"> </span>attack<span class="w"> </span>-rate<span class="o">=</span><span class="m">100</span><span class="w"> </span>-duration<span class="o">=</span>30s<span class="w"> </span>-targets<span class="o">=</span>targets.txt<span class="w"> </span><span class="p">|</span><span class="w"> </span>tee<span class="w"> </span>results.bin<span class="w"> </span><span class="p">|</span><span class="w"> </span>vegeta<span class="w"> </span>report
+</code></pre></div>
+<details class="example">
+<summary>Potential output</summary>
+<div class="highlight"><pre><span></span><code>&gt;<span class="w"> </span>vegeta<span class="w"> </span>attack<span class="w"> </span>-rate<span class="o">=</span><span class="m">100</span><span class="w"> </span>-duration<span class="o">=</span>30s<span class="w"> </span>-targets<span class="o">=</span>targets.txt<span class="w"> </span><span class="p">|</span><span class="w"> </span>tee<span class="w"> </span>results.bin<span class="w"> </span><span class="p">|</span><span class="w"> </span>vegeta<span class="w"> </span>report
+Requests<span class="w">      </span><span class="o">[</span>total,<span class="w"> </span>rate,<span class="w"> </span>throughput<span class="o">]</span><span class="w">  </span><span class="m">3000</span>,<span class="w"> </span><span class="m">100</span>.04,<span class="w"> </span><span class="m">100</span>.03
+Duration<span class="w">      </span><span class="o">[</span>total,<span class="w"> </span>attack,<span class="w"> </span>wait<span class="o">]</span><span class="w">      </span><span class="m">29</span>.989635542s,<span class="w"> </span><span class="m">29</span>.989108333s,<span class="w"> </span><span class="m">527</span>.209µs
+Latencies<span class="w">     </span><span class="o">[</span>mean,<span class="w"> </span><span class="m">50</span>,<span class="w"> </span><span class="m">95</span>,<span class="w"> </span><span class="m">99</span>,<span class="w"> </span>max<span class="o">]</span><span class="w">    </span><span class="m">524</span>.563µs,<span class="w"> </span><span class="m">504</span>.802µs,<span class="w"> </span><span class="m">793</span>.997µs,<span class="w"> </span><span class="m">1</span>.47362ms,<span class="w"> </span><span class="m">7</span>.351541ms
+Bytes<span class="w"> </span>In<span class="w">      </span><span class="o">[</span>total,<span class="w"> </span>mean<span class="o">]</span><span class="w">              </span><span class="m">42000</span>,<span class="w"> </span><span class="m">14</span>.00
+Bytes<span class="w"> </span>Out<span class="w">     </span><span class="o">[</span>total,<span class="w"> </span>mean<span class="o">]</span><span class="w">              </span><span class="m">0</span>,<span class="w"> </span><span class="m">0</span>.00
+Success<span class="w">       </span><span class="o">[</span>ratio<span class="o">]</span><span class="w">                    </span><span class="m">100</span>.00%
+Status<span class="w"> </span>Codes<span class="w">  </span><span class="o">[</span>code:count<span class="o">]</span><span class="w">               </span><span class="m">200</span>:3000
+Error<span class="w"> </span>Set:
+</code></pre></div>
+</details>
+<p>View percentiles:</p>
+<div class="highlight"><pre><span></span><code>vegeta<span class="w"> </span>report<span class="w"> </span>-type<span class="o">=</span><span class="s1">'hist[0,10ms,50ms,100ms,200ms,500ms,1s]'</span><span class="w"> </span>&lt;<span class="w"> </span>results.bin
+</code></pre></div>
+<p>Generate chart:</p>
+<div class="highlight"><pre><span></span><code>vegeta<span class="w"> </span>plot<span class="w"> </span>&lt;<span class="w"> </span>results.bin<span class="w"> </span>&gt;<span class="w"> </span>plot.html
+</code></pre></div>
+<details class="info">
+<summary>Testing Multiple Endpoints with Vegeta</summary>
+<p>Depending on your goals, there are two recommended approaches for testing both <code>/fast</code> and <code>/slow</code> endpoints in a single run.</p>
+<p><strong>Option 1: Round-Robin Between Endpoints</strong></p>
+<p>Create a <code>targets.txt</code> with both endpoints:</p>
+<div class="highlight"><pre><span></span><code>cat<span class="w"> </span>&gt;<span class="w"> </span>targets.txt<span class="w"> </span><span class="s">&lt;&lt;EOF</span>
+<span class="s">GET http://localhost:8080/fast</span>
+<span class="s">GET http://localhost:8080/slow</span>
+<span class="s">EOF</span>
+</code></pre></div>
+<p>Run the test:</p>
+<div class="highlight"><pre><span></span><code>vegeta<span class="w"> </span>attack<span class="w"> </span>-rate<span class="o">=</span><span class="m">50</span><span class="w"> </span>-duration<span class="o">=</span>30s<span class="w"> </span>-targets<span class="o">=</span>targets.txt<span class="w"> </span><span class="p">|</span><span class="w"> </span>tee<span class="w"> </span>mixed-results.bin<span class="w"> </span><span class="p">|</span><span class="w"> </span>vegeta<span class="w"> </span>report<span class="w"> </span>-type<span class="o">=</span><span class="s1">'hist[0,50ms,100ms,200ms,500ms,1s,2s]'</span>
+</code></pre></div>
+<ul>
+<li>Requests are randomly distributed between the two endpoints.</li>
+<li>Useful for observing aggregate behavior of mixed traffic.</li>
+<li>Easy to set up and analyze combined performance.</li>
+</ul>
+<p><strong>Option 2: Weighted Mix Using Multiple Vegeta Runs</strong></p>
+<p>To simulate different traffic proportions (e.g., 80% fast, 20% slow):</p>
+<div class="highlight"><pre><span></span><code><span class="c1"># Send 80% of requests to /fast</span>
+vegeta<span class="w"> </span>attack<span class="w"> </span>-rate<span class="o">=</span><span class="m">40</span><span class="w"> </span>-duration<span class="o">=</span>30s<span class="w"> </span>-targets<span class="o">=</span>&lt;<span class="o">(</span><span class="nb">echo</span><span class="w"> </span><span class="s2">"GET http://localhost:8080/fast"</span><span class="o">)</span><span class="w"> </span>&gt;<span class="w"> </span>fast.bin<span class="w"> </span><span class="p">&amp;</span>
+
+<span class="c1"># Send 20% of requests to /slow</span>
+vegeta<span class="w"> </span>attack<span class="w"> </span>-rate<span class="o">=</span><span class="m">10</span><span class="w"> </span>-duration<span class="o">=</span>30s<span class="w"> </span>-targets<span class="o">=</span>&lt;<span class="o">(</span><span class="nb">echo</span><span class="w"> </span><span class="s2">"GET http://localhost:8080/slow"</span><span class="o">)</span><span class="w"> </span>&gt;<span class="w"> </span>slow.bin<span class="w"> </span><span class="p">&amp;</span>
+
+<span class="nb">wait</span>
+</code></pre></div>
+<p>Then merge the results and generate a report:</p>
+<div class="highlight"><pre><span></span><code>vegeta<span class="w"> </span>encode<span class="w"> </span>fast.bin<span class="w"> </span>slow.bin<span class="w"> </span>&gt;<span class="w"> </span>combined.bin
+vegeta<span class="w"> </span>report<span class="w"> </span>-type<span class="o">=</span><span class="s1">'hist[0,50ms,100ms,200ms,500ms,1s,2s]'</span><span class="w"> </span>&lt;<span class="w"> </span>combined.bin
+</code></pre></div>
+<ul>
+<li>Gives you precise control over traffic distribution.</li>
+<li>Better for simulating realistic traffic mixes.</li>
+<li>Enables per-endpoint benchmarking when analyzed separately.</li>
+</ul>
+<p>Both methods are valid—choose based on whether you need simplicity or control.</p>
+</details>
+<h3 id="wrk">wrk<a class="headerlink" href="#wrk" title="Permanent link">¶</a></h3>
+<p><a href="https://github.com/wg/wrk">wrk</a> is a high-performance HTTP benchmarking tool written in C. It's designed for raw speed and concurrency, making it ideal for stress testing your server’s throughput and connection handling capacity.</p>
+<p>We use <code>wrk</code> when we want to push the system to its upper limits. It excels at flooding endpoints with high request volumes using multiple threads and connections. While it doesn’t offer detailed percentiles like <code>vegeta</code>, it's perfect for quick saturation tests and measuring how much traffic your Go server can handle before it starts dropping requests or stalling.</p>
+<p>Install:</p>
+<div class="highlight"><pre><span></span><code>brew<span class="w"> </span>install<span class="w"> </span>wrk<span class="w">  </span><span class="c1"># or build from source</span>
+</code></pre></div>
+<p>Run test:</p>
+<div class="highlight"><pre><span></span><code>wrk<span class="w"> </span>-t4<span class="w"> </span>-c100<span class="w"> </span>-d30s<span class="w"> </span>http://localhost:8080/fast
+</code></pre></div>
+<details class="example">
+<summary>Potential output</summary>
+<div class="highlight"><pre><span></span><code>&gt;<span class="w"> </span>wrk<span class="w"> </span>-t4<span class="w"> </span>-c100<span class="w"> </span>-d30s<span class="w"> </span>http://localhost:8080/fast
+Running<span class="w"> </span>30s<span class="w"> </span><span class="nb">test</span><span class="w"> </span>@<span class="w"> </span>http://localhost:8080/fast
+<span class="w">  </span><span class="m">4</span><span class="w"> </span>threads<span class="w"> </span>and<span class="w"> </span><span class="m">100</span><span class="w"> </span>connections
+<span class="w">  </span>Thread<span class="w"> </span>Stats<span class="w">   </span>Avg<span class="w">      </span>Stdev<span class="w">     </span>Max<span class="w">   </span>+/-<span class="w"> </span>Stdev
+<span class="w">    </span>Latency<span class="w">     </span><span class="m">1</span>.29ms<span class="w">  </span><span class="m">255</span>.31us<span class="w">   </span><span class="m">5</span>.24ms<span class="w">   </span><span class="m">84</span>.86%
+<span class="w">    </span>Req/Sec<span class="w">    </span><span class="m">19</span>.30k<span class="w">   </span><span class="m">565</span>.16<span class="w">    </span><span class="m">21</span>.93k<span class="w">    </span><span class="m">77</span>.92%
+<span class="w">  </span><span class="m">2304779</span><span class="w"> </span>requests<span class="w"> </span><span class="k">in</span><span class="w"> </span><span class="m">30</span>.00s,<span class="w"> </span><span class="m">287</span>.94MB<span class="w"> </span><span class="nb">read</span>
+Requests/sec:<span class="w">  </span><span class="m">76823</span>.88
+Transfer/sec:<span class="w">      </span><span class="m">9</span>.60MB
+</code></pre></div>
+</details>
+<h3 id="k6">k6<a class="headerlink" href="#k6" title="Permanent link">¶</a></h3>
+<p><a href="https://k6.io">k6</a> is a modern load testing tool built around scripting realistic client behavior in JavaScript. It’s designed for simulating time-based load profiles—ramp-up, steady-state, ramp-down—and supports custom flows, pacing, and threshold-based validation.</p>
+<p>We use <code>k6</code> when raw throughput isn’t enough and we need to simulate how real users interact with the system. It handles chained requests, models session-like flows, and supports stage-based testing out of the box. With rich metrics and seamless CI/CD integration, <code>k6</code> helps surface regressions before they reach production.</p>
+<p>Install:</p>
+<div class="highlight"><pre><span></span><code>brew<span class="w"> </span>install<span class="w"> </span>k6
+</code></pre></div>
+<p>Script:</p>
+<div class="highlight"><pre><span></span><code><span class="c1">// script.js</span>
+<span class="k">import</span><span class="w"> </span><span class="nx">http</span><span class="w"> </span><span class="kr">from</span><span class="w"> </span><span class="s1">'k6/http'</span><span class="p">;</span>
+<span class="k">import</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nx">sleep</span><span class="w"> </span><span class="p">}</span><span class="w"> </span><span class="kr">from</span><span class="w"> </span><span class="s1">'k6'</span><span class="p">;</span>
+
+<span class="k">export</span><span class="w"> </span><span class="kd">const</span><span class="w"> </span><span class="nx">options</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="nx">stages</span><span class="o">:</span><span class="w"> </span><span class="p">[</span>
+<span class="w">    </span><span class="p">{</span><span class="w"> </span><span class="nx">duration</span><span class="o">:</span><span class="w"> </span><span class="s1">'10s'</span><span class="p">,</span><span class="w"> </span><span class="nx">target</span><span class="o">:</span><span class="w"> </span><span class="mf">50</span><span class="w"> </span><span class="p">},</span>
+<span class="w">    </span><span class="p">{</span><span class="w"> </span><span class="nx">duration</span><span class="o">:</span><span class="w"> </span><span class="s1">'30s'</span><span class="p">,</span><span class="w"> </span><span class="nx">target</span><span class="o">:</span><span class="w"> </span><span class="mf">50</span><span class="w"> </span><span class="p">},</span>
+<span class="w">    </span><span class="p">{</span><span class="w"> </span><span class="nx">duration</span><span class="o">:</span><span class="w"> </span><span class="s1">'10s'</span><span class="p">,</span><span class="w"> </span><span class="nx">target</span><span class="o">:</span><span class="w"> </span><span class="mf">0</span><span class="w"> </span><span class="p">},</span>
+<span class="w">  </span><span class="p">],</span>
+<span class="p">};</span>
+
+<span class="k">export</span><span class="w"> </span><span class="k">default</span><span class="w"> </span><span class="kd">function</span><span class="w"> </span><span class="p">()</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="nx">http</span><span class="p">.</span><span class="nx">get</span><span class="p">(</span><span class="s1">'http://localhost:8080/fast'</span><span class="p">);</span>
+<span class="w">  </span><span class="nx">sleep</span><span class="p">(</span><span class="mf">1</span><span class="p">);</span>
+<span class="p">}</span>
+</code></pre></div>
+<p>Run:</p>
+<div class="highlight"><pre><span></span><code>k6<span class="w"> </span>run<span class="w"> </span>script.js
+</code></pre></div>
+<details class="example">
+<summary>Potential output</summary>
+<div class="highlight"><pre><span></span><code>&gt;<span class="w"> </span>k6<span class="w"> </span>run<span class="w"> </span>script.js
+
+<span class="w">         </span>/<span class="se">\ </span><span class="w">     </span>Grafana<span class="w">   </span>/‾‾/
+<span class="w">    </span>/<span class="se">\ </span><span class="w"> </span>/<span class="w">  </span><span class="se">\ </span><span class="w">    </span><span class="p">|</span><span class="se">\ </span><span class="w"> </span>__<span class="w">   </span>/<span class="w">  </span>/
+<span class="w">   </span>/<span class="w">  </span><span class="se">\/</span><span class="w">    </span><span class="se">\ </span><span class="w">   </span><span class="p">|</span><span class="w"> </span><span class="p">|</span>/<span class="w"> </span>/<span class="w">  </span>/<span class="w">   </span>‾‾<span class="se">\</span>
+<span class="w">  </span>/<span class="w">          </span><span class="se">\ </span><span class="w">  </span><span class="p">|</span><span class="w">   </span><span class="o">(</span><span class="w">  </span><span class="p">|</span><span class="w">  </span><span class="o">(</span>‾<span class="o">)</span><span class="w">  </span><span class="p">|</span>
+<span class="w"> </span>/<span class="w"> </span>__________<span class="w"> </span><span class="se">\ </span><span class="w"> </span><span class="p">|</span>_<span class="p">|</span><span class="se">\_\ </span><span class="w"> </span><span class="se">\_</span>____/
+
+<span class="w">     </span>execution:<span class="w"> </span><span class="nb">local</span>
+<span class="w">        </span>script:<span class="w"> </span>script.js
+<span class="w">        </span>output:<span class="w"> </span>-
+
+<span class="w">     </span>scenarios:<span class="w"> </span><span class="o">(</span><span class="m">100</span>.00%<span class="o">)</span><span class="w"> </span><span class="m">1</span><span class="w"> </span>scenario,<span class="w"> </span><span class="m">50</span><span class="w"> </span>max<span class="w"> </span>VUs,<span class="w"> </span>1m20s<span class="w"> </span>max<span class="w"> </span>duration<span class="w"> </span><span class="o">(</span>incl.<span class="w"> </span>graceful<span class="w"> </span>stop<span class="o">)</span>:
+<span class="w">              </span>*<span class="w"> </span>default:<span class="w"> </span>Up<span class="w"> </span>to<span class="w"> </span><span class="m">50</span><span class="w"> </span>looping<span class="w"> </span>VUs<span class="w"> </span><span class="k">for</span><span class="w"> </span>50s<span class="w"> </span>over<span class="w"> </span><span class="m">3</span><span class="w"> </span>stages<span class="w"> </span><span class="o">(</span>gracefulRampDown:<span class="w"> </span>30s,<span class="w"> </span>gracefulStop:<span class="w"> </span>30s<span class="o">)</span>
+
+
+<span class="w">  </span>█<span class="w"> </span>TOTAL<span class="w"> </span>RESULTS
+
+<span class="w">    </span>HTTP
+<span class="w">    </span>http_req_duration.......................................................:<span class="w"> </span><span class="nv">avg</span><span class="o">=</span><span class="m">495</span>.55µs<span class="w"> </span><span class="nv">min</span><span class="o">=</span>116µs<span class="w"> </span><span class="nv">med</span><span class="o">=</span>449µs<span class="w"> </span><span class="nv">max</span><span class="o">=</span><span class="m">5</span>.49ms<span class="w"> </span>p<span class="o">(</span><span class="m">90</span><span class="o">)=</span>705µs<span class="w"> </span>p<span class="o">(</span><span class="m">95</span><span class="o">)=</span><span class="m">820</span>.39µs
+<span class="w">      </span><span class="o">{</span><span class="w"> </span>expected_response:true<span class="w"> </span><span class="o">}</span>............................................:<span class="w"> </span><span class="nv">avg</span><span class="o">=</span><span class="m">495</span>.55µs<span class="w"> </span><span class="nv">min</span><span class="o">=</span>116µs<span class="w"> </span><span class="nv">med</span><span class="o">=</span>449µs<span class="w"> </span><span class="nv">max</span><span class="o">=</span><span class="m">5</span>.49ms<span class="w"> </span>p<span class="o">(</span><span class="m">90</span><span class="o">)=</span>705µs<span class="w"> </span>p<span class="o">(</span><span class="m">95</span><span class="o">)=</span><span class="m">820</span>.39µs
+<span class="w">    </span>http_req_failed.........................................................:<span class="w"> </span><span class="m">0</span>.00%<span class="w">  </span><span class="m">0</span><span class="w"> </span>out<span class="w"> </span>of<span class="w"> </span><span class="m">2027</span>
+<span class="w">    </span>http_reqs...............................................................:<span class="w"> </span><span class="m">2027</span><span class="w">   </span><span class="m">40</span>.146806/s
+
+<span class="w">    </span>EXECUTION
+<span class="w">    </span>iteration_duration......................................................:<span class="w"> </span><span class="nv">avg</span><span class="o">=</span>1s<span class="w">       </span><span class="nv">min</span><span class="o">=</span>1s<span class="w">    </span><span class="nv">med</span><span class="o">=</span>1s<span class="w">    </span><span class="nv">max</span><span class="o">=</span><span class="m">1</span>.01s<span class="w">  </span>p<span class="o">(</span><span class="m">90</span><span class="o">)=</span>1s<span class="w">    </span>p<span class="o">(</span><span class="m">95</span><span class="o">)=</span>1s
+<span class="w">    </span>iterations..............................................................:<span class="w"> </span><span class="m">2027</span><span class="w">   </span><span class="m">40</span>.146806/s
+<span class="w">    </span>vus.....................................................................:<span class="w"> </span><span class="m">3</span><span class="w">      </span><span class="nv">min</span><span class="o">=</span><span class="m">3</span><span class="w">         </span><span class="nv">max</span><span class="o">=</span><span class="m">50</span>
+<span class="w">    </span>vus_max.................................................................:<span class="w"> </span><span class="m">50</span><span class="w">     </span><span class="nv">min</span><span class="o">=</span><span class="m">50</span><span class="w">        </span><span class="nv">max</span><span class="o">=</span><span class="m">50</span>
+
+<span class="w">    </span>NETWORK
+<span class="w">    </span>data_received...........................................................:<span class="w"> </span><span class="m">266</span><span class="w"> </span>kB<span class="w"> </span><span class="m">5</span>.3<span class="w"> </span>kB/s
+<span class="w">    </span>data_sent...............................................................:<span class="w"> </span><span class="m">176</span><span class="w"> </span>kB<span class="w"> </span><span class="m">3</span>.5<span class="w"> </span>kB/s
+
+
+
+
+running<span class="w"> </span><span class="o">(</span>0m50.5s<span class="o">)</span>,<span class="w"> </span><span class="m">00</span>/50<span class="w"> </span>VUs,<span class="w"> </span><span class="m">2027</span><span class="w"> </span><span class="nb">complete</span><span class="w"> </span>and<span class="w"> </span><span class="m">0</span><span class="w"> </span>interrupted<span class="w"> </span>iterations
+default<span class="w"> </span>✓<span class="w"> </span><span class="o">[======================================]</span><span class="w"> </span><span class="m">00</span>/50<span class="w"> </span>VUs<span class="w">  </span>50s
+</code></pre></div>
+</details>
+<h2 id="profiling-networked-go-applications-with-pprof">Profiling Networked Go Applications with <code>pprof</code><a class="headerlink" href="#profiling-networked-go-applications-with-pprof" title="Permanent link">¶</a></h2>
+<p>Profiling Go applications that heavily utilize networking is crucial to identifying and resolving bottlenecks that impact performance under high-traffic scenarios. Go's built-in <code>net/http/pprof</code> package provides insights specifically beneficial for network-heavy operations. Set up continuous profiling by enabling an HTTP endpoint:</p>
+<div class="highlight"><pre><span></span><code><span class="kn">import</span><span class="w"> </span><span class="p">(</span>
+
+<span class="w">    </span><span class="nx">_</span><span class="w"> </span><span class="s">"net/http/pprof"</span>
+
+<span class="p">)</span>
+
+<span class="c1">// ...</span>
+
+<span class="w">    </span><span class="c1">// Start pprof in a separate goroutine.</span>
+<span class="w">    </span><span class="k">go</span><span class="w"> </span><span class="kd">func</span><span class="p">()</span><span class="w"> </span><span class="p">{</span>
+<span class="w">        </span><span class="nx">log</span><span class="p">.</span><span class="nx">Println</span><span class="p">(</span><span class="s">"pprof listening on :6060"</span><span class="p">)</span>
+<span class="w">        </span><span class="k">if</span><span class="w"> </span><span class="nx">err</span><span class="w"> </span><span class="o">:=</span><span class="w"> </span><span class="nx">http</span><span class="p">.</span><span class="nx">ListenAndServe</span><span class="p">(</span><span class="s">"localhost:6060"</span><span class="p">,</span><span class="w"> </span><span class="kc">nil</span><span class="p">);</span><span class="w"> </span><span class="nx">err</span><span class="w"> </span><span class="o">!=</span><span class="w"> </span><span class="kc">nil</span><span class="w"> </span><span class="p">{</span>
+<span class="w">            </span><span class="nx">log</span><span class="p">.</span><span class="nx">Fatalf</span><span class="p">(</span><span class="s">"pprof server error: %v"</span><span class="p">,</span><span class="w"> </span><span class="nx">err</span><span class="p">)</span>
+<span class="w">        </span><span class="p">}</span>
+<span class="w">    </span><span class="p">}()</span>
+</code></pre></div>
+<p>It's possible to inspect the application in real time, even under heavy load. To capture a CPU profile:</p>
+<div class="highlight"><pre><span></span><code>go<span class="w"> </span>tool<span class="w"> </span>pprof<span class="w"> </span>http://localhost:6060/debug/pprof/profile?seconds<span class="o">=</span><span class="m">30</span>
+</code></pre></div>
+<p>This grabs a 30-second snapshot of CPU usage. With the <code>pprof</code> HTTP server exposed, all runtime data—CPU, memory, goroutines, contention, flamegraphs—is available without pausing or restarting the application.</p>
+<div class="highlight"><pre><span></span><code>go<span class="w"> </span>tool<span class="w"> </span>pprof<span class="w"> </span>-http<span class="o">=</span>:7070<span class="w"> </span>cpu.prof<span class="w"> </span><span class="c1">#(1)</span>
+</code></pre></div>
+<ol>
+<li>the actual <code>cpu.prof</code> path will be something like <code>$HOME/pprof/pprof.net-app.samples.cpu.004.pb.gz</code></li>
+</ol>
+<h3 id="cpu-profiling">CPU Profiling<a class="headerlink" href="#cpu-profiling" title="Permanent link">¶</a></h3>
+<p>Profiling a system at rest rarely tells the full story. Real bottlenecks show up under pressure—when requests stack up, threads compete, and memory churn increases. CPU profiling during load reveals where execution time concentrates, often exposing slow serialization, inefficient handler logic, or contention between goroutines. These are the paths that quietly limit throughput and inflate latency when traffic scales.</p>
+<h4 id="what-to-look-for">What to Look For<a class="headerlink" href="#what-to-look-for" title="Permanent link">¶</a></h4>
+<ul>
+<li>Network Serialization Hotspots: Frequent use of <code>json.Marshal</code> or similar serialization methods during network response generation.</li>
+<li>Syscall Overhead: Extensive syscall usage (e.g., <code>syscall.Read</code>) suggesting inefficient socket handling or excessive blocking I/O.</li>
+<li>GC Activity: High frequency of <code>runtime.gc</code> indicating inefficient memory management impacting response latency.</li>
+</ul>
+<p><strong>Why This Matters:</strong> Identifying and optimizing CPU-intensive operations in networking contexts reduces latency, boosts throughput, and improves reliability during traffic spikes.</p>
+<h3 id="flamegraphs">Flamegraphs<a class="headerlink" href="#flamegraphs" title="Permanent link">¶</a></h3>
+<p>Flamegraphs provide a visual summary of where CPU time is spent by aggregating and collapsing stack traces into a single view. They make it easy to identify performance hotspots without digging through raw profiling data. In server applications, this often highlights issues in request handling, serialization, or blocking I/O. Under load, flamegraphs are especially useful for catching subtle inefficiencies that scale into major performance problems.</p>
+<h4 id="what-to-look-for_1">What to Look For<a class="headerlink" href="#what-to-look-for_1" title="Permanent link">¶</a></h4>
+<ul>
+<li>Functions related to network I/O or data transfer that appear as wide blocks in a flamegraph often point to excessive time spent on serialization, buffering, or socket operations.</li>
+<li>Deep Call Chains Deep stacks could reveal inefficient middleware or unnecessary layers in network request handling.</li>
+<li>Unexpected Paths Look for unexpected serialization, reflection, or routing inefficiencies.</li>
+</ul>
+<p><strong>Why This Matters:</strong> Flamegraphs simplify diagnosing complex inefficiencies visually, leading to quicker optimization and reduced downtime.</p>
+<h3 id="managing-garbage-collection-gc-pressure">Managing Garbage Collection (GC) Pressure<a class="headerlink" href="#managing-garbage-collection-gc-pressure" title="Permanent link">¶</a></h3>
+<p>Memory profiling helps identify where your application is wasting heap space, especially in network-heavy code paths. Common issues include repeated allocation of response buffers, temporary objects, or excessive use of slices and maps. These patterns often go unnoticed until they trigger GC pressure or latency under load. Profiling with <code>pprof</code> follows the same basic steps as CPU profiling, making it easy to integrate into your existing workflow.</p>
+<div class="highlight"><pre><span></span><code>go<span class="w"> </span>tool<span class="w"> </span>pprof<span class="w"> </span>http://localhost:6060/debug/pprof/heap
+</code></pre></div>
+<p>Then, again, you can view results interactively.</p>
+<div class="highlight"><pre><span></span><code>go<span class="w"> </span>tool<span class="w"> </span>pprof<span class="w"> </span>-http<span class="o">=</span>:7070<span class="w"> </span>mem.prof<span class="w"> </span><span class="c1">#(1)</span>
+</code></pre></div>
+<ol>
+<li>the actual <code>mem.prof</code> path will be something like <code>$HOME/pprof/pprof.net-app.alloc_objects.alloc_space.inuse_objects.inuse_space.003.pb.gz</code></li>
+</ol>
+<h4 id="what-to-look-for_2">What to Look For<a class="headerlink" href="#what-to-look-for_2" title="Permanent link">¶</a></h4>
+<ul>
+<li>Frequent Temporary Buffers: High frequency of allocations in network buffers, such as repeatedly creating byte slices for each request.</li>
+<li>Persistent Network Objects: Accumulation of long-lived network connections or sessions.</li>
+<li>Excessive Serialization Overhead: High object creation rate due to repeated encoding/decoding of network payloads.</li>
+</ul>
+<p>Example: Optimizing buffer reuse using <code>sync.Pool</code> greatly reduces GC pressure during high-volume network operations.</p>
+<p><strong>Why This Matters:</strong> Reducing memory churn from network activities improves response times and minimizes latency spikes caused by GC.</p>
+<h3 id="identifying-cpu-bottlenecks">Identifying CPU Bottlenecks<a class="headerlink" href="#identifying-cpu-bottlenecks" title="Permanent link">¶</a></h3>
+<p>Networked applications often hit CPU limits first when pushed under sustained load. Profiling helps surface where time is actually being spent and what’s getting in the way.</p>
+<h4 id="what-to-look-for_3">What to Look For<a class="headerlink" href="#what-to-look-for_3" title="Permanent link">¶</a></h4>
+<ul>
+<li>Latency Rising While Throughput Stalls: A sign the CPU is saturated, often from request processing or serialization overhead.</li>
+<li>Scheduler Overhead (runtime.schedule, mcall): Too many goroutines can overwhelm the scheduler, especially when each connection gets its own handler.</li>
+<li>Lock Contention: Repeated locking on shared network state or blocking channel operations slows down throughput and limits parallelism.</li>
+</ul>
+<p>For example, if profiling shows excessive time spent in TLS handshake routines, the fix might involve moving handshakes off the hot path or reducing handshake frequency with connection reuse.</p>
+<p><strong>Why it matters:</strong> CPU bottlenecks cap your ability to scale. Fixing them is often the difference between a system that handles 5K clients and one that handles 50K.</p>
+<h3 id="practicle-example-of-profiling-networked-go-applications-with-pprof">Practicle example of Profiling Networked Go Applications with <code>pprof</code><a class="headerlink" href="#practicle-example-of-profiling-networked-go-applications-with-pprof" title="Permanent link">¶</a></h3>
+<p>To illustrate these concepts practically, our demo application integrates profiling and benchmarking tools and provides comprehensive profiling and load testing scenarios. The demo covers identifying performance bottlenecks, analyzing flame graphs, and benchmarking under various simulated network conditions.</p>
+<p>Due to its significant size, <a href="../gc-endpoint-profiling/">Practicle example of Profiling Networked Go Applications with <code>prof</code></a> is a separate article.</p>
+<h2 id="benchmarking-as-a-feedback-loop">Benchmarking as a Feedback Loop<a class="headerlink" href="#benchmarking-as-a-feedback-loop" title="Permanent link">¶</a></h2>
+<p>A single load test run means little in isolation. But if you treat benchmarking as part of your development cycle—before and after changes—you start building a performance narrative. You can see exactly how a change impacted throughput or whether it traded latency for memory overhead.</p>
+<p>The Go standard library gives you <code>testing.B</code> for microbenchmarks. Combine profiling with robust integration testing as part of your CI/CD pipeline using tools like <code>Vegeta</code> and <code>k6</code>. This practice ensures early detection of regressions, continuous validation of performance enhancements, and reliable application performance maintenance under realistic production conditions.</p>
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+    
+      
+      <nav class="md-footer__inner md-grid" aria-label="Footer">
+        
+          
+          <a href="../" class="md-footer__link md-footer__link--prev" aria-label="Previous: Practical Networking Patterns in Go">
+            <div class="md-footer__button md-icon">
+              
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"></path></svg>
+            </div>
+            <div class="md-footer__title">
+              <span class="md-footer__direction">
+                Previous
+              </span>
+              <div class="md-ellipsis">
+                Practical Networking Patterns in Go
+              </div>
+            </div>
+          </a>
+        
+        
+          
+          <a href="../gc-endpoint-profiling/" class="md-footer__link md-footer__link--next" aria-label="Next: Practicle example of Profiling Networked Go Applications with pprof">
+            <div class="md-footer__title">
+              <span class="md-footer__direction">
+                Next
+              </span>
+              <div class="md-ellipsis">
+                Practicle example of Profiling Networked Go Applications with pprof
+              </div>
+            </div>
+            <div class="md-footer__button md-icon">
+              
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M4 11v2h12l-5.5 5.5 1.42 1.42L19.84 12l-7.92-7.92L10.5 5.5 16 11z"></path></svg>
+            </div>
+          </a>
+        
+      </nav>
+    
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+      Material for MkDocs
+    </a>
+  
+</div>
+      
+        
+<div class="md-social">
+  
+    
+    
+    
+    
+      
+      
+    
+    <a href="https://goperf.dev/feed_rss_created.xml" target="_blank" rel="noopener" title="goperf.dev" class="md-social__link">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M64 32C28.7 32 0 60.7 0 96v320c0 35.3 28.7 64 64 64h320c35.3 0 64-28.7 64-64V96c0-35.3-28.7-64-64-64zm32 104c0-13.3 10.7-24 24-24 137 0 248 111 248 248 0 13.3-10.7 24-24 24s-24-10.7-24-24c0-110.5-89.5-200-200-200-13.3 0-24-10.7-24-24m0 96c0-13.3 10.7-24 24-24 83.9 0 152 68.1 152 152 0 13.3-10.7 24-24 24s-24-10.7-24-24c0-57.4-46.6-104-104-104-13.3 0-24-10.7-24-24m0 120a32 32 0 1 1 64 0 32 32 0 1 1-64 0"></path></svg>
+    </a>
+  
+    
+    
+    
+    
+      
+      
+    
+    <a href="https://github.com/astavonin/go-optimization-guide" target="_blank" rel="noopener" title="github.com" class="md-social__link">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M173.9 397.4c0 2-2.3 3.6-5.2 3.6-3.3.3-5.6-1.3-5.6-3.6 0-2 2.3-3.6 5.2-3.6 3-.3 5.6 1.3 5.6 3.6m-31.1-4.5c-.7 2 1.3 4.3 4.3 4.9 2.6 1 5.6 0 6.2-2s-1.3-4.3-4.3-5.2c-2.6-.7-5.5.3-6.2 2.3m44.2-1.7c-2.9.7-4.9 2.6-4.6 4.9.3 2 2.9 3.3 5.9 2.6 2.9-.7 4.9-2.6 4.6-4.6-.3-1.9-3-3.2-5.9-2.9M252.8 8C114.1 8 8 113.3 8 252c0 110.9 69.8 205.8 169.5 239.2 12.8 2.3 17.3-5.6 17.3-12.1 0-6.2-.3-40.4-.3-61.4 0 0-70 15-84.7-29.8 0 0-11.4-29.1-27.8-36.6 0 0-22.9-15.7 1.6-15.4 0 0 24.9 2 38.6 25.8 21.9 38.6 58.6 27.5 72.9 20.9 2.3-16 8.8-27.1 16-33.7-55.9-6.2-112.3-14.3-112.3-110.5 0-27.5 7.6-41.3 23.6-58.9-2.6-6.5-11.1-33.3 2.6-67.9 20.9-6.5 69 27 69 27 20-5.6 41.5-8.5 62.8-8.5s42.8 2.9 62.8 8.5c0 0 48.1-33.6 69-27 13.7 34.7 5.2 61.4 2.6 67.9 16 17.7 25.8 31.5 25.8 58.9 0 96.5-58.9 104.2-114.8 110.5 9.2 7.9 17 22.9 17 46.4 0 33.7-.3 75.4-.3 83.6 0 6.5 4.6 14.4 17.3 12.1C436.2 457.8 504 362.9 504 252 504 113.3 391.5 8 252.8 8M105.2 352.9c-1.3 1-1 3.3.7 5.2 1.6 1.6 3.9 2.3 5.2 1 1.3-1 1-3.3-.7-5.2-1.6-1.6-3.9-2.3-5.2-1m-10.8-8.1c-.7 1.3.3 2.9 2.3 3.9 1.6 1 3.6.7 4.3-.7.7-1.3-.3-2.9-2.3-3.9-2-.6-3.6-.3-4.3.7m32.4 35.6c-1.6 1.3-1 4.3 1.3 6.2 2.3 2.3 5.2 2.6 6.5 1 1.3-1.3.7-4.3-1.3-6.2-2.2-2.3-5.2-2.6-6.5-1m-11.4-14.7c-1.6 1-1.6 3.6 0 5.9s4.3 3.3 5.6 2.3c1.6-1.3 1.6-3.9 0-6.2-1.4-2.3-4-3.3-5.6-2"></path></svg>
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    
+    
+      
+      
+      <script id="__config" type="application/json">{"annotate": null, "base": "../..", "features": ["navigation.indexes", "navigation.instant", "navigation.footer", "search.suggest", "search.highlight", "content.code.copy", "content.code.annotate", "toc.follow", "navigation.sections", "navigation.tabs", "toc.integrate"], "search": "../../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
+    
+    
+      <script src="../../assets/javascripts/bundle.79ae519e.min.js"></script>
+      
+    
+  
+<script id="init-glightbox">const lightbox = GLightbox({"touchNavigation": true, "loop": false, "zoomable": true, "draggable": true, "openEffect": "zoom", "closeEffect": "zoom", "slideEffect": "slide"});
+document$.subscribe(()=>{ lightbox.reload(); });
+</script></body></html>
