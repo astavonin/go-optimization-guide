@@ -465,6 +465,32 @@ func getBenchmarkSourceFile(name string) string {
 	return "perf-tracking/benchmarks/core/allocation_test.go"
 }
 
+// exportVersionWithCPU exports a single version's benchmarks to JSON, applying
+// cpuFallback when the benchmark file lacks a cpu: line.
+func exportVersionWithCPU(inputFile, version, outputFile, cpuFallback string) error {
+	versionData, err := parseBenchmarkFile(inputFile, version)
+	if err != nil {
+		return fmt.Errorf("failed to parse benchmark file: %w", err)
+	}
+	if versionData.Metadata.System.CPU == "" && cpuFallback != "" {
+		versionData.Metadata.System.CPU = cpuFallback
+	}
+
+	jsonData, err := json.MarshalIndent(versionData, "", "  ")
+	if err != nil {
+		return fmt.Errorf("failed to marshal JSON: %w", err)
+	}
+	if err := os.MkdirAll(filepath.Dir(outputFile), 0755); err != nil {
+		return fmt.Errorf("failed to create output directory: %w", err)
+	}
+	if err := os.WriteFile(outputFile, jsonData, 0644); err != nil {
+		return fmt.Errorf("failed to write output file: %w", err)
+	}
+	fmt.Printf("  Output: %s\n", outputFile)
+	fmt.Printf("  ✓ Exported %d benchmarks\n\n", len(versionData.Benchmarks))
+	return nil
+}
+
 // exportVersion exports a single version's benchmarks to JSON
 func exportVersion(inputFile, version, outputFile string) error {
 	fmt.Printf("Exporting Go %s...\n", version)
@@ -580,7 +606,8 @@ func getReliability(maxCV float64) string {
 // This makes every export additive: pre-existing version files are never dropped.
 // defaultPlatform is used when the platform cannot be auto-detected from the
 // benchmark files (e.g. files lack OS/arch metadata).
-func exportAll(resultsDir, outputDir, defaultPlatform string) error {
+// cpuOverride is used as a fallback when benchmark files lack a cpu: line.
+func exportAll(resultsDir, outputDir, defaultPlatform, cpuOverride string) error {
 	fmt.Println("=== Exporting All Versions ===")
 
 	entries, err := os.ReadDir(resultsDir)
@@ -683,7 +710,7 @@ func exportAll(resultsDir, outputDir, defaultPlatform string) error {
 		platformDir := filepath.Join(outputDir, platform)
 		outputFile := filepath.Join(platformDir, fmt.Sprintf("go%s.json", version))
 
-		if err := exportVersion(latestFile, version, outputFile); err != nil {
+		if err := exportVersionWithCPU(latestFile, version, outputFile, cpuOverride); err != nil {
 			fmt.Printf("  Error: %v\n", err)
 			continue
 		}

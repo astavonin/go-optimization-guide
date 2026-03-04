@@ -200,8 +200,8 @@ echo "=== Step 8: System check ==="
 BENCHMARK_RESULT="failed: system check"
 
 # Wait for the 1-minute load average to settle after Go installation
-echo "→ Waiting 60s for load average to settle after installations..."
-sleep 60
+echo "→ Waiting 90s for load average to settle after installations..."
+sleep 90
 
 runuser -l ec2-user -c "cd $REPO_DIR && perf-tracking/tools/system-check.sh"
 echo "✓ System check passed"

@@ -156,16 +156,17 @@ func main() {
 	resultsDir := flag.String("results-dir", "", "Results directory (for --export-all)")
 	outputDir := flag.String("output-dir", "", "Output directory (for --export-all)")
 	platform := flag.String("platform", "linux-amd64", "Platform identifier used when auto-detection from files fails (for --export-all)")
+	cpuOverride := flag.String("cpu", "", "CPU identifier used as fallback when benchmark files lack a cpu: line (for --export-all and --export)")
 
 	flag.Parse()
 
 	// Export mode
 	if *exportAllFlag {
 		if *resultsDir == "" || *outputDir == "" {
-			fmt.Println("Usage: benchexport --export-all --results-dir <dir> --output-dir <dir> [--platform <os-arch>]")
+			fmt.Println("Usage: benchexport --export-all --results-dir <dir> --output-dir <dir> [--platform <os-arch>] [--cpu <label>]")
 			os.Exit(1)
 		}
-		if err := exportAll(*resultsDir, *outputDir, *platform); err != nil {
+		if err := exportAll(*resultsDir, *outputDir, *platform, *cpuOverride); err != nil {
 			fmt.Printf("Error: %v\n", err)
 			os.Exit(1)
 		}
