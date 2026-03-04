@@ -164,7 +164,7 @@ cleanup_instance() {
         echo -e "  ${CYAN}→${NC} Revoking SSH access for $OPERATOR_IP..."
         if aws ec2 revoke-security-group-ingress \
                 --group-id "$SG_ID" --protocol tcp --port 22 \
-                --cidr "${OPERATOR_IP}/32" 2>/dev/null; then
+                --cidr "${OPERATOR_IP}/32" > /dev/null 2>&1; then
             echo -e "  ${GREEN}✓${NC} SSH access revoked"
         else
             echo -e "  ${YELLOW}⚠${NC} SSH revoke failed — rule may need manual removal"
@@ -375,7 +375,7 @@ if [ "$SSH_AUTHORIZED" = "true" ] && [ -n "$OPERATOR_IP" ]; then
         --group-id "$SG_ID" \
         --protocol tcp \
         --port 22 \
-        --cidr "${OPERATOR_IP}/32" || true
+        --cidr "${OPERATOR_IP}/32" > /dev/null 2>&1 || true
     echo -e "  ${GREEN}✓${NC} SSH access revoked"
     SSH_AUTHORIZED=false  # prevent double-revocation in EXIT trap
 fi

@@ -124,7 +124,7 @@ create_sg() {
 
     SG_ID=$(aws ec2 create-security-group \
         --group-name "$SG_NAME" \
-        --description "Benchmark runner — SSH ingress added and revoked dynamically" \
+        --description "Benchmark runner - SSH ingress added and revoked dynamically" \
         --query 'GroupId' \
         --output text)
 
@@ -137,11 +137,11 @@ create_sg() {
     aws ec2 revoke-security-group-egress \
         --group-id "$SG_ID" \
         --ip-permissions '[{"IpProtocol":"-1","IpRanges":[{"CidrIp":"0.0.0.0/0"}]}]' \
-        2>/dev/null || true
+        > /dev/null 2>&1 || true
     aws ec2 revoke-security-group-egress \
         --group-id "$SG_ID" \
         --ip-permissions '[{"IpProtocol":"-1","Ipv6Ranges":[{"CidrIpv6":"::/0"}]}]' \
-        2>/dev/null || true
+        > /dev/null 2>&1 || true
 
     aws ec2 authorize-security-group-egress \
         --group-id "$SG_ID" \

@@ -136,6 +136,9 @@ chown -R ec2-user:ec2-user "$REPO_DIR"
 echo "✓ Repository cloned to $REPO_DIR"
 
 # Record run metadata for reproducibility tracking
+BENCHMARK_RESULT="failed: run metadata"
+mkdir -p "$REPO_DIR/perf-tracking/results"
+chown ec2-user:ec2-user "$REPO_DIR/perf-tracking/results"
 {
     echo "run_date=$(date -u +%Y-%m-%dT%H:%M:%SZ)"
     echo "go_versions=$GO_VERSIONS"
@@ -143,9 +146,6 @@ echo "✓ Repository cloned to $REPO_DIR"
     echo "kernel=$(uname -r)"
     echo "instance_type=$(curl -sf -H "X-aws-ec2-metadata-token: $(curl -sf -X PUT http://169.254.169.254/latest/api/token -H 'X-aws-ec2-metadata-token-ttl-seconds: 60')" http://169.254.169.254/latest/meta-data/instance-type 2>/dev/null || echo unknown)"
 } > "$REPO_DIR/perf-tracking/results/run-metadata.txt"
-# run-metadata.txt is written after the chown call above, so it is root-owned
-# by default. Fix ownership so ec2-user can read/SCP it.
-chown ec2-user:ec2-user "$REPO_DIR/perf-tracking/results/run-metadata.txt"
 echo "✓ Run metadata recorded"
 
 # ---------------------------------------------------------------------------
@@ -186,9 +186,10 @@ FIRST_VERSION=$(echo "$GO_VERSIONS" | cut -d' ' -f1)
 FIRST_GO=$(runuser -l ec2-user -c \
     "cd $REPO_DIR && perf-tracking/tools/setup-go-versions.sh path $FIRST_VERSION")
 FIRST_GO_BIN=$(dirname "$FIRST_GO")
+FIRST_GOPATH=$(runuser -l ec2-user -c "PATH=${FIRST_GO_BIN}:\$PATH go env GOPATH")
 
 runuser -l ec2-user -c \
-    "PATH=${FIRST_GO_BIN}:\$PATH $REPO_DIR/perf-tracking/tools/install-tools.sh"
+    "PATH=${FIRST_GO_BIN}:${FIRST_GOPATH}/bin:\$PATH $REPO_DIR/perf-tracking/tools/install-tools.sh"
 echo "✓ Go tools installed"
 
 # ---------------------------------------------------------------------------
@@ -197,6 +198,10 @@ echo "✓ Go tools installed"
 echo
 echo "=== Step 8: System check ==="
 BENCHMARK_RESULT="failed: system check"
+
+# Wait for the 1-minute load average to settle after Go installation
+echo "→ Waiting 60s for load average to settle after installations..."
+sleep 60
 
 runuser -l ec2-user -c "cd $REPO_DIR && perf-tracking/tools/system-check.sh"
 echo "✓ System check passed"
