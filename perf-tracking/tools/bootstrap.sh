@@ -234,6 +234,7 @@ runuser -l ec2-user -c \
     "cd $REPO_DIR/perf-tracking && \
      taskset -c 2,3 python3 tools/collect_benchmarks.py \
          --count 20 --benchtime 3s --skip-system-check --progress \
+         --max-reruns 3 --rerun-count 40 \
          $GO_VERSIONS"
 
 # ---------------------------------------------------------------------------
