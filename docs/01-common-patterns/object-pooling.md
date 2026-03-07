@@ -10,65 +10,28 @@ Object pooling allows programs to reuse memory by recycling previously allocated
 
 ### Using `sync.Pool` for Object Reuse
 
-#### Without Object Pooling (Inefficient Memory Usage)
+`bytes.Buffer` is one of the most common pooling targets in Go—used internally by `net/http`, `encoding/json`, and `fmt`. Each handler or encoder needs a scratch buffer for the duration of a request, then discards it. Without pooling, that means a heap allocation on every call.
+
+#### Without Object Pooling
+
 ```go
 package main
 
 import (
+    "bytes"
     "fmt"
 )
 
-type Data struct {
-    Value int
-}
-
-func createData() *Data {
-    return &Data{Value: 42}
-}
-
-func main() {
-    for i := 0; i < 1000000; i++ {
-        obj := createData() // Allocating a new object every time
-        _ = obj // Simulate usage
-    }
-    fmt.Println("Done")
+func handleRequest(payload []byte) {
+    buf := &bytes.Buffer{} // new backing array allocated on every call
+    buf.Write(payload)
+    fmt.Println(buf.Len())
 }
 ```
 
-In the above example, every iteration creates a new `Data` instance, leading to unnecessary allocations and increased GC pressure.
+Every call to `handleRequest` allocates a fresh backing array for the buffer. Under load—thousands of requests per second—this creates constant allocation churn and keeps the GC busy reclaiming short-lived memory.
 
-#### With Object Pooling (Optimized Memory Usage)
-```go
-package main
-
-import (
-    "fmt"
-    "sync"
-)
-
-type Data struct {
-    Value int
-}
-
-var dataPool = sync.Pool{
-    New: func() any {
-        return &Data{}
-    },
-}
-
-func main() {
-    for i := 0; i < 1000000; i++ {
-        obj := dataPool.Get().(*Data) // Retrieve from pool
-        obj.Value = 42 // Use the object
-        dataPool.Put(obj) // Return object to pool for reuse
-    }
-    fmt.Println("Done")
-}
-```
-
-### Pooling Byte Buffers for Efficient I/O
-
-Object pooling is especially effective when working with large byte slices that would otherwise lead to high allocation and garbage collection overhead.
+#### With Object Pooling
 
 ```go
 package main
@@ -79,26 +42,26 @@ import (
     "sync"
 )
 
-var bufferPool = sync.Pool{
+var bufPool = sync.Pool{
     New: func() any {
         return new(bytes.Buffer)
     },
 }
 
-func main() {
-    buf := bufferPool.Get().(*bytes.Buffer)
-    buf.Reset()
-    buf.WriteString("Hello, pooled world!")
-    fmt.Println(buf.String())
-    bufferPool.Put(buf) // Return buffer to pool for reuse
+func handleRequest(payload []byte) {
+    buf := bufPool.Get().(*bytes.Buffer)
+    buf.Reset() // reposition read offset; backing array is kept
+    buf.Write(payload)
+    fmt.Println(buf.Len())
+    bufPool.Put(buf)
 }
 ```
 
-Using `sync.Pool` for byte buffers significantly reduces memory pressure when dealing with high-frequency I/O operations.
+`Reset()` sets the buffer's internal offset to zero without freeing the underlying slice. On the next `Get()`, the buffer arrives already sized from its previous use—`Write` fills existing memory and no allocation occurs.
 
 ## Benchmarking Impact
 
-To prove that object pooling actually reduces allocations and improves speed, we can use Go's built-in memory profiling tools (`pprof`) and compare memory allocations between the non-pooled and pooled versions. Simulating a full-scale application that actively uses memory for benchmarking is challenging, so we need a controlled test to evaluate direct heap allocations versus pooled allocations.
+The benchmark writes a 4 KB payload into a `bytes.Buffer` on each iteration, simulating per-request serialization work.
 
 ??? example "Show the benchmark file"
     ```go
@@ -107,10 +70,10 @@ To prove that object pooling actually reduces allocations and improves speed, we
 
 | Benchmark               | Iterations  | Time per op (ns) | Bytes per op | Allocs per op |
 |-------------------------|-------------|------------------|---------------|----------------|
-| BenchmarkWithoutPooling-14 | 1,692,014   | 705.4            | 8,192         | 1              |
-| BenchmarkWithPooling-14    | 160,440,506 | 7.455            | 0             | 0              |
+| BenchmarkWithoutPooling | 1,328,937   | 864              | 4,096         | 1              |
+| BenchmarkWithPooling    | 28,021,245  | 42               | 0             | 0              |
 
-The benchmark results highlight the contrast in performance and memory usage between direct allocations and object pooling. In `BenchmarkWithoutPooling`, each iteration creates a new object on the heap, leading to higher execution time and increased memory consumption. This constant allocation pressure triggers more frequent garbage collection, which adds latency and reduces throughput. The presence of nonzero allocation counts per operation confirms that each iteration contributes to GC load, making this approach less efficient in high-throughput scenarios.
+Without pooling, every iteration allocates a fresh 4 KB backing array for the buffer—one heap allocation per call, with the allocator and GC paying the cost. With pooling, the buffer is retrieved from the pool already sized from a prior use: `Reset()` repositions the read offset without freeing the underlying slice, so subsequent writes reuse the existing memory with zero allocations. The result is roughly a 20× throughput improvement and complete elimination of per-call allocation pressure—which directly translates to reduced GC pause frequency at scale.
 
 ## When Should You Use `sync.Pool`?
 

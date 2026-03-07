@@ -1,35 +1,43 @@
 package perf
 
 import (
+	"bytes"
 	"sync"
 	"testing"
 )
 
-// Data is a struct with a large fixed-size array to simulate a memory-intensive object.
-type Data struct {
-	Values [1024]int
-}
+// requestPayload simulates a fixed-size request body written per iteration.
+var requestPayload = bytes.Repeat([]byte("x"), 4096)
 
-// BenchmarkWithoutPooling measures the performance of direct heap allocations.
+// BenchmarkWithoutPooling allocates a fresh bytes.Buffer on every call.
+// The buffer's internal backing array is heap-allocated on each Write,
+// which is the allocation pattern this benchmark measures.
 func BenchmarkWithoutPooling(b *testing.B) {
 	for b.Loop() {
-		data := &Data{}      // Allocating a new object each time
-		data.Values[0] = 42  // Simulating some memory activity
+		buf := &bytes.Buffer{}
+		buf.Write(requestPayload)
+		_ = buf.Bytes()
 	}
 }
 
-// dataPool is a sync.Pool that reuses instances of Data to reduce memory allocations.
-var dataPool = sync.Pool{
+// bufPool reuses bytes.Buffer instances across calls. After the first
+// iteration the buffer's internal slice is already sized, so subsequent
+// iterations avoid heap allocation entirely.
+var bufPool = sync.Pool{
 	New: func() any {
-		return &Data{}
+		return new(bytes.Buffer)
 	},
 }
 
-// BenchmarkWithPooling measures the performance of using sync.Pool to reuse objects.
+// BenchmarkWithPooling retrieves a buffer from the pool, writes into it,
+// then returns it. The Reset call repositions the read offset without
+// freeing the underlying slice, so no allocation occurs after warm-up.
 func BenchmarkWithPooling(b *testing.B) {
 	for b.Loop() {
-		obj := dataPool.Get().(*Data) // Retrieve from pool
-		obj.Values[0] = 42            // Simulate memory usage
-		dataPool.Put(obj)             // Return object to pool for reuse
+		buf := bufPool.Get().(*bytes.Buffer)
+		buf.Reset()
+		buf.Write(requestPayload)
+		_ = buf.Bytes()
+		bufPool.Put(buf)
 	}
 }
