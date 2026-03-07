@@ -179,7 +179,7 @@ The `mmap` version remains faster, but the difference is smaller. Once the CPU i
 
 ??? example "Show the complete benchmark file"
     ```go
-    {% include "01-common-patterns/src/interface-boxing_test.go" %}
+    {% include "01-common-patterns/src/zero-copy_test.go" %}
     ```
 
 ??? info "How to run the benchmark"
