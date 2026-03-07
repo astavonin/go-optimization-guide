@@ -131,9 +131,9 @@ header, _ := reader.Peek(8) // Peek without advancing the buffer
 
 ### Force Fresh DNS Lookups with Custom Dialers
 
-Go’s built-in DNS caching lasts for the lifetime of the process. In dynamic environments, like Kubernetes, this can become a problem when service IPs change but clients keep reusing stale ones. To avoid this, you can force fresh DNS lookups by creating a new net.Dialer per request or rotating the HTTP client periodically.
+Go has no built-in DNS cache. However, `http.Transport` caches connections: once a connection to a host is established and reused, DNS is never queried again for that host. In dynamic environments like Kubernetes, service IPs can change while existing connections keep routing to stale addresses.
 
-But you can bypass Go’s internal DNS cache when needed:
+Creating a fresh `net.Dialer` per request bypasses the transport’s connection pool, forcing a new TCP connection and therefore a new DNS lookup through the OS resolver:
 
 ```go
 DialContext: func(ctx context.Context, network, addr string) (net.Conn, error) {
@@ -141,7 +141,7 @@ DialContext: func(ctx context.Context, network, addr string) (net.Conn, error) {
 },
 ```
 
-This ensures a fresh DNS lookup per request. While this adds minor overhead, it's necessary in failover-sensitive environments.
+This ensures a fresh DNS lookup per request. While this adds minor overhead, it’s necessary in failover-sensitive environments.
 
 ### Use `sync.Pool` for Readers/Writers
 
@@ -165,7 +165,7 @@ This practice significantly reduces allocation churn and improves latency consis
 
 ### Don’t Share `http.Client` Across Multiple Hosts
 
-While it might seem efficient to reuse a single `http.Client`, each target host maintains its own internal connection pool within the underlying `http.Transport`. If you use the same client for multiple base URLs, you end up mixing connection reuse and causing head-of-line blocking across unrelated services. Worse, DNS caching and socket exhaustion become harder to track.
+While it might seem efficient to reuse a single `http.Client`, each target host maintains its own internal connection pool within the underlying `http.Transport`. If you use the same client for multiple base URLs, you end up mixing connection reuse and causing head-of-line blocking across unrelated services. Worse, connection reuse patterns and socket exhaustion become harder to track.
 
 Instead, create a dedicated `http.Client` for each upstream service you interact with. This improves connection reuse, avoids cross-talk between services, and usually makes behavior more predictable, especially in environments like service meshes or when dealing with multiple external APIs.
 
