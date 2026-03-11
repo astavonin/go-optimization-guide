@@ -36,9 +36,13 @@ Topics include:
 
 This section is intentionally more theoretical, but still grounded in tests and measurements where that’s possible. Networking behavior depends heavily on workload shape and environmental details, including kernel settings, network topology, deployment model, and hardware. Universal rules are rare. When conclusions rely on assumptions rather than guarantees, those assumptions are stated explicitly.
 
-## Part 3. TBD
+## Part 3. [Go Version Performance Tracking](03-version-tracking/index.md)
 
-The scope is still being defined, but the direction is clear: runtime behavior under sustained load, profiling and observability that work in real systems, and failure modes that don’t show up in benchmarks. As with the rest of the guide, the emphasis will be on measured behavior and trade-offs, not generic advice.
+This section tracks how Go’s runtime and standard library performance evolves across releases. 76 benchmarks spanning runtime internals, standard library, and networking, collected on dedicated EC2 instances with controlled CPU configuration and automatic variance retry logic. Every number traces back to a specific instance type, kernel version, and repo commit.
+
+Platforms: Linux amd64 (Intel Ice Lake), Linux arm64 (AWS Graviton3), macOS arm64 (Apple Silicon). Go versions 1.24–1.26.
+
+An interactive comparison tool lets you explore benchmark deltas between versions and filter by category or reliability classification.
 
 ## Who This Is For
 
