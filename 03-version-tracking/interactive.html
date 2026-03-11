@@ -1,0 +1,2198 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Go Performance Tracking - Version Comparison</title>
+    <style>
+        :root {
+            --bg-primary: #f5f5f5;
+            --bg-card: #ffffff;
+            --bg-hover: #f8f9fa;
+            --text-primary: #333333;
+            --text-secondary: #666666;
+            --border-color: #e0e0e0;
+            --border-hover: #3498db;
+            --accent-color: #3498db;
+            --accent-hover: #2980b9;
+            --success-color: #27ae60;
+            --danger-color: #e74c3c;
+            --neutral-color: #95a5a6;
+            --chart-bg: #ffffff;
+            --chart-grid: #e0e0e0;
+        }
+
+        [data-md-color-scheme="slate"] {
+            --bg-primary: #1e1e1e;
+            --bg-card: #2d2d2d;
+            --bg-hover: #353535;
+            --text-primary: #ffffff;
+            --text-secondary: #9e9e9e;
+            --border-color: #404040;
+            --border-hover: #4a9eff;
+            --accent-color: #4a9eff;
+            --accent-hover: #6bb0ff;
+            --success-color: #2ecc71;
+            --danger-color: #e74c3c;
+            --neutral-color: #95a5a6;
+            --chart-bg: #2d2d2d;
+            --chart-grid: #404040;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        /* Prevent page-level horizontal scroll on all browsers including iOS Safari.
+           overflow-x: hidden on body alone is not enough on iOS — must be on html too. */
+        html {
+            overflow-x: hidden;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            line-height: 1.6;
+            overflow-x: hidden;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        header {
+            background: var(--bg-card);
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            margin-bottom: 30px;
+            border: 1px solid var(--border-color);
+        }
+
+        h1 {
+            color: var(--text-primary);
+            margin-bottom: 10px;
+        }
+
+        .subtitle {
+            color: var(--text-secondary);
+            font-size: 16px;
+        }
+
+        .controls {
+            background: var(--bg-card);
+            padding: 25px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            margin-bottom: 30px;
+            border: 1px solid var(--border-color);
+        }
+
+        .control-group {
+            display: flex;
+            gap: 20px;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+
+        .version-selector {
+            flex: 1;
+            min-width: 200px;
+        }
+
+        label {
+            display: block;
+            font-weight: 600;
+            margin-bottom: 8px;
+            color: var(--text-primary);
+        }
+
+        select {
+            width: 100%;
+            padding: 10px;
+            border: 2px solid var(--border-color);
+            border-radius: 6px;
+            font-size: 15px;
+            background: var(--bg-card);
+            color: var(--text-primary);
+            cursor: pointer;
+            transition: border-color 0.3s;
+        }
+
+        select:hover {
+            border-color: var(--border-hover);
+        }
+
+        select:focus {
+            outline: 2px solid var(--accent-hover);
+            outline-offset: 2px;
+            border-color: var(--accent-hover);
+        }
+
+        .category-filter {
+            background: var(--bg-card);
+            padding: 25px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            margin-bottom: 30px;
+            border: 1px solid var(--border-color);
+        }
+
+        .category-filter label {
+            display: block;
+            font-weight: 600;
+            margin-bottom: 12px;
+            color: var(--text-primary);
+        }
+
+        .category-tabs {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        .category-tab {
+            flex: 1;
+            min-width: 120px;
+            padding: 12px 20px;
+            border: 2px solid var(--border-color);
+            border-radius: 6px;
+            background: var(--bg-card);
+            color: var(--text-primary);
+            font-size: 15px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            min-height: 44px;
+        }
+
+        .category-tab:hover {
+            border-color: var(--accent-color);
+            background: var(--bg-hover);
+        }
+
+        .category-tab.active {
+            background: var(--accent-color);
+            color: #ffffff;
+            border-color: var(--accent-color);
+        }
+
+        .category-tab:focus {
+            outline: 2px solid var(--accent-hover);
+            outline-offset: 2px;
+        }
+
+        .category-badge {
+            display: inline-block;
+            padding: 2px 8px;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: 700;
+            min-width: 24px;
+            text-align: center;
+        }
+
+        .category-tab.active .category-badge {
+            background: rgba(255, 255, 255, 0.3);
+            color: #ffffff;
+        }
+
+        .category-tab:not(.active) .category-badge {
+            background: var(--bg-hover);
+            color: var(--text-secondary);
+        }
+
+        .category-group-header td {
+            background: var(--bg-hover);
+            padding: 10px 12px;
+            font-weight: 600;
+            color: var(--text-primary);
+            border-top: 2px solid var(--accent-color);
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .metadata {
+            background: var(--bg-card);
+            padding: 25px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            margin-bottom: 30px;
+            border: 1px solid var(--border-color);
+        }
+
+        .metadata-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+        }
+
+        .metadata-item {
+            padding: 15px;
+            background: var(--bg-hover);
+            border-radius: 6px;
+            border-left: 4px solid var(--accent-color);
+        }
+
+        .metadata-label {
+            font-size: 12px;
+            color: var(--text-secondary);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 5px;
+        }
+
+        .metadata-value {
+            font-size: 15px;
+            color: var(--text-primary);
+            font-weight: 500;
+        }
+
+        .summary {
+            background: var(--bg-card);
+            padding: 25px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            margin-bottom: 30px;
+            border: 1px solid var(--border-color);
+        }
+
+        .summary h2 {
+            color: var(--text-primary);
+            margin-bottom: 20px;
+            font-size: 20px;
+        }
+
+        .table-wrapper {
+            overflow-x: auto;
+            -webkit-overflow-scrolling: touch;
+        }
+
+        .benchmark-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 15px;
+        }
+
+        .benchmark-table th {
+            background: var(--bg-hover);
+            padding: 12px;
+            text-align: left;
+            font-weight: 600;
+            color: var(--text-primary);
+            border-bottom: 2px solid var(--border-color);
+        }
+
+        .benchmark-table td {
+            padding: 12px;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .benchmark-table tr:not(.category-group-header):hover {
+            background: var(--bg-hover);
+        }
+
+        .benchmark-link {
+            color: var(--accent-color);
+            text-decoration: none;
+            font-weight: 600;
+            transition: color 0.2s;
+        }
+
+        .benchmark-link:hover {
+            color: var(--accent-hover);
+            text-decoration: underline;
+        }
+
+        .benchmark-link::after {
+            content: " ↗";
+            font-size: 12px;
+            opacity: 0.6;
+        }
+
+        .delta-positive {
+            color: var(--success-color);
+            font-weight: 600;
+        }
+
+        .delta-negative {
+            color: var(--danger-color);
+            font-weight: 600;
+        }
+
+        .delta-neutral {
+            color: var(--neutral-color);
+        }
+
+        .chart-container {
+            background: var(--bg-card);
+            padding: 25px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            margin-bottom: 30px;
+            border: 1px solid var(--border-color);
+        }
+
+        .chart-container h2 {
+            color: var(--text-primary);
+            margin-bottom: 20px;
+            font-size: 20px;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 40px;
+            color: var(--text-secondary);
+        }
+
+        .error {
+            background: #ffe6e6;
+            border: 1px solid #ffcccc;
+            color: #c0392b;
+            padding: 15px;
+            border-radius: 6px;
+            margin-bottom: 20px;
+        }
+
+        [data-md-color-scheme="slate"] .error {
+            background: #3d0009;
+            border-color: #dc3545;
+            color: #ff8a94;
+        }
+
+        .variance-badge {
+            display: inline-block;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+
+        .variance-low {
+            background: #d4edda;
+            color: #155724;
+        }
+
+        .variance-medium {
+            background: #fff3cd;
+            color: #856404;
+        }
+
+        .variance-high {
+            background: #f8d7da;
+            color: #721c24;
+        }
+
+        [data-md-color-scheme="slate"] .variance-low {
+            background: #1a3a2a;
+            color: #6fcf97;
+        }
+        [data-md-color-scheme="slate"] .variance-medium {
+            background: #3a3010;
+            color: #f2c94c;
+        }
+        [data-md-color-scheme="slate"] .variance-high {
+            background: #3a1010;
+            color: #eb5757;
+        }
+
+        .reliability-badge {
+            display: inline-block;
+            padding: 2px 6px;
+            border-radius: 3px;
+            font-size: 0.7em;
+            font-weight: 600;
+            margin-left: 6px;
+            vertical-align: middle;
+            cursor: help;
+        }
+        .reliability-noisy {
+            background: #fff3cd;
+            color: #856404;
+            border: 1px solid #ffc107;
+        }
+        .reliability-unstable {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #dc3545;
+        }
+
+        [data-md-color-scheme="slate"] .reliability-noisy {
+            background: #3d2f00;
+            color: #ffd96e;
+            border-color: #ffc107;
+        }
+        [data-md-color-scheme="slate"] .reliability-unstable {
+            background: #3d0009;
+            color: #ff8a94;
+            border-color: #dc3545;
+        }
+
+        /* Mobile Responsiveness */
+        @media (max-width: 768px) {
+            .container {
+                padding: 10px;
+            }
+
+            header {
+                padding: 20px 15px;
+                margin-bottom: 20px;
+            }
+
+            h1 {
+                font-size: 24px;
+            }
+
+            .subtitle {
+                font-size: 14px;
+            }
+
+            .controls {
+                padding: 15px;
+            }
+
+            .control-group {
+                flex-direction: column;
+                gap: 15px;
+            }
+
+            .version-selector {
+                min-width: 100%;
+            }
+
+            .category-filter {
+                padding: 12px;
+            }
+
+            /* Grid guarantees 2-column layout without overflow regardless of container width */
+            .category-tabs {
+                display: grid;
+                grid-template-columns: 1fr 1fr;
+                gap: 8px;
+            }
+
+            .category-tab {
+                flex: none;
+                min-width: 0;
+                padding: 8px 10px;
+                font-size: 13px;
+            }
+
+            .category-badge {
+                font-size: 11px;
+                padding: 2px 5px;
+                min-width: 18px;
+            }
+
+            .metadata {
+                padding: 12px;
+            }
+
+            .metadata h2 {
+                font-size: 16px;
+                margin-bottom: 12px;
+            }
+
+            .metadata-grid {
+                grid-template-columns: 1fr;
+                gap: 8px;
+            }
+
+            .metadata-item {
+                padding: 10px;
+            }
+
+            .metadata-label {
+                font-size: 11px;
+            }
+
+            .metadata-value {
+                font-size: 13px;
+            }
+
+            .summary {
+                padding: 15px;
+            }
+
+            .summary h2 {
+                font-size: 18px;
+            }
+
+            /* Table wrapper for horizontal scroll */
+            .table-wrapper {
+                overflow-x: auto;
+                -webkit-overflow-scrolling: touch;
+                margin: 0 -15px;
+                padding: 0 15px;
+            }
+
+            .benchmark-table {
+                min-width: 600px;
+                font-size: 13px;
+            }
+
+            .benchmark-table th,
+            .benchmark-table td {
+                padding: 8px 6px;
+                white-space: nowrap;
+            }
+
+            .benchmark-table th:first-child,
+            .benchmark-table td:first-child {
+                position: sticky;
+                left: 0;
+                background: var(--bg-card);
+                z-index: 1;
+                min-width: 120px;
+                max-width: 150px;
+            }
+
+            .benchmark-table th:first-child {
+                background: var(--bg-hover);
+            }
+
+            .benchmark-link {
+                font-size: 13px;
+                display: inline-block;
+                max-width: 130px;
+                overflow: hidden;
+                text-overflow: ellipsis;
+            }
+
+            .chart-container {
+                padding: 15px;
+                overflow-x: auto;
+                -webkit-overflow-scrolling: touch;
+            }
+
+            .chart-container h2 {
+                font-size: 18px;
+            }
+
+            /* Make plotly charts responsive with minimum width */
+            .js-plotly-plot {
+                width: 100% !important;
+                min-width: 500px;
+            }
+
+            .variance-badge {
+                font-size: 10px;
+                padding: 3px 6px;
+            }
+        }
+
+        /* Extra small devices */
+        @media (max-width: 480px) {
+            h1 {
+                font-size: 20px;
+            }
+
+            .subtitle {
+                font-size: 13px;
+            }
+
+            .benchmark-table {
+                min-width: 500px;
+                font-size: 12px;
+            }
+
+            .benchmark-table th,
+            .benchmark-table td {
+                padding: 6px 4px;
+            }
+
+            .benchmark-link {
+                font-size: 12px;
+                max-width: 100px;
+            }
+        }
+
+        /* ── Mobile card layout ─────────────────────────────────── */
+
+        .benchmark-cards {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            margin-top: 10px;
+        }
+
+        .benchmark-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            padding: 10px 12px;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+        }
+
+        .card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            gap: 8px;
+            margin-bottom: 6px;
+        }
+
+        .card-name {
+            font-weight: 600;
+            color: var(--text-primary);
+            font-size: 13px;
+            word-break: break-word;
+            flex: 1;
+        }
+
+        .card-delta {
+            font-size: 13px;
+            font-weight: 700;
+            white-space: nowrap;
+            flex-shrink: 0;
+        }
+
+        .card-metrics {
+            display: grid;
+            grid-template-columns: auto 1fr;
+            gap: 3px 10px;
+            margin-bottom: 6px;
+            align-items: baseline;
+        }
+
+        .card-metric-label {
+            font-size: 11px;
+            color: var(--text-secondary);
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.3px;
+        }
+
+        .card-metric-value {
+            font-size: 12px;
+            color: var(--text-primary);
+        }
+
+        .card-variance {
+            margin-bottom: 6px;
+        }
+
+        .card-details-toggle {
+            width: 100%;
+            min-height: 36px;
+            background: var(--bg-hover);
+            color: var(--text-primary);
+            border: 1px solid var(--border-color);
+            border-radius: 4px;
+            font-size: 12px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: background 0.2s, border-color 0.2s;
+            padding: 0 10px;
+            text-align: left;
+        }
+
+        .card-details-toggle:hover {
+            background: var(--bg-card);
+            border-color: var(--border-hover);
+        }
+
+        .card-details-toggle:focus {
+            outline: 2px solid var(--accent-hover);
+            outline-offset: 2px;
+        }
+
+        .card-details {
+            margin-top: 8px;
+            border-top: 1px solid var(--border-color);
+            padding-top: 8px;
+        }
+
+        .card-detail-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: baseline;
+            gap: 8px;
+            padding: 3px 0;
+            border-bottom: 1px solid var(--border-color);
+            font-size: 12px;
+        }
+
+        .card-detail-row:last-child {
+            border-bottom: none;
+        }
+
+        .card-detail-row span:first-child {
+            color: var(--text-secondary);
+            font-weight: 600;
+            font-size: 11px;
+            text-transform: uppercase;
+            letter-spacing: 0.3px;
+            white-space: nowrap;
+        }
+
+        .card-detail-row span:last-child {
+            color: var(--text-primary);
+            text-align: right;
+        }
+
+        /* Category header for card groups */
+        .card-category-header {
+            background: var(--bg-hover);
+            border-top: 2px solid var(--accent-color);
+            border-bottom: 1px solid var(--border-color);
+            padding: 6px 10px;
+            font-weight: 600;
+            color: var(--text-primary);
+            font-size: 12px;
+            border-radius: 4px;
+            margin-top: 4px;
+        }
+
+        .mobile-summary-bar {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            gap: 4px;
+            margin-bottom: 10px;
+            font-size: 12px;
+        }
+        .summary-improved { color: var(--success-color); font-weight: 600; }
+        .summary-regressed { color: var(--danger-color); font-weight: 600; }
+        .summary-neutral { color: var(--neutral-color); }
+        .summary-sep { color: var(--text-secondary); margin: 0 4px; }
+
+        .top-movers { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 20px; }
+        .top-movers-col { background: var(--bg-card); border: 1px solid var(--border-color); border-radius: 6px; padding: 8px; min-width: 0; }
+        .top-movers-heading { font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.3px; color: var(--text-secondary); margin-bottom: 6px; }
+        .top-mover-row { display: flex; justify-content: space-between; align-items: baseline; gap: 4px; padding: 3px 0; font-size: 12px; border-bottom: 1px solid var(--border-color); }
+        .top-mover-row:last-child { border-bottom: none; }
+        /* min-width: 0 is required for text-overflow: ellipsis to work in a flex row */
+        .top-mover-name { color: var(--text-primary); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; flex: 1; min-width: 0; }
+        /* flex-shrink: 0 keeps the delta value from being squeezed off the right edge */
+        .top-mover-delta { flex-shrink: 0; white-space: nowrap; }
+        .top-mover-none { font-size: 12px; color: var(--text-secondary); font-style: italic; }
+
+        .category-averages {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+            gap: 8px;
+            margin-bottom: 16px;
+        }
+        .cat-avg-item {
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-left: 3px solid var(--accent-color);
+            border-radius: 6px;
+            padding: 10px 12px;
+        }
+        .cat-avg-name { display: block; font-size: 12px; font-weight: 600; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 0.3px; margin-bottom: 4px; }
+        .cat-avg-delta { display: block; font-size: 15px; font-weight: 700; }
+        .cat-avg-count { display: block; font-size: 11px; color: var(--text-secondary); margin-top: 2px; }
+
+        /* Collapsible group header — replaces the static .card-category-header for the "all" view on mobile */
+        .collapsible-header {
+            width: 100%; display: flex; align-items: center; gap: 6px;
+            background: var(--bg-hover); border: none; border-top: 2px solid var(--accent-color);
+            border-bottom: 1px solid var(--border-color); padding: 8px 10px;
+            font-size: 12px; font-weight: 600; color: var(--text-primary);
+            border-radius: 4px; margin-top: 4px; cursor: pointer; text-align: left;
+            min-height: 36px;
+        }
+        .collapsible-header:focus { outline: 2px solid var(--accent-hover); outline-offset: 2px; }
+        .group-title { flex: 1; }
+        .group-meta { font-size: 11px; font-weight: 400; color: var(--text-secondary); white-space: nowrap; }
+        .group-arrow { font-size: 10px; color: var(--text-secondary); flex-shrink: 0; }
+        .card-group-body { display: flex; flex-direction: column; gap: 6px; margin-top: 4px; }
+        /* Explicit overrides — display:flex/grid above would otherwise win over [hidden]'s display:none */
+        .card-group-body[hidden] { display: none; }
+        #metadata-body[hidden] { display: none; }
+
+        /* ── Mobile collapsible chart toggle ────────────────────── */
+
+        .chart-toggle-btn {
+            width: 100%;
+            min-height: 44px;
+            background: var(--bg-hover);
+            color: var(--text-primary);
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            font-size: 15px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: background 0.2s, border-color 0.2s;
+            padding: 0 14px;
+            text-align: left;
+            margin-bottom: 12px;
+        }
+
+        .chart-toggle-btn:hover {
+            background: var(--bg-card);
+            border-color: var(--border-hover);
+        }
+
+        .chart-toggle-btn:focus {
+            outline: 2px solid var(--accent-hover);
+            outline-offset: 2px;
+        }
+
+        /* Visually hidden but accessible to screen readers */
+        .sr-only {
+            position: absolute;
+            width: 1px;
+            height: 1px;
+            padding: 0;
+            margin: -1px;
+            overflow: hidden;
+            clip: rect(0, 0, 0, 0);
+            white-space: nowrap;
+            border: 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>Go Performance Tracking</h1>
+            <p class="subtitle">Compare benchmark performance across Go versions</p>
+        </header>
+
+        <div class="controls">
+            <div class="control-group">
+                <div class="version-selector">
+                    <label for="platform-selector">Platform</label>
+                    <select id="platform-selector">
+                        <option value="">Loading...</option>
+                    </select>
+                </div>
+                <div class="version-selector">
+                    <label for="baseline-version">Baseline Version</label>
+                    <select id="baseline-version">
+                        <option value="">Select platform first...</option>
+                    </select>
+                </div>
+                <div class="version-selector">
+                    <label for="target-version">Target Version</label>
+                    <select id="target-version">
+                        <option value="">Select platform first...</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+
+        <div class="category-filter">
+            <label>Filter by Category</label>
+            <div class="category-tabs">
+                <button class="category-tab active" data-category="all">
+                    All <span class="category-badge" id="badge-all">0</span>
+                </button>
+                <button class="category-tab" data-category="runtime">
+                    Runtime <span class="category-badge" id="badge-runtime">0</span>
+                </button>
+                <button class="category-tab" data-category="stdlib">
+                    Stdlib <span class="category-badge" id="badge-stdlib">0</span>
+                </button>
+                <button class="category-tab" data-category="networking">
+                    Networking <span class="category-badge" id="badge-networking">0</span>
+                </button>
+            </div>
+        </div>
+
+        <div id="sr-status" role="status" aria-live="polite" aria-atomic="true" class="sr-only"></div>
+        <div id="error-container"></div>
+        <div id="metadata-container"></div>
+        <div id="summary-container"></div>
+        <div id="charts-container"></div>
+    </div>
+
+    <script>
+        // Benchmark categories — single source of truth used by both table and card renderers
+        const CATEGORIES = [
+            { name: 'runtime', label: 'Runtime & GC' },
+            { name: 'stdlib', label: 'Standard Library' },
+            { name: 'networking', label: 'Networking' },
+            { name: 'uncategorized', label: 'Other' }
+        ];
+
+        // Lazily load Plotly.js the first time charts are needed.
+        // Returns a Promise that resolves when Plotly is available.
+        // Subsequent calls return the cached promise (no duplicate loads).
+        let _plotlyPromise = null;
+        function ensurePlotly() {
+            if (window.Plotly) return Promise.resolve();
+            if (_plotlyPromise) return _plotlyPromise;
+            _plotlyPromise = new Promise((resolve, reject) => {
+                const s = document.createElement('script');
+                // TODO(security): Add SRI integrity hash before production deployment.
+                // Generate with: curl -s https://cdn.plot.ly/plotly-2.27.0.min.js | openssl dgst -sha384 -binary | openssl base64 -A
+                // Then add: s.integrity = 'sha384-<hash>'; s.crossOrigin = 'anonymous';
+                s.src = 'https://cdn.plot.ly/plotly-2.27.0.min.js';
+                s.onload = resolve;
+                s.onerror = () => { _plotlyPromise = null; reject(new Error('Failed to load Plotly')); };
+                document.head.appendChild(s);
+            });
+            return _plotlyPromise;
+        }
+
+        let platformsData = null;
+        let currentPlatform = null;
+        let indexData = null;
+        let baselineData = null;
+        let targetData = null;
+        let benchmarkMetadata = {}; // Map of benchmark name to metadata
+        let activeCategory = 'all'; // Current active category filter
+
+        // Theme detection and synchronization
+        function detectAndApplyTheme() {
+            let detectedTheme = null;
+            let parentBgColor = null;
+
+            // Method 1: Try to detect theme from parent window (same-origin only)
+            try {
+                if (window.parent !== window && window.parent.document) {
+                    const parentScheme = window.parent.document.documentElement.getAttribute('data-md-color-scheme');
+                    if (parentScheme) {
+                        detectedTheme = parentScheme;
+                        console.log('Theme from parent attribute:', parentScheme);
+                    }
+
+                    // Extract parent's actual background color
+                    const parentStyle = getComputedStyle(window.parent.document.body);
+                    parentBgColor = parentStyle.backgroundColor;
+                    console.log('Parent background color:', parentBgColor);
+
+                    // Calculate lighter shades for cards based on parent background
+                    if (parentBgColor) {
+                        const rgb = parentBgColor.match(/\d+/g);
+                        if (rgb && rgb.length >= 3) {
+                            const baseR = parseInt(rgb[0]);
+                            const baseG = parseInt(rgb[1]);
+                            const baseB = parseInt(rgb[2]);
+
+                            // Make cards ~15% lighter than background
+                            const r = Math.min(255, Math.round(baseR * 1.15));
+                            const g = Math.min(255, Math.round(baseG * 1.15));
+                            const b = Math.min(255, Math.round(baseB * 1.15));
+                            const cardColor = `rgb(${r}, ${g}, ${b})`;
+
+                            // Make hover/metadata items ~35% lighter for more contrast
+                            const hr = Math.min(255, Math.round(baseR * 1.35));
+                            const hg = Math.min(255, Math.round(baseG * 1.35));
+                            const hb = Math.min(255, Math.round(baseB * 1.35));
+                            const hoverColor = `rgb(${hr}, ${hg}, ${hb})`;
+
+                            document.documentElement.style.setProperty('--bg-card', cardColor);
+                            document.documentElement.style.setProperty('--bg-hover', hoverColor);
+                            document.documentElement.style.setProperty('--chart-bg', cardColor);
+                            console.log('Applied calculated colors - card:', cardColor, 'hover:', hoverColor);
+                        }
+                    }
+                }
+            } catch (e) {
+                // Cross-origin restrictions - can't access parent
+                console.log('Cannot access parent (cross-origin)');
+            }
+
+            // Method 2: Check URL parameter (?theme=dark or ?theme=light)
+            if (!detectedTheme) {
+                const urlParams = new URLSearchParams(window.location.search);
+                const themeParam = urlParams.get('theme');
+                if (themeParam === 'dark' || themeParam === 'slate') {
+                    detectedTheme = 'slate';
+                } else if (themeParam === 'light') {
+                    detectedTheme = 'default';
+                }
+            }
+
+            // Method 3: Detect from parent bg color brightness
+            if (!detectedTheme && parentBgColor) {
+                const rgb = parentBgColor.match(/\d+/g);
+                if (rgb && rgb.length >= 3) {
+                    const brightness = (parseInt(rgb[0]) + parseInt(rgb[1]) + parseInt(rgb[2])) / 3;
+                    detectedTheme = brightness < 128 ? 'slate' : 'default';
+                    console.log('Theme from brightness:', detectedTheme, 'brightness:', brightness);
+                }
+            }
+
+            // Method 4: Fall back to system preference
+            if (!detectedTheme) {
+                if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
+                    detectedTheme = 'slate';
+                } else {
+                    detectedTheme = 'default';
+                }
+            }
+
+            console.log('Final detected theme:', detectedTheme);
+            document.documentElement.setAttribute('data-md-color-scheme', detectedTheme);
+
+            // Apply parent's exact background color to iframe if available
+            if (parentBgColor) {
+                document.documentElement.style.setProperty('--bg-primary', parentBgColor);
+                document.body.style.backgroundColor = parentBgColor;
+                console.log('Applied parent background color:', parentBgColor);
+            }
+        }
+
+        // Listen for theme changes from parent window
+        window.addEventListener('message', (event) => {
+            if (event.origin !== window.location.origin) return;
+            if (event.data && event.data.theme) {
+                console.log('Received theme change message:', event.data.theme);
+                // Re-detect and apply theme (this will update all colors)
+                detectAndApplyTheme();
+                // Redraw charts with new theme
+                if (baselineData && targetData) {
+                    renderCharts();
+                }
+            }
+        });
+
+        // Sanitize HTML to prevent XSS attacks
+        function sanitizeHTML(str) {
+            if (typeof str !== 'string') {
+                return '';
+            }
+            const div = document.createElement('div');
+            div.textContent = str;
+            return div.innerHTML;
+        }
+
+        // Apply theme on load
+        detectAndApplyTheme();
+
+        // Re-check theme periodically (in case parent loads after iframe)
+        let themeCheckCount = 0;
+        const themeCheckInterval = setInterval(() => {
+            detectAndApplyTheme();
+            themeCheckCount++;
+            if (themeCheckCount > 10) { // Stop after 5 seconds (10 * 500ms)
+                clearInterval(themeCheckInterval);
+            }
+        }, 500);
+
+        // Also check when window becomes visible
+        document.addEventListener('visibilitychange', () => {
+            if (!document.hidden) {
+                detectAndApplyTheme();
+            }
+        });
+
+        // Get category for a benchmark (with fallback for old data)
+        function getBenchmarkCategory(benchmarkName) {
+            const metadata = benchmarkMetadata[benchmarkName];
+            if (metadata && metadata.category) {
+                return metadata.category;
+            }
+            // Fallback to uncategorized if no category metadata
+            return 'uncategorized';
+        }
+
+        // Filter benchmarks by category
+        function filterBenchmarksByCategory(benchmarks, category) {
+            if (category === 'all') {
+                return benchmarks;
+            }
+            return benchmarks.filter(name => {
+                const cat = getBenchmarkCategory(name);
+                return cat === category;
+            });
+        }
+
+        // Get category counts
+        function getCategoryCounts() {
+            if (!baselineData || !targetData) {
+                return { all: 0, runtime: 0, stdlib: 0, networking: 0, uncategorized: 0 };
+            }
+
+            const benchmarks = Object.keys(baselineData.benchmarks);
+            const counts = {
+                all: benchmarks.length,
+                runtime: 0,
+                stdlib: 0,
+                networking: 0,
+                uncategorized: 0
+            };
+
+            benchmarks.forEach(name => {
+                const category = getBenchmarkCategory(name);
+                if (counts.hasOwnProperty(category)) {
+                    counts[category]++;
+                }
+            });
+
+            return counts;
+        }
+
+        // Update category badge counts
+        function updateCategoryBadges() {
+            const counts = getCategoryCounts();
+            document.getElementById('badge-all').textContent = counts.all;
+            document.getElementById('badge-runtime').textContent = counts.runtime;
+            document.getElementById('badge-stdlib').textContent = counts.stdlib;
+            document.getElementById('badge-networking').textContent = counts.networking;
+        }
+
+        // Set active category
+        function setActiveCategory(category) {
+            activeCategory = category;
+
+            // Update tab active states
+            document.querySelectorAll('.category-tab').forEach(tab => {
+                if (tab.dataset.category === category) {
+                    tab.classList.add('active');
+                } else {
+                    tab.classList.remove('active');
+                }
+            });
+
+            // Re-render if data is loaded
+            if (baselineData && targetData) {
+                renderSummary();
+                renderCharts();
+            }
+        }
+
+        // Load platforms.json and initialize platform selector
+        async function loadPlatforms() {
+            try {
+                const response = await fetch('data/platforms.json');
+                if (!response.ok) throw new Error(`HTTP ${response.status}`);
+                platformsData = await response.json();
+                populatePlatformSelector();
+            } catch (error) {
+                showError('Failed to load platforms index: ' + error.message);
+            }
+        }
+
+        // Populate platform dropdown
+        function populatePlatformSelector() {
+            const select = document.getElementById('platform-selector');
+            select.innerHTML = '';
+
+            platformsData.platforms.forEach(p => {
+                const option = new Option(p.display, p.name);
+                select.add(option);
+            });
+
+            if (platformsData.platforms.length > 0) {
+                select.value = platformsData.platforms[0].name;
+                loadPlatformIndex(platformsData.platforms[0].name);
+            }
+        }
+
+        // Load index.json for a specific platform
+        async function loadPlatformIndex(platform) {
+            try {
+                currentPlatform = platform;
+                const response = await fetch(`data/${platform}/index.json`);
+                if (!response.ok) throw new Error(`HTTP ${response.status}`);
+                indexData = await response.json();
+
+                // Build benchmark metadata map
+                benchmarkMetadata = {};
+                indexData.benchmarks.forEach(bench => {
+                    benchmarkMetadata[bench.name] = bench;
+                });
+
+                populateVersionSelectors();
+            } catch (error) {
+                showError('Failed to load version index for ' + platform + ': ' + error.message);
+            }
+        }
+
+        // Populate version dropdowns
+        function populateVersionSelectors() {
+            const baselineSelect = document.getElementById('baseline-version');
+            const targetSelect = document.getElementById('target-version');
+
+            baselineSelect.innerHTML = '<option value="">Select baseline version...</option>';
+            targetSelect.innerHTML = '<option value="">Select target version...</option>';
+
+            indexData.versions.forEach(version => {
+                const option1 = new Option(`Go ${version.version}`, version.file);
+                const option2 = new Option(`Go ${version.version}`, version.file);
+                baselineSelect.add(option1);
+                targetSelect.add(option2);
+            });
+
+            // Set defaults if we have at least 2 versions
+            if (indexData.versions.length >= 2) {
+                baselineSelect.value = indexData.versions[0].file;
+                targetSelect.value = indexData.versions[indexData.versions.length - 1].file;
+                compareVersions();
+            }
+        }
+
+        // Load version data
+        async function loadVersionData(filename) {
+            const response = await fetch(`data/${currentPlatform}/${filename}`);
+            if (!response.ok) throw new Error(`HTTP ${response.status}`);
+            return await response.json();
+        }
+
+        // Compare versions
+        async function compareVersions() {
+            const baselineFile = document.getElementById('baseline-version').value;
+            const targetFile = document.getElementById('target-version').value;
+
+            if (!baselineFile || !targetFile) {
+                return;
+            }
+
+            if (baselineFile === targetFile) {
+                showError('Please select different versions to compare');
+                return;
+            }
+
+            try {
+                document.getElementById('error-container').innerHTML = '';
+
+                baselineData = await loadVersionData(baselineFile);
+                targetData = await loadVersionData(targetFile);
+
+                updateCategoryBadges();
+                renderMetadata();
+                renderSummary();
+                await renderCharts();
+            } catch (error) {
+                showError('Failed to load version data: ' + error.message);
+            }
+        }
+
+        // Render metadata
+        function renderMetadata() {
+            const container = document.getElementById('metadata-container');
+
+            const gridHTML = `
+                <div class="metadata-grid">
+                    <div class="metadata-item">
+                        <div class="metadata-label">Baseline Version</div>
+                        <div class="metadata-value">${sanitizeHTML(baselineData.metadata.go_version_full)}</div>
+                    </div>
+                    <div class="metadata-item">
+                        <div class="metadata-label">Target Version</div>
+                        <div class="metadata-value">${sanitizeHTML(targetData.metadata.go_version_full)}</div>
+                    </div>
+                    <div class="metadata-item">
+                        <div class="metadata-label">CPU</div>
+                        <div class="metadata-value">${sanitizeHTML(baselineData.metadata.system.cpu)}</div>
+                    </div>
+                    <div class="metadata-item">
+                        <div class="metadata-label">Platform</div>
+                        <div class="metadata-value">${sanitizeHTML(baselineData.metadata.system.os)}/${sanitizeHTML(baselineData.metadata.system.arch)}</div>
+                    </div>
+                    <div class="metadata-item">
+                        <div class="metadata-label">Benchmark Config</div>
+                        <div class="metadata-value">${sanitizeHTML(String(baselineData.metadata.benchmark_config.iterations))} iterations × ${sanitizeHTML(baselineData.metadata.benchmark_config.benchtime)}</div>
+                    </div>
+                </div>`;
+
+            if (isMobile()) {
+                container.innerHTML = `
+                    <div class="metadata">
+                        <button class="collapsible-header" id="metadata-toggle" aria-expanded="false" aria-controls="metadata-body">
+                            <span class="group-title">System Information</span>
+                            <span class="group-arrow">&#x25B6;</span>
+                        </button>
+                        <div id="metadata-body" hidden>${gridHTML}</div>
+                    </div>`;
+
+                document.getElementById('metadata-toggle').addEventListener('click', function() {
+                    const body = document.getElementById('metadata-body');
+                    const expanded = this.getAttribute('aria-expanded') === 'true';
+                    const arrow = this.querySelector('.group-arrow');
+                    body.hidden = expanded;
+                    this.setAttribute('aria-expanded', String(!expanded));
+                    arrow.textContent = expanded ? '\u25B6' : '\u25BC';
+                });
+            } else {
+                container.innerHTML = `<div class="metadata"><h2>System Information</h2>${gridHTML}</div>`;
+            }
+        }
+
+        // Calculate percentage change
+        function percentChange(baseline, target) {
+            if (baseline === 0) {
+                return target === 0 ? 0 : Infinity;
+            }
+            return ((target - baseline) / baseline) * 100;
+        }
+
+        // Generate GitHub source link for a benchmark
+        function getBenchmarkSourceURL(benchmarkName) {
+            const metadata = benchmarkMetadata[benchmarkName];
+            if (!metadata || !indexData.repository) {
+                return null;
+            }
+
+            const { url, source_path } = indexData.repository;
+            const sourceFile = metadata.source_file;
+
+            // Use GitHub's text search anchor to jump to the function
+            const searchText = `func%20${benchmarkName}`;
+            const constructed = `${url}/${source_path}/${sourceFile}#:~:text=${searchText}`;
+            if (!constructed.startsWith('https://')) return null;
+            return constructed;
+        }
+
+        // Format delta with clear color coding.
+        // Negative % = improvement (green), Positive % = regression (red).
+        // maxCV (optional): the benchmark's max historical coefficient of variation (0–1).
+        // When provided, a tooltip clarifies whether the delta is likely real or within noise.
+        function formatDelta(value, maxCV) {
+            if (!Number.isFinite(value)) {
+                const symbol = value > 0 ? '+∞' : '-∞';
+                const className = value > 0 ? 'delta-negative' : 'delta-positive';
+                return `<span class="${className}">${symbol}</span>`;
+            }
+            if (Math.abs(value) < 0.5) {
+                return '<span class="delta-neutral">~0%</span>';
+            }
+            const sign = value > 0 ? '+' : '';
+            const className = value < 0 ? 'delta-positive' : 'delta-negative';
+
+            let title = '';
+            if (maxCV != null && maxCV > 0) {
+                const noiseFloorPct = (maxCV * 100).toFixed(1);
+                if (Math.abs(value) < maxCV * 100) {
+                    title = ` title="Within historical noise margin (max CV ±${noiseFloorPct}%) — may not be a real change"`;
+                } else {
+                    title = ` title="Exceeds noise floor of ±${noiseFloorPct}% — likely a real change"`;
+                }
+            }
+
+            return `<span class="${className}"${title}>${sign}${value.toFixed(2)}%</span>`;
+        }
+
+        // Get variance badge showing within-run CV for both versions in the comparison.
+        // When baseline and target CV differ by more than 0.5%, both are shown as
+        // "±base% → ±target%" so the source of any Noisy/Unstable badge is obvious.
+        // Badge color is driven by the higher of the two values.
+        function getVarianceBadge(baselineVariance, targetVariance) {
+            const basePct  = (baselineVariance || 0) * 100;
+            const targPct  = (targetVariance  || 0) * 100;
+            const maxPct   = Math.max(basePct, targPct);
+            const title    = `title="Within-run CV — baseline: ±${basePct.toFixed(1)}%, target: ±${targPct.toFixed(1)}%"`;
+
+            const label = (Math.abs(basePct - targPct) >= 0.5)
+                ? `±${basePct.toFixed(1)}% → ±${targPct.toFixed(1)}%`
+                : `±${targPct.toFixed(1)}%`;
+
+            if (maxPct >= 10) {
+                return `<span class="variance-badge variance-high" ${title}>${label}</span>`;
+            } else if (maxPct >= 5) {
+                return `<span class="variance-badge variance-medium" ${title}>${label}</span>`;
+            } else {
+                return `<span class="variance-badge variance-low" ${title}>${label}</span>`;
+            }
+        }
+
+        // Get reliability badge based on the variance of the two versions being compared.
+        // baselineVariance and targetVariance are the ns_per_op_variance values (0–1) for
+        // each version; the badge reflects max(baseline, target) so it is specific to this
+        // comparison pair rather than a static global label.
+        // Returns empty string when both versions are reliable for this comparison.
+        function getReliabilityBadge(benchmarkName, baselineVariance, targetVariance) {
+            const compCV = Math.max(baselineVariance || 0, targetVariance || 0);
+            const metadata = benchmarkMetadata[benchmarkName];
+            const historicalMax = metadata?.max_cv ?? 0;
+
+            // Note historical noisiness in the tooltip when older versions were worse.
+            const historicalNote = (historicalMax > compCV + 0.01)
+                ? ` Historically worse: up to ±${(historicalMax * 100).toFixed(1)}% across all versions.`
+                : '';
+
+            if (compCV >= 0.15) {
+                return `<span class="reliability-badge reliability-unstable" title="Unstable for this comparison: CV ±${(compCV * 100).toFixed(1)}% — high variance, not suitable for direct comparison.${historicalNote}">⚠ Unstable</span>`;
+            }
+            if (compCV >= 0.05) {
+                return `<span class="reliability-badge reliability-noisy" title="Noisy for this comparison: CV ±${(compCV * 100).toFixed(1)}% — small deltas may be noise; deltas larger than ±${(compCV * 100).toFixed(1)}% are likely real.${historicalNote}">~ Noisy</span>`;
+            }
+            return '';
+        }
+
+        // Render a single benchmark row
+        function renderBenchmarkRow(name) {
+            const baseline = baselineData.benchmarks[name];
+            const target = targetData.benchmarks[name];
+
+            if (!target) return '';
+
+            const timeDelta = percentChange(baseline.ns_per_op, target.ns_per_op);
+            const allocDelta = percentChange(baseline.allocs_per_op, target.allocs_per_op);
+
+            // Create clickable benchmark name with link to source
+            const sourceURL = getBenchmarkSourceURL(name);
+            const displayName = name.replace('Benchmark', '');
+            const benchmarkCell = sourceURL
+                ? `<a href="${sanitizeHTML(sourceURL)}" class="benchmark-link" target="_blank" rel="noopener">${sanitizeHTML(displayName)}</a>`
+                : `<strong>${sanitizeHTML(displayName)}</strong>`;
+
+            // Use the variance of this specific comparison pair as the noise floor.
+            const baselineVariance = baseline?.ns_per_op_variance ?? 0;
+            const targetVariance = target?.ns_per_op_variance ?? 0;
+            const comparisonMaxCV = Math.max(baselineVariance, targetVariance);
+
+            return `
+                <tr>
+                    <td>${benchmarkCell}${getReliabilityBadge(name, baselineVariance, targetVariance)}</td>
+                    <td>${formatDelta(timeDelta, comparisonMaxCV)}</td>
+                    <td>${baseline.ns_per_op.toFixed(2)} ns/op</td>
+                    <td>${target.ns_per_op.toFixed(2)} ns/op</td>
+                    <td>${formatDelta(allocDelta)}</td>
+                    <td>${baseline.allocs_per_op}</td>
+                    <td>${target.allocs_per_op}</td>
+                    <td>${getVarianceBadge(baselineVariance, targetVariance)}</td>
+                </tr>
+            `;
+        }
+
+        // True when the viewport is at or below the mobile breakpoint
+        function isMobile() {
+            return window.innerWidth <= 768;
+        }
+
+        // Announce summary stats to screen readers via the live region
+        function announceToScreenReader(benchmarks) {
+            const stats = computeSummaryStats(benchmarks);
+            const msg = `Comparison updated: ${stats.improved} improved, ${stats.regressed} regressed, ${stats.neutral} neutral.`;
+            const el = document.getElementById('sr-status');
+            if (el) el.textContent = msg;
+        }
+
+        // Render summary — delegates to card layout on mobile, table on desktop
+        function renderSummary() {
+            const container = document.getElementById('summary-container');
+            const allBenchmarks = Object.keys(baselineData.benchmarks);
+            const filteredBenchmarks = filterBenchmarksByCategory(allBenchmarks, activeCategory);
+
+            if (isMobile()) {
+                renderCards(filteredBenchmarks, container);
+                announceToScreenReader(filteredBenchmarks);
+                return;
+            }
+
+            // ── Desktop: table layout ──────────────────────────────────
+            const stats = computeSummaryStats(filteredBenchmarks);
+            const summaryBarHTML = buildSummaryBarHTML(stats);
+            const categoryAveragesHTML = buildCategoryAveragesHTML(filteredBenchmarks);
+            const topMoversHTML = filteredBenchmarks.length >= 2 ? buildTopMoversHTML(stats) : '';
+
+            let tableRows = '';
+
+            // Group benchmarks by category when showing "all"
+            if (activeCategory === 'all') {
+                CATEGORIES.forEach(({ name: categoryName, label }) => {
+                    const categoryBenchmarks = filteredBenchmarks.filter(name =>
+                        getBenchmarkCategory(name) === categoryName
+                    );
+
+                    if (categoryBenchmarks.length === 0) return;
+
+                    // Add category group header
+                    tableRows += `
+                        <tr class="category-group-header">
+                            <td colspan="8">${sanitizeHTML(label)} (${sanitizeHTML(String(categoryBenchmarks.length))})</td>
+                        </tr>
+                    `;
+
+                    categoryBenchmarks.forEach(name => {
+                        tableRows += renderBenchmarkRow(name);
+                    });
+                });
+            } else {
+                // Render filtered benchmarks without grouping
+                filteredBenchmarks.forEach(name => {
+                    tableRows += renderBenchmarkRow(name);
+                });
+            }
+
+            const html = `
+                <div class="summary">
+                    <h2>Performance Comparison</h2>
+                    <p style="color: var(--text-secondary); font-size: 14px; margin-bottom: 15px;">
+                        <span class="delta-positive">Green (negative %)</span> = improvement,
+                        <span class="delta-negative">Red (positive %)</span> = regression
+                    </p>
+                    ${summaryBarHTML}
+                    ${categoryAveragesHTML}
+                    ${topMoversHTML}
+                    <div class="table-wrapper">
+                        <table class="benchmark-table">
+                            <thead>
+                                <tr>
+                                    <th>Benchmark</th>
+                                    <th>Δ Time</th>
+                                    <th>Baseline Time</th>
+                                    <th>Target Time</th>
+                                    <th>Δ Allocs</th>
+                                    <th>Baseline Allocs</th>
+                                    <th>Target Allocs</th>
+                                    <th>Variance</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                ${tableRows}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            `;
+
+            container.innerHTML = html;
+            announceToScreenReader(filteredBenchmarks);
+        }
+
+        // Compute improved / regressed / neutral counts and top movers for mobile summary.
+        // A benchmark is "improved" when timeDelta < -0.5%, "regressed" when > +0.5%,
+        // and "neutral" otherwise.  Infinite deltas are excluded from the top-movers lists
+        // because they cannot be meaningfully ranked by magnitude.
+        function computeSummaryStats(benchmarks) {
+            let improved = 0, regressed = 0, neutral = 0;
+            const improvements = [], regressions = [];
+
+            benchmarks.forEach(name => {
+                const baseline = baselineData.benchmarks[name];
+                const target = targetData.benchmarks[name];
+                if (!target) return;
+
+                const delta = percentChange(baseline.ns_per_op, target.ns_per_op);
+
+                if (!Number.isFinite(delta)) return; // skip infinities for counts and ranking
+
+                // Unstable benchmarks (CV ≥ 15%) still contribute to the improved/regressed/
+                // neutral counts so the summary bar reflects reality, but they are excluded
+                // from the ranked top-movers lists because their delta may not be a real change.
+                const isUnstable = Math.max(
+                    baseline.ns_per_op_variance ?? 0,
+                    target.ns_per_op_variance ?? 0
+                ) >= 0.15;
+
+                if (delta < -0.5) {
+                    improved++;
+                    if (!isUnstable) improvements.push({ name: name.replace('Benchmark', ''), delta });
+                } else if (delta > 0.5) {
+                    regressed++;
+                    if (!isUnstable) regressions.push({ name: name.replace('Benchmark', ''), delta });
+                } else {
+                    neutral++;
+                }
+            });
+
+            // Sort improvements by most negative delta first (largest absolute improvement)
+            improvements.sort((a, b) => a.delta - b.delta);
+            // Sort regressions by most positive delta first (largest absolute regression)
+            regressions.sort((a, b) => b.delta - a.delta);
+
+            return {
+                improved,
+                regressed,
+                neutral,
+                topImprovements: improvements.slice(0, 3),
+                topRegressions: regressions.slice(0, 3)
+            };
+        }
+
+        // Build per-category average delta cards. Only rendered when activeCategory === 'all'.
+        // Unstable benchmarks (CV ≥ 15%) are excluded from the average so noise does not
+        // distort the per-category summary.
+        function buildCategoryAveragesHTML(benchmarks) {
+            if (activeCategory !== 'all') return '';
+
+            let html = '<div class="category-averages">';
+            CATEGORIES.forEach(({ name: categoryName, label }) => {
+                const catBenchmarks = benchmarks.filter(n => getBenchmarkCategory(n) === categoryName);
+                if (catBenchmarks.length === 0) return;
+
+                // stableDeltas excludes benchmarks whose max comparison CV ≥ 15%
+                const stableDeltas = catBenchmarks
+                    .map(n => {
+                        const b = baselineData.benchmarks[n];
+                        const t = targetData.benchmarks[n];
+                        if (!t) return null;
+                        if (Math.max(b.ns_per_op_variance ?? 0, t.ns_per_op_variance ?? 0) >= 0.15) return null;
+                        const d = percentChange(b.ns_per_op, t.ns_per_op);
+                        return Number.isFinite(d) ? d : null;
+                    })
+                    .filter(d => d !== null);
+
+                const stableCount = stableDeltas.length;
+                const countLabel = stableCount < catBenchmarks.length
+                    ? `${stableCount}/${catBenchmarks.length} stable`
+                    : `${catBenchmarks.length} benchmarks`;
+
+                let deltaClass = 'delta-neutral', deltaLabel = '~0%';
+                if (stableDeltas.length > 0) {
+                    const avg = stableDeltas.reduce((s, v) => s + v, 0) / stableDeltas.length;
+                    if (avg < -0.5) {
+                        deltaClass = 'delta-positive';
+                        // avgMeta is raw HTML — deltaClass is hardcoded, avg.toFixed is numeric-only
+                        deltaLabel = `\u2212${Math.abs(avg).toFixed(2)}%`;
+                    } else if (avg > 0.5) {
+                        deltaClass = 'delta-negative';
+                        deltaLabel = `+${avg.toFixed(2)}%`;
+                    }
+                }
+
+                html += `<div class="cat-avg-item">` +
+                    `<span class="cat-avg-name">${sanitizeHTML(label)}</span>` +
+                    `<span class="cat-avg-delta ${deltaClass}">${deltaLabel}</span>` +
+                    `<span class="cat-avg-count">${sanitizeHTML(countLabel)}</span>` +
+                    `</div>`;
+            });
+            html += '</div>';
+            return html;
+        }
+
+        // Build the summary bar HTML showing improved / regressed / neutral counts.
+        function buildSummaryBarHTML(stats) {
+            return `<div class="mobile-summary-bar">` +
+                `<span class="summary-improved">\u2191 ${stats.improved} improved</span>` +
+                `<span class="summary-sep">\u00B7</span>` +
+                `<span class="summary-regressed">\u2193 ${stats.regressed} regressed</span>` +
+                `<span class="summary-sep">\u00B7</span>` +
+                `<span class="summary-neutral">\u2192 ${stats.neutral} neutral</span>` +
+                `</div>`;
+        }
+
+        // Build the top-movers two-column panel HTML.
+        // Only rendered when there are at least 2 benchmarks in scope.
+        function buildTopMoversHTML(stats) {
+            // cssClass is a hardcoded caller-supplied string — never external data
+            function buildMoverRows(entries, cssClass) {
+                if (entries.length === 0) {
+                    return `<div class="top-mover-none">None</div>`;
+                }
+                return entries.map(e => {
+                    const sign = e.delta > 0 ? '+' : '';
+                    return `<div class="top-mover-row">` +
+                        `<span class="top-mover-name">${sanitizeHTML(e.name)}</span>` +
+                        `<span class="top-mover-delta ${cssClass}">${sign}${e.delta.toFixed(1)}%</span>` +
+                        `</div>`;
+                }).join('');
+            }
+
+            return `<div class="top-movers">` +
+                `<div class="top-movers-col">` +
+                `<div class="top-movers-heading">Top improvements</div>` +
+                buildMoverRows(stats.topImprovements, 'delta-positive') +
+                `</div>` +
+                `<div class="top-movers-col">` +
+                `<div class="top-movers-heading">Top regressions</div>` +
+                buildMoverRows(stats.topRegressions, 'delta-negative') +
+                `</div>` +
+                `</div>`;
+        }
+
+        // Render benchmark cards for mobile layout
+        function renderCards(benchmarks, container) {
+
+            // ── Summary bar + top movers ──────────────────────────────
+            const stats = computeSummaryStats(benchmarks);
+            const summaryBarHTML = buildSummaryBarHTML(stats);
+            const categoryAveragesHTML = buildCategoryAveragesHTML(benchmarks);
+            // Top movers are only meaningful when there are at least 2 benchmarks in scope
+            const topMoversHTML = benchmarks.length >= 2 ? buildTopMoversHTML(stats) : '';
+
+            let cardsHTML = '';
+
+            if (activeCategory === 'all') {
+                // Group cards under collapsible category headers; all start collapsed
+                CATEGORIES.forEach(({ name: categoryName, label }) => {
+                    const categoryBenchmarks = benchmarks.filter(name =>
+                        getBenchmarkCategory(name) === categoryName
+                    );
+
+                    if (categoryBenchmarks.length === 0) return;
+
+                    // Compute average timeDelta for this category.
+                    // Skip infinities and unstable benchmarks (CV ≥ 15%) so noise
+                    // does not distort the per-category header summary.
+                    const finiteDeltas = categoryBenchmarks
+                        .map(name => {
+                            const b = baselineData.benchmarks[name];
+                            const t = targetData.benchmarks[name];
+                            if (!t) return null;
+                            if (Math.max(b.ns_per_op_variance ?? 0, t.ns_per_op_variance ?? 0) >= 0.15) return null;
+                            const d = percentChange(b.ns_per_op, t.ns_per_op);
+                            return Number.isFinite(d) ? d : null;
+                        })
+                        .filter(d => d !== null);
+
+                    let avgMeta = '';
+                    if (finiteDeltas.length > 0) {
+                        const avg = finiteDeltas.reduce((s, v) => s + v, 0) / finiteDeltas.length;
+                        let avgClass, avgLabel;
+                        if (avg < -0.5) {
+                            avgClass = 'delta-positive';
+                            avgLabel = `avg \u2212${Math.abs(avg).toFixed(2)}%`;
+                        } else if (avg > 0.5) {
+                            avgClass = 'delta-negative';
+                            avgLabel = `avg +${avg.toFixed(2)}%`;
+                        } else {
+                            avgClass = 'delta-neutral';
+                            avgLabel = 'avg ~0%';
+                        }
+                        // avgMeta is raw HTML — avgClass is hardcoded, avgLabel is numeric-only
+                        avgMeta = ` <span class="${avgClass}">${avgLabel}</span>`;
+                    }
+
+                    const groupBodyId = `group-body-${categoryName}`;
+                    cardsHTML += `<button class="card-category-header collapsible-header" aria-expanded="false" aria-controls="${sanitizeHTML(groupBodyId)}" data-group="${sanitizeHTML(categoryName)}">` +
+                        `<span class="group-title">${sanitizeHTML(label)}</span>` +
+                        `<span class="group-meta">${sanitizeHTML(String(categoryBenchmarks.length))}${avgMeta}</span>` +
+                        `<span class="group-arrow">\u25B6</span>` +
+                        `</button>` +
+                        `<div class="card-group-body" id="${sanitizeHTML(groupBodyId)}" hidden>`;
+
+                    categoryBenchmarks.forEach(name => {
+                        cardsHTML += renderCardRow(name);
+                    });
+
+                    cardsHTML += `</div>`;
+                });
+            } else {
+                benchmarks.forEach(name => {
+                    cardsHTML += renderCardRow(name);
+                });
+            }
+
+            container.innerHTML = `
+                <div class="summary">
+                    <h2>Performance Comparison</h2>
+                    <p style="color: var(--text-secondary); font-size: 14px; margin-bottom: 15px;">
+                        <span class="delta-positive">Green (negative %)</span> = improvement,
+                        <span class="delta-negative">Red (positive %)</span> = regression
+                    </p>
+                    ${summaryBarHTML}
+                    ${categoryAveragesHTML}
+                    ${topMoversHTML}
+                    <div class="benchmark-cards">${cardsHTML}</div>
+                </div>
+            `;
+
+            // Attach toggle listeners for individual card details
+            container.querySelectorAll('.card-details-toggle').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    const details = this.nextElementSibling;
+                    const expanded = this.getAttribute('aria-expanded') === 'true';
+                    if (expanded) {
+                        details.hidden = true;
+                        this.setAttribute('aria-expanded', 'false');
+                        this.textContent = 'Show details \u25BC';
+                    } else {
+                        details.hidden = false;
+                        this.setAttribute('aria-expanded', 'true');
+                        this.textContent = 'Hide details \u25B2';
+                    }
+                });
+            });
+
+            // Attach toggle listeners for collapsible category group headers
+            container.querySelectorAll('.collapsible-header').forEach(header => {
+                header.addEventListener('click', function() {
+                    const groupName = this.dataset.group;
+                    const body = document.getElementById(`group-body-${groupName}`);
+                    const arrow = this.querySelector('.group-arrow');
+                    const expanded = this.getAttribute('aria-expanded') === 'true';
+                    if (expanded) {
+                        body.hidden = true;
+                        this.setAttribute('aria-expanded', 'false');
+                        arrow.textContent = '\u25B6';
+                    } else {
+                        body.hidden = false;
+                        this.setAttribute('aria-expanded', 'true');
+                        arrow.textContent = '\u25BC';
+                    }
+                });
+            });
+        }
+
+        // Build the HTML for a single benchmark card (analogous to renderBenchmarkRow)
+        function renderCardRow(name) {
+            const baseline = baselineData.benchmarks[name];
+            const target = targetData.benchmarks[name];
+
+            if (!target) return '';
+
+            const timeDelta = percentChange(baseline.ns_per_op, target.ns_per_op);
+            const allocDelta = percentChange(baseline.allocs_per_op, target.allocs_per_op);
+
+            const baselineVariance = baseline?.ns_per_op_variance ?? 0;
+            const targetVariance = target?.ns_per_op_variance ?? 0;
+            const comparisonMaxCV = Math.max(baselineVariance, targetVariance);
+
+            const displayName = name.replace('Benchmark', '');
+            const reliabilityBadge = getReliabilityBadge(name, baselineVariance, targetVariance);
+            const detailsId = `card-details-${sanitizeHTML(name.replace(/[^a-zA-Z0-9]/g, '-'))}`;
+
+            // Determine the delta CSS class for the card header summary value.
+            // Uses same sign convention as formatDelta: negative = improvement = green.
+            let deltaClass = 'delta-neutral';
+            let deltaText = '~0%';
+            if (Number.isFinite(timeDelta) && Math.abs(timeDelta) >= 0.5) {
+                deltaClass = timeDelta < 0 ? 'delta-positive' : 'delta-negative';
+                const sign = timeDelta > 0 ? '+' : '';
+                deltaText = `${sign}${timeDelta.toFixed(2)}%`;
+            } else if (!Number.isFinite(timeDelta)) {
+                deltaClass = timeDelta > 0 ? 'delta-negative' : 'delta-positive';
+                deltaText = timeDelta > 0 ? '+\u221E' : '-\u221E';
+            }
+
+            return `
+                <div class="benchmark-card">
+                    <div class="card-header">
+                        <span class="card-name">${sanitizeHTML(displayName)}${reliabilityBadge}</span>
+                        <span class="card-delta ${sanitizeHTML(deltaClass)}">${sanitizeHTML(deltaText)}</span>
+                    </div>
+                    <div class="card-metrics">
+                        <span class="card-metric-label">Time</span>
+                        <span class="card-metric-value">${sanitizeHTML(baseline.ns_per_op.toFixed(2))} \u2192 ${sanitizeHTML(target.ns_per_op.toFixed(2))} ns/op</span>
+                        <span class="card-metric-label">Allocs</span>
+                        <span class="card-metric-value">${sanitizeHTML(String(baseline.allocs_per_op))} \u2192 ${sanitizeHTML(String(target.allocs_per_op))}</span>
+                    </div>
+                    <div class="card-variance">${getVarianceBadge(baselineVariance, targetVariance)}</div>
+                    <button class="card-details-toggle" aria-expanded="false" aria-controls="${detailsId}">Show details \u25BC</button>
+                    <div class="card-details" id="${detailsId}" hidden>
+                        <div class="card-detail-row"><span>\u0394 Time</span><span>${formatDelta(timeDelta, comparisonMaxCV)}</span></div>
+                        <div class="card-detail-row"><span>\u0394 Allocs</span><span>${formatDelta(allocDelta)}</span></div>
+                        <div class="card-detail-row"><span>Baseline</span><span>${sanitizeHTML(baseline.ns_per_op.toFixed(2))} ns/op, ${sanitizeHTML(String(baseline.allocs_per_op))} allocs</span></div>
+                        <div class="card-detail-row"><span>Target</span><span>${sanitizeHTML(target.ns_per_op.toFixed(2))} ns/op, ${sanitizeHTML(String(target.allocs_per_op))} allocs</span></div>
+                    </div>
+                </div>
+            `;
+        }
+
+        // Get theme-aware chart layout
+        function getThemedLayout(baseLayout) {
+            const isDark = document.documentElement.getAttribute('data-md-color-scheme') === 'slate';
+            const computedStyle = getComputedStyle(document.documentElement);
+
+            return {
+                ...baseLayout,
+                paper_bgcolor: computedStyle.getPropertyValue('--chart-bg').trim() || (isDark ? '#252526' : '#ffffff'),
+                plot_bgcolor: computedStyle.getPropertyValue('--chart-bg').trim() || (isDark ? '#252526' : '#ffffff'),
+                font: {
+                    color: computedStyle.getPropertyValue('--text-primary').trim() || (isDark ? '#e0e0e0' : '#333333')
+                },
+                xaxis: {
+                    ...baseLayout.xaxis,
+                    gridcolor: computedStyle.getPropertyValue('--chart-grid').trim() || (isDark ? '#3e3e42' : '#e0e0e0'),
+                    color: computedStyle.getPropertyValue('--text-primary').trim() || (isDark ? '#e0e0e0' : '#333333'),
+                    zerolinecolor: computedStyle.getPropertyValue('--border-color').trim() || (isDark ? '#3e3e42' : '#e0e0e0')
+                },
+                yaxis: {
+                    ...baseLayout.yaxis,
+                    gridcolor: computedStyle.getPropertyValue('--chart-grid').trim() || (isDark ? '#3e3e42' : '#e0e0e0'),
+                    color: computedStyle.getPropertyValue('--text-primary').trim() || (isDark ? '#e0e0e0' : '#333333'),
+                    zerolinecolor: computedStyle.getPropertyValue('--border-color').trim() || (isDark ? '#3e3e42' : '#e0e0e0')
+                }
+            };
+        }
+
+        // Build the inner HTML for a single chart section.
+        // On mobile the chart div is omitted until the user expands the section,
+        // saving the cost of an immediate Plotly render.
+        function buildChartSection(title, chartId) {
+            if (isMobile()) {
+                const wrapperId = `${sanitizeHTML(chartId)}-wrapper`;
+                return `
+                    <div class="chart-container" data-chart-id="${sanitizeHTML(chartId)}">
+                        <h2>${sanitizeHTML(title)}</h2>
+                        <button class="chart-toggle-btn" aria-expanded="false" aria-controls="${wrapperId}">\u25B6 Show chart</button>
+                        <div class="chart-plot-wrapper" id="${wrapperId}" hidden></div>
+                    </div>
+                `;
+            }
+            // Desktop: render chart immediately, no toggle button
+            return `
+                <div class="chart-container">
+                    <h2>${sanitizeHTML(title)}</h2>
+                    <div id="${sanitizeHTML(chartId)}"></div>
+                </div>
+            `;
+        }
+
+        // Wire up expand/collapse behaviour for chart toggle buttons.
+        // When a chart is expanded for the first time, the appropriate render
+        // function is called.  When collapsed, the Plotly plot is purged to
+        // reclaim memory.
+        function attachChartToggles() {
+            const renderFns = {
+                'time-chart': renderTimeChart,
+                'allocs-chart': renderAllocsChart,
+                'delta-chart': renderDeltaChart
+            };
+
+            document.querySelectorAll('.chart-toggle-btn').forEach(btn => {
+                btn.addEventListener('click', async function() {
+                    const container = this.closest('.chart-container');
+                    const chartId = container.dataset.chartId;
+                    const wrapper = container.querySelector('.chart-plot-wrapper');
+                    const expanded = this.getAttribute('aria-expanded') === 'true';
+
+                    if (expanded) {
+                        // Collapse: purge plot to free memory, then hide wrapper
+                        const plotEl = wrapper.querySelector('[id]');
+                        if (plotEl && window.Plotly) {
+                            Plotly.purge(plotEl);
+                        }
+                        wrapper.hidden = true;
+                        this.setAttribute('aria-expanded', 'false');
+                        this.textContent = '\u25B6 Show chart';
+                    } else {
+                        // Expand: load Plotly if needed, inject div, then render
+                        try {
+                            await ensurePlotly();
+                        } catch (e) {
+                            showError('Failed to load chart library: ' + e.message);
+                            return;
+                        }
+                        if (!wrapper.querySelector(`#${CSS.escape(chartId)}`)) {
+                            const plotDiv = document.createElement('div');
+                            plotDiv.id = chartId;
+                            wrapper.appendChild(plotDiv);
+                        }
+                        wrapper.hidden = false;
+                        this.setAttribute('aria-expanded', 'true');
+                        this.textContent = '\u25BC Hide chart';
+                        if (renderFns[chartId]) {
+                            renderFns[chartId]();
+                        }
+                    }
+                });
+            });
+        }
+
+        // Render charts
+        async function renderCharts() {
+            const container = document.getElementById('charts-container');
+            // Purge any existing Plotly instances before replacing the DOM to prevent memory leaks
+            if (window.Plotly) {
+                container.querySelectorAll('[id$="-chart"]').forEach(el => Plotly.purge(el));
+            }
+            container.innerHTML =
+                buildChartSection('Performance Comparison (ns/op)', 'time-chart') +
+                buildChartSection('Memory Allocations', 'allocs-chart') +
+                buildChartSection('Performance Delta (%)', 'delta-chart');
+
+            if (isMobile()) {
+                // Charts are collapsed by default on mobile; Plotly loads on first expand.
+                attachChartToggles();
+            } else {
+                // Desktop: load Plotly then render all charts.
+                try {
+                    await ensurePlotly();
+                    renderTimeChart();
+                    renderAllocsChart();
+                    renderDeltaChart();
+                } catch (e) {
+                    showError('Failed to load chart library: ' + e.message);
+                }
+            }
+        }
+
+        // Adjust chart configuration for mobile
+        function getResponsiveChartConfig(baseConfig) {
+            const onMobile = window.innerWidth <= 768;
+            if (onMobile) {
+                return {
+                    ...baseConfig,
+                    margin: { t: 20, r: 10, b: 110, l: 50 },
+                    height: 420,
+                    width: 500,
+                    xaxis: {
+                        ...baseConfig.xaxis,
+                        tickangle: -45,
+                        tickfont: { size: 9 },
+                        automargin: true
+                    },
+                    yaxis: {
+                        ...baseConfig.yaxis,
+                        tickfont: { size: 10 },
+                        automargin: true
+                    },
+                    bargap: 0.15,
+                    bargroupgap: 0.05
+                };
+            }
+            return baseConfig;
+        }
+
+        // Render time comparison chart
+        function renderTimeChart() {
+            const allBenchmarks = Object.keys(baselineData.benchmarks);
+            const benchmarks = filterBenchmarksByCategory(allBenchmarks, activeCategory)
+                .filter(name => targetData.benchmarks[name]);
+            const labels = benchmarks.map(name => name.replace('Benchmark', ''));
+
+            const baselineValues = benchmarks.map(name => baselineData.benchmarks[name].ns_per_op);
+            const targetValues = benchmarks.map(name => targetData.benchmarks[name].ns_per_op);
+
+            const trace1 = {
+                x: labels,
+                y: baselineValues,
+                name: `Go ${baselineData.version}`,
+                type: 'bar',
+                marker: { color: '#3498db' }
+            };
+
+            const trace2 = {
+                x: labels,
+                y: targetValues,
+                name: `Go ${targetData.version}`,
+                type: 'bar',
+                marker: { color: '#2ecc71' }
+            };
+
+            const layout = getThemedLayout(getResponsiveChartConfig({
+                barmode: 'group',
+                yaxis: { title: 'Time (ns/op)', type: 'log' },
+                xaxis: { title: 'Benchmark' },
+                margin: { t: 20, r: 20, b: 80, l: 80 },
+                height: 400
+            }));
+
+            Plotly.newPlot('time-chart', [trace1, trace2], layout, { responsive: true });
+        }
+
+        // Render allocations chart
+        function renderAllocsChart() {
+            const allBenchmarks = Object.keys(baselineData.benchmarks);
+            const benchmarks = filterBenchmarksByCategory(allBenchmarks, activeCategory)
+                .filter(name => targetData.benchmarks[name]);
+            const labels = benchmarks.map(name => name.replace('Benchmark', ''));
+
+            const baselineAllocs = benchmarks.map(name => baselineData.benchmarks[name].allocs_per_op);
+            const targetAllocs = benchmarks.map(name => targetData.benchmarks[name].allocs_per_op);
+
+            const trace1 = {
+                x: labels,
+                y: baselineAllocs,
+                name: `Go ${baselineData.version}`,
+                type: 'bar',
+                marker: { color: '#3498db' }
+            };
+
+            const trace2 = {
+                x: labels,
+                y: targetAllocs,
+                name: `Go ${targetData.version}`,
+                type: 'bar',
+                marker: { color: '#2ecc71' }
+            };
+
+            const layout = getThemedLayout(getResponsiveChartConfig({
+                barmode: 'group',
+                yaxis: { title: 'Allocations per op' },
+                xaxis: { title: 'Benchmark' },
+                margin: { t: 20, r: 20, b: 80, l: 80 },
+                height: 400
+            }));
+
+            Plotly.newPlot('allocs-chart', [trace1, trace2], layout, { responsive: true });
+        }
+
+        // Render delta chart
+        function renderDeltaChart() {
+            const allBenchmarks = Object.keys(baselineData.benchmarks);
+            const benchmarks = filterBenchmarksByCategory(allBenchmarks, activeCategory)
+                .filter(name => targetData.benchmarks[name]);
+            const labels = benchmarks.map(name => name.replace('Benchmark', ''));
+
+            const deltas = benchmarks.map(name => {
+                const baseline = baselineData.benchmarks[name].ns_per_op;
+                const target = targetData.benchmarks[name].ns_per_op;
+                return percentChange(baseline, target);
+            });
+
+            // Negative % = improvement (green), Positive % = regression (red)
+            const colors = deltas.map(d => d < 0 ? '#27ae60' : d > 0 ? '#e74c3c' : '#95a5a6');
+
+            const trace = {
+                x: labels,
+                y: deltas,
+                type: 'bar',
+                marker: { color: colors }
+            };
+
+            const computedStyle = getComputedStyle(document.documentElement);
+            const textSecondary = computedStyle.getPropertyValue('--text-secondary').trim();
+            const textPrimary = computedStyle.getPropertyValue('--text-primary').trim();
+
+            const layout = getThemedLayout(getResponsiveChartConfig({
+                yaxis: {
+                    title: 'Performance Change (%)',
+                    zeroline: true,
+                    zerolinewidth: 2,
+                    zerolinecolor: textPrimary
+                },
+                xaxis: { title: 'Benchmark' },
+                margin: { t: 20, r: 20, b: 80, l: 80 },
+                height: 400,
+                annotations: [{
+                    text: 'Negative % = Faster (better), Positive % = Slower (worse)',
+                    xref: 'paper',
+                    yref: 'paper',
+                    x: 0.5,
+                    y: 1.05,
+                    showarrow: false,
+                    font: { size: 12, color: textSecondary }
+                }]
+            }));
+
+            Plotly.newPlot('delta-chart', [trace], layout, { responsive: true });
+        }
+
+        // Show error message
+        function showError(message) {
+            const container = document.getElementById('error-container');
+            container.innerHTML = `<div class="error">${sanitizeHTML(message)}</div>`;
+        }
+
+        // Event listeners
+        document.getElementById('platform-selector').addEventListener('change', function() {
+            loadPlatformIndex(this.value);
+        });
+        document.getElementById('baseline-version').addEventListener('change', compareVersions);
+        document.getElementById('target-version').addEventListener('change', compareVersions);
+
+        // Category filter event listeners
+        document.querySelectorAll('.category-tab').forEach(tab => {
+            tab.addEventListener('click', function() {
+                const category = this.dataset.category;
+                setActiveCategory(category);
+            });
+        });
+
+        // Debounced resize handler — re-renders summary and charts when the
+        // viewport crosses the 768px mobile/desktop breakpoint.
+        (function attachResizeHandler() {
+            let lastMobile = isMobile();
+            let resizeTimer = null;
+
+            window.addEventListener('resize', function() {
+                clearTimeout(resizeTimer);
+                resizeTimer = setTimeout(function() {
+                    const nowMobile = isMobile();
+                    if (nowMobile !== lastMobile) {
+                        lastMobile = nowMobile;
+                        // Only re-render when data is loaded
+                        if (baselineData && targetData) {
+                            renderSummary();
+                            renderCharts();
+                        }
+                    }
+                }, 200);
+            });
+        })();
+
+        // Initialize
+        loadPlatforms();
+    </script>
+</body>
+</html>
