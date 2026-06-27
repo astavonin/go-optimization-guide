@@ -362,11 +362,11 @@ For example, if profiling shows excessive time spent in TLS handshake routines, 
 
 **Why it matters:** CPU bottlenecks cap your ability to scale. Fixing them is often the difference between a system that handles 5K clients and one that handles 50K.
 
-### Practicle example of Profiling Networked Go Applications with `pprof`
+### Practical example of Profiling Networked Go Applications with `pprof`
 
 To illustrate these concepts practically, our demo application integrates profiling and benchmarking tools and provides comprehensive profiling and load testing scenarios. The demo covers identifying performance bottlenecks, analyzing flame graphs, and benchmarking under various simulated network conditions.
 
-Due to its significant size, [Practicle example of Profiling Networked Go Applications with `prof`](gc-endpoint-profiling.md) is a separate article.
+Due to its significant size, [Practical example of Profiling Networked Go Applications with `prof`](gc-endpoint-profiling.md) is a separate article.
 
 ## Benchmarking as a Feedback Loop
 
