@@ -47,6 +47,11 @@ show_usage() {
     echo
     echo "One-time AWS setup (run once before first use):"
     echo "  ./setup-aws.sh"
+    echo
+    echo "Concurrent runs:"
+    echo "  Multiple runs from this machine are safe (they share one SSH rule)."
+    echo "  Runs from a different operator IP are not: each prunes the other's"
+    echo "  rule at startup, cutting off the other's result download."
 }
 
 if [ $# -lt 2 ]; then
@@ -138,6 +143,38 @@ if [ -z "$OPERATOR_IP" ]; then
     exit 1
 fi
 echo -e "  ${GREEN}✓${NC} Operator IP: $OPERATOR_IP"
+
+# ---------------------------------------------------------------------------
+# Prune stale SSH rules
+# The cleanup trap cannot run when the script is killed outright (SIGKILL,
+# host sleep, dropped connection), which strands the ingress rule until
+# someone notices. This group is documented as "added and revoked
+# dynamically", so any port-22 rule for an IP other than ours is leftovers.
+#
+# Concurrent runs from THIS machine are safe: they share $OPERATOR_IP and so
+# are never pruned. Concurrent runs from a *different* operator IP would be
+# cut off — see the note in show_usage.
+# ---------------------------------------------------------------------------
+echo -e "${CYAN}→${NC} Pruning stale SSH rules..."
+STALE_CIDRS=$(aws ec2 describe-security-groups \
+    --group-ids "$SG_ID" \
+    --query "SecurityGroups[0].IpPermissions[?FromPort==\`22\`].IpRanges[].CidrIp" \
+    --output text 2>/dev/null | tr '\t' '\n' | grep -v "^${OPERATOR_IP}/32$" || true)
+
+if [ -n "$STALE_CIDRS" ]; then
+    while read -r cidr; do
+        [ -z "$cidr" ] && continue
+        if aws ec2 revoke-security-group-ingress \
+                --group-id "$SG_ID" --protocol tcp --port 22 \
+                --cidr "$cidr" > /dev/null 2>&1; then
+            echo -e "  ${YELLOW}⚠${NC} Revoked stale SSH rule: $cidr"
+        else
+            echo -e "  ${YELLOW}⚠${NC} Could not revoke stale rule: $cidr"
+        fi
+    done <<< "$STALE_CIDRS"
+else
+    echo -e "  ${GREEN}✓${NC} No stale rules found"
+fi
 
 # ---------------------------------------------------------------------------
 # Cleanup trap: terminate instance and revoke SSH rule on any exit
