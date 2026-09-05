@@ -40,7 +40,7 @@ This section is intentionally more theoretical, but still grounded in tests and 
 
 This section tracks how Go’s runtime and standard library performance evolves across releases. 76 benchmarks spanning runtime internals, standard library, and networking, collected on dedicated EC2 instances with controlled CPU configuration and automatic variance retry logic. Every number traces back to a specific instance type, kernel version, and repo commit.
 
-Platforms: Linux amd64 (Intel Ice Lake), Linux arm64 (AWS Graviton3), macOS arm64 (Apple Silicon). Go versions 1.24–1.26.
+Platforms: Linux amd64 (Intel Ice Lake), Linux arm64 (AWS Graviton3), macOS arm64 (Apple Silicon). Go versions 1.24–1.27.
 
 An interactive comparison tool lets you explore benchmark deltas between versions and filter by category or reliability classification.
 

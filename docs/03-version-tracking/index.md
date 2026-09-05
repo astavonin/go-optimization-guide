@@ -38,9 +38,9 @@ All benchmark source: [perf-tracking/benchmarks/](https://github.com/astavonin/g
 
 | Platform | Instance | Go versions |
 |----------|----------|-------------|
-| Linux amd64 | `c6i.xlarge` | 1.24, 1.25, 1.26 |
-| Linux arm64 | `c7g.xlarge` | 1.24, 1.25, 1.26 |
-| macOS arm64 | Apple Silicon (local) | 1.24, 1.25, 1.26 |
+| Linux amd64 | `c6i.xlarge` | 1.24, 1.25, 1.26, 1.27 |
+| Linux arm64 | `c7g.xlarge` | 1.24, 1.25, 1.26, 1.27 |
+| macOS arm64 | Apple Silicon (local) | 1.24, 1.25, 1.26, 1.27 |
 
 ## Key Findings
 
@@ -57,6 +57,17 @@ All benchmark source: [perf-tracking/benchmarks/](https://github.com/astavonin/g
 - Small allocation specialization: measurable reduction in allocation latency for sub-32-byte objects
 - `io.ReadAll`: ~2× throughput improvement on large reads
 - RSA-4096 key generation: ~3× faster
+
+**Go 1.27**
+
+- `encoding/json` decoding: 25–42% faster, with allocations cut from 11 to 4 (small payloads) and 28 to 14 (medium). In this release the v1 package is implemented on top of `encoding/json/v2`, and the decoder is where that pays off.
+- `encoding/json` encoding: **48–51% slower**, with one extra allocation per call (2 → 3 small, 5 → 6 with escaping). The v1 compatibility layer costs more on the marshal path than it saves. If you encode JSON in a hot path, measure before upgrading — and consider calling `encoding/json/v2` directly.
+- `encoding/binary`: 15–20% faster across `Append`, `Encode`, and the legacy `Write` path
+- GC with many small objects: 18–20% faster; overall GC throughput 7–11% faster
+- `sync.Map`: 8–16% faster on both single-threaded and parallel access
+
+!!! note "Why the JSON numbers are trustworthy"
+    The `encoding/json` deltas are the only findings here corroborated by allocation counts rather than timings alone. `B/op` and `allocs/op` changed *identically* on all three platforms — a deterministic signal that cannot be produced by measurement noise. The timing deltas on the two controlled EC2 platforms agree to within a few percent.
 
 ## About This Data
 

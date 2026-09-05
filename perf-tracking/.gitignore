@@ -12,6 +12,9 @@ tools/benchexport/benchexport
 results/stable/
 results/collection_progress.json
 
+# Raw EC2 downloads from run-benchmark.sh (results-<arch>-<timestamp>/)
+results-*/
+
 # Temporary files
 *.tmp
 *.temp

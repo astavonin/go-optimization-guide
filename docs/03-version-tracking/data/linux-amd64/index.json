@@ -14,6 +14,11 @@
       "version": "1.26",
       "file": "go1.26.json",
       "collected_at": "2026-03-06T09:18:28+06:00"
+    },
+    {
+      "version": "1.27",
+      "file": "go1.27.json",
+      "collected_at": "2026-09-05T17:43:03+06:00"
     }
   ],
   "benchmarks": [
@@ -23,7 +28,7 @@
       "source_file": "perf-tracking/benchmarks/stdlib/stdlib_test.go",
       "category": "stdlib",
       "reliability": "reliable",
-      "max_cv": 0.004458131709976803
+      "max_cv": 0.0067438402843454604
     },
     {
       "name": "BenchmarkAESCTR/Size1MB",
@@ -79,7 +84,7 @@
       "source_file": "perf-tracking/benchmarks/stdlib/stdlib_test.go",
       "category": "stdlib",
       "reliability": "reliable",
-      "max_cv": 0.000947174548362461
+      "max_cv": 0.0014366580510732365
     },
     {
       "name": "BenchmarkBinaryEncode/LegacyWrite",
@@ -87,7 +92,7 @@
       "source_file": "perf-tracking/benchmarks/stdlib/stdlib_test.go",
       "category": "stdlib",
       "reliability": "reliable",
-      "max_cv": 0.002019637387670372
+      "max_cv": 0.0023422335769809266
     },
     {
       "name": "BenchmarkBufferedIO/Reader",
@@ -103,7 +108,7 @@
       "source_file": "perf-tracking/benchmarks/stdlib/stdlib_test.go",
       "category": "stdlib",
       "reliability": "reliable",
-      "max_cv": 0.01662921932533535
+      "max_cv": 0.019648125344483087
     },
     {
       "name": "BenchmarkCRC32/Castagnoli",
@@ -183,7 +188,7 @@
       "source_file": "perf-tracking/benchmarks/runtime/gc_test.go",
       "category": "runtime",
       "reliability": "reliable",
-      "max_cv": 0.005624759531074977
+      "max_cv": 0.005731308488711501
     },
     {
       "name": "BenchmarkGCThroughput",
@@ -207,7 +212,7 @@
       "source_file": "perf-tracking/benchmarks/networking/networking_test.go",
       "category": "networking",
       "reliability": "reliable",
-      "max_cv": 0.007272686159635162
+      "max_cv": 0.00739893758845546
     },
     {
       "name": "BenchmarkHTTP2/Parallel_30",
@@ -263,7 +268,7 @@
       "source_file": "perf-tracking/benchmarks/stdlib/stdlib_test.go",
       "category": "stdlib",
       "reliability": "reliable",
-      "max_cv": 0.028486498285495283
+      "max_cv": 0.03856725666836422
     },
     {
       "name": "BenchmarkJSONDecode/Large",
@@ -311,7 +316,7 @@
       "source_file": "perf-tracking/benchmarks/runtime/gc_test.go",
       "category": "runtime",
       "reliability": "reliable",
-      "max_cv": 0.006482187950781092
+      "max_cv": 0.008738034994023314
     },
     {
       "name": "BenchmarkRSAKeyGen/Bits2048",
@@ -335,7 +340,7 @@
       "source_file": "perf-tracking/benchmarks/stdlib/stdlib_test.go",
       "category": "stdlib",
       "reliability": "reliable",
-      "max_cv": 0.004559899316966789
+      "max_cv": 0.004640016813566519
     },
     {
       "name": "BenchmarkRegexp/Compile/IPv4",
@@ -343,7 +348,7 @@
       "source_file": "perf-tracking/benchmarks/stdlib/stdlib_test.go",
       "category": "stdlib",
       "reliability": "reliable",
-      "max_cv": 0.003878750855322706
+      "max_cv": 0.0053150017380316225
     },
     {
       "name": "BenchmarkRegexp/Compile/LogLine",
@@ -375,7 +380,7 @@
       "source_file": "perf-tracking/benchmarks/stdlib/stdlib_test.go",
       "category": "stdlib",
       "reliability": "reliable",
-      "max_cv": 0.006138232598562825
+      "max_cv": 0.012167536950226295
     },
     {
       "name": "BenchmarkSHA/SHA1",
@@ -415,7 +420,7 @@
       "source_file": "perf-tracking/benchmarks/runtime/gc_test.go",
       "category": "runtime",
       "reliability": "reliable",
-      "max_cv": 0.018020111446667795
+      "max_cv": 0.018192351674044486
     },
     {
       "name": "BenchmarkSmallAllocSpecialized/Size256",
@@ -431,7 +436,7 @@
       "source_file": "perf-tracking/benchmarks/runtime/gc_test.go",
       "category": "runtime",
       "reliability": "reliable",
-      "max_cv": 0.00436850469036672
+      "max_cv": 0.005228527491444862
     },
     {
       "name": "BenchmarkSmallAllocSpecialized/Size512",
@@ -463,7 +468,7 @@
       "source_file": "perf-tracking/benchmarks/runtime/gc_test.go",
       "category": "runtime",
       "reliability": "reliable",
-      "max_cv": 0.032598674974457245
+      "max_cv": 0.03437499946969362
     },
     {
       "name": "BenchmarkSwissMapIteration/Size1000",
@@ -567,7 +572,7 @@
       "source_file": "perf-tracking/benchmarks/networking/networking_test.go",
       "category": "networking",
       "reliability": "reliable",
-      "max_cv": 0.0088730121041571
+      "max_cv": 0.010565394024078363
     },
     {
       "name": "BenchmarkTCPThroughput/64KB",
@@ -623,12 +628,12 @@
       "source_file": "perf-tracking/benchmarks/networking/networking_test.go",
       "category": "networking",
       "reliability": "reliable",
-      "max_cv": 0.0037396212671935206
+      "max_cv": 0.00381978373031094
     }
   ],
   "repository": {
     "url": "https://github.com/astavonin/go-optimization-guide",
     "source_path": "blob/main"
   },
-  "last_updated": "2026-03-06T09:18:32+06:00"
+  "last_updated": "2026-09-05T17:43:03+06:00"
 }

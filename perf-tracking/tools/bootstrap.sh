@@ -84,8 +84,26 @@ echo
 echo "=== Step 2: Installing packages ==="
 BENCHMARK_RESULT="failed: package installation"
 
-yum install -y git python3 jq util-linux kernel-tools
-echo "✓ Packages installed"
+yum install -y git python3 jq util-linux
+echo "✓ Base packages installed"
+
+# cpupower ships in a kernel-tools package whose name tracks the running kernel
+# series. AL2023 on kernel 6.18 preinstalls kernel6.18-tools, and the
+# unversioned "kernel-tools" name resolves to the 6.1.x build, which
+# hard-conflicts with it — so ask for the versioned name first.
+KERNEL_TOOLS="kernel$(uname -r | cut -d. -f1,2)-tools"
+yum install -y "$KERNEL_TOOLS" 2>/dev/null \
+    || yum install -y kernel-tools 2>/dev/null \
+    || true
+
+if command -v cpupower &>/dev/null; then
+    echo "✓ cpupower available"
+else
+    # Non-fatal: the governor has a sysfs fallback in Step 3, but deep C-state
+    # disabling does not, so results will carry more latency jitter than the
+    # published methodology claims.
+    echo "⚠ cpupower unavailable — deep C-states will NOT be disabled"
+fi
 
 # ---------------------------------------------------------------------------
 # Step 3: System tuning for stable benchmark results

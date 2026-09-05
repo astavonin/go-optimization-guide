@@ -14,6 +14,11 @@
       "version": "1.26",
       "file": "go1.26.json",
       "collected_at": "2026-03-04T19:25:56+06:00"
+    },
+    {
+      "version": "1.27",
+      "file": "go1.27.json",
+      "collected_at": "2026-09-05T17:41:59+06:00"
     }
   ],
   "benchmarks": [
@@ -103,7 +108,7 @@
       "source_file": "perf-tracking/benchmarks/stdlib/stdlib_test.go",
       "category": "stdlib",
       "reliability": "reliable",
-      "max_cv": 0.02015951971367145
+      "max_cv": 0.0307327999118081
     },
     {
       "name": "BenchmarkCRC32/Castagnoli",
@@ -151,7 +156,7 @@
       "source_file": "perf-tracking/benchmarks/stdlib/stdlib_test.go",
       "category": "stdlib",
       "reliability": "reliable",
-      "max_cv": 0.00017448091926518608
+      "max_cv": 0.0005157105452138897
     },
     {
       "name": "BenchmarkFNVHash/FNV1a_64",
@@ -335,7 +340,7 @@
       "source_file": "perf-tracking/benchmarks/stdlib/stdlib_test.go",
       "category": "stdlib",
       "reliability": "reliable",
-      "max_cv": 0.008087417167667782
+      "max_cv": 0.013441110924566794
     },
     {
       "name": "BenchmarkRegexp/Compile/IPv4",
@@ -343,7 +348,7 @@
       "source_file": "perf-tracking/benchmarks/stdlib/stdlib_test.go",
       "category": "stdlib",
       "reliability": "reliable",
-      "max_cv": 0.007749290462125993
+      "max_cv": 0.013320598482600197
     },
     {
       "name": "BenchmarkRegexp/Compile/LogLine",
@@ -446,8 +451,8 @@
       "description": "Specialized small allocations (32-512 bytes)",
       "source_file": "perf-tracking/benchmarks/runtime/gc_test.go",
       "category": "runtime",
-      "reliability": "reliable",
-      "max_cv": 0.033714804485439356
+      "reliability": "noisy",
+      "max_cv": 0.07886531455648522
     },
     {
       "name": "BenchmarkStackGrowth",
@@ -471,7 +476,7 @@
       "source_file": "perf-tracking/benchmarks/runtime/gc_test.go",
       "category": "runtime",
       "reliability": "reliable",
-      "max_cv": 0.009385377654134847
+      "max_cv": 0.010353026341445467
     },
     {
       "name": "BenchmarkSwissMapIteration/Size10000",
@@ -519,7 +524,7 @@
       "source_file": "perf-tracking/benchmarks/runtime/gc_test.go",
       "category": "runtime",
       "reliability": "reliable",
-      "max_cv": 0.016582641253081846
+      "max_cv": 0.0457329678791854
     },
     {
       "name": "BenchmarkTCPConnect/Parallel",
@@ -567,7 +572,7 @@
       "source_file": "perf-tracking/benchmarks/networking/networking_test.go",
       "category": "networking",
       "reliability": "reliable",
-      "max_cv": 0.010599003970939899
+      "max_cv": 0.01635625148181426
     },
     {
       "name": "BenchmarkTCPThroughput/64KB",
@@ -615,7 +620,7 @@
       "source_file": "perf-tracking/benchmarks/networking/networking_test.go",
       "category": "networking",
       "reliability": "reliable",
-      "max_cv": 0.002801901820840726
+      "max_cv": 0.0028709562628861716
     },
     {
       "name": "BenchmarkTLSThroughput/64KB",
@@ -623,12 +628,12 @@
       "source_file": "perf-tracking/benchmarks/networking/networking_test.go",
       "category": "networking",
       "reliability": "reliable",
-      "max_cv": 0.0028998919862912305
+      "max_cv": 0.008194946650378064
     }
   ],
   "repository": {
     "url": "https://github.com/astavonin/go-optimization-guide",
     "source_path": "blob/main"
   },
-  "last_updated": "2026-03-04T19:31:24+06:00"
+  "last_updated": "2026-09-05T17:41:59+06:00"
 }

@@ -14,6 +14,11 @@
       "version": "1.26",
       "file": "go1.26.json",
       "collected_at": "2026-03-11T14:58:00+06:00"
+    },
+    {
+      "version": "1.27",
+      "file": "go1.27.json",
+      "collected_at": "2026-09-05T17:27:02+06:00"
     }
   ],
   "benchmarks": [
@@ -103,7 +108,7 @@
       "source_file": "perf-tracking/benchmarks/stdlib/stdlib_test.go",
       "category": "stdlib",
       "reliability": "reliable",
-      "max_cv": 0.01092175371063483
+      "max_cv": 0.020112237030139028
     },
     {
       "name": "BenchmarkCRC32/Castagnoli",
@@ -143,7 +148,7 @@
       "source_file": "perf-tracking/benchmarks/networking/networking_test.go",
       "category": "networking",
       "reliability": "reliable",
-      "max_cv": 0.00546263639710673
+      "max_cv": 0.009876429867885901
     },
     {
       "name": "BenchmarkFNVHash/FNV1a_128",
@@ -175,7 +180,7 @@
       "source_file": "perf-tracking/benchmarks/runtime/gc_test.go",
       "category": "runtime",
       "reliability": "reliable",
-      "max_cv": 0.016603626609687352
+      "max_cv": 0.04956939565480522
     },
     {
       "name": "BenchmarkGCSmallObjects",
@@ -199,7 +204,7 @@
       "source_file": "perf-tracking/benchmarks/runtime/gc_test.go",
       "category": "runtime",
       "reliability": "reliable",
-      "max_cv": 0.013307889711252728
+      "max_cv": 0.013360653216966584
     },
     {
       "name": "BenchmarkHTTP2/Parallel_10",
@@ -223,7 +228,7 @@
       "source_file": "perf-tracking/benchmarks/networking/networking_test.go",
       "category": "networking",
       "reliability": "reliable",
-      "max_cv": 0.0097904763901816
+      "max_cv": 0.026199823685473498
     },
     {
       "name": "BenchmarkHTTPRequest/GET_Small",
@@ -311,7 +316,7 @@
       "source_file": "perf-tracking/benchmarks/runtime/gc_test.go",
       "category": "runtime",
       "reliability": "reliable",
-      "max_cv": 0.00911018708221084
+      "max_cv": 0.010651203176337113
     },
     {
       "name": "BenchmarkRSAKeyGen/Bits2048",
@@ -335,7 +340,7 @@
       "source_file": "perf-tracking/benchmarks/stdlib/stdlib_test.go",
       "category": "stdlib",
       "reliability": "reliable",
-      "max_cv": 0.01505326305449885
+      "max_cv": 0.018908083409800148
     },
     {
       "name": "BenchmarkRegexp/Compile/IPv4",
@@ -343,7 +348,7 @@
       "source_file": "perf-tracking/benchmarks/stdlib/stdlib_test.go",
       "category": "stdlib",
       "reliability": "reliable",
-      "max_cv": 0.017024489279482406
+      "max_cv": 0.02314766764147784
     },
     {
       "name": "BenchmarkRegexp/Compile/LogLine",
@@ -351,7 +356,7 @@
       "source_file": "perf-tracking/benchmarks/stdlib/stdlib_test.go",
       "category": "stdlib",
       "reliability": "reliable",
-      "max_cv": 0.02036893998032359
+      "max_cv": 0.031021688408436797
     },
     {
       "name": "BenchmarkRegexp/Match/Email",
@@ -431,7 +436,7 @@
       "source_file": "perf-tracking/benchmarks/runtime/gc_test.go",
       "category": "runtime",
       "reliability": "reliable",
-      "max_cv": 0.011832963785785643
+      "max_cv": 0.0314839440508949
     },
     {
       "name": "BenchmarkSmallAllocSpecialized/Size512",
@@ -503,7 +508,7 @@
       "source_file": "perf-tracking/benchmarks/runtime/gc_test.go",
       "category": "runtime",
       "reliability": "reliable",
-      "max_cv": 0.010396201038482997
+      "max_cv": 0.011836665925339229
     },
     {
       "name": "BenchmarkSyncMap/Parallel",
@@ -591,7 +596,7 @@
       "source_file": "perf-tracking/benchmarks/networking/networking_test.go",
       "category": "networking",
       "reliability": "reliable",
-      "max_cv": 0.011956236833109323
+      "max_cv": 0.012337390082008019
     },
     {
       "name": "BenchmarkTLSHandshake/TLS13_ECDHE",
@@ -630,5 +635,5 @@
     "url": "https://github.com/astavonin/go-optimization-guide",
     "source_path": "blob/main"
   },
-  "last_updated": "2026-03-11T15:11:51+06:00"
+  "last_updated": "2026-09-05T17:27:31+06:00"
 }
